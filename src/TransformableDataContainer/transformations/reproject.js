@@ -3,18 +3,18 @@ import { transformGeometries } from '../../helpers/geometryUtils'
 import { warn } from '../../helpers/logging.js'
 
 export default function (data, reprojectInstructions) {
-  if (!data.hasOwnProperty('$geometry')) {
+  if (!('$geometry' in data)) {
     warn('No geometry column found. Skipping reproject-transformation.')
     return data
   }
 
-  if (!reprojectInstructions.hasOwnProperty('to')) {
+  if (!('to' in reprojectInstructions)) {
     warn(`reproject: missing required option 'to'`)
     return data
   }
 
   let from = 'WGS84'
-  if (reprojectInstructions.hasOwnProperty('from')) {
+  if ('from' in reprojectInstructions) {
     from = reprojectInstructions.from
   }
 
