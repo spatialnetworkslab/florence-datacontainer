@@ -45,7 +45,6 @@ const methods = {
   },
 
   _createKeyColumn () {
-    // if (!this._data.hasOwnProperty('$key')) {
     if (!('$key' in this._data)) {
       const keyColumn = new Array(this._length).fill(0).map(_ => id())
 

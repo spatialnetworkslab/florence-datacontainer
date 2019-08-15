@@ -3,7 +3,7 @@ import domainsAndTypesMixin from './domainsAndTypesMixin.js'
 import transformationsMixin from './transformationsMixin.js'
 
 import { isColumnOriented, isRowOriented, isGeoJSON } from './utils/checkFormat.js'
-import ensureValidRow from './utils/ensureValidRow.js'
+import { ensureValidRow, ensureRowExists } from './utils/ensureValidRow.js'
 import id from './helpers/id.js'
 
 import TransformableDataContainer from './TransformableDataContainer/'
@@ -103,6 +103,7 @@ export default class DataContainer {
   }
 
   updateRow (key, row) {
+    ensureRowExists(key, this)
     const rowNumber = this._keyToRowNumber[key]
 
     for (const columnName in row) {
@@ -115,6 +116,16 @@ export default class DataContainer {
 
       const value = row[columnName]
       this._data[columnName][rowNumber] = value
+    }
+  }
+
+  deleteRow (key) {
+    ensureRowExists(key, this)
+    const rowNumber = this._keyToRowNumber[key]
+    delete this._keyToRowNumber[key]
+
+    for (const columnName in this._data) {
+      this._data[columnName].splice(rowNumber, 1)
     }
   }
 

@@ -1,7 +1,7 @@
 import getDataType from './getDataType.js'
 import { isInvalid } from '../helpers/equals.js'
 
-export default function (row, self) {
+export function ensureValidRow (row, self) {
   for (const columnName in row) {
     if (!(columnName in self._data)) throw new Error(`Column '${columnName}' not found`)
   }
@@ -25,5 +25,11 @@ export default function (row, self) {
         throw new Error(`Column '${columnName}' is of type '${columnType}'. Received value of type '${valueType}'`)
       }
     }
+  }
+}
+
+export function ensureRowExists (key, self) {
+  if (!self._keyToRowIndex[key]) {
+    throw new Error(`Key '${key}' not found`)
   }
 }
