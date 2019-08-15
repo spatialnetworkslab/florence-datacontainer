@@ -18,7 +18,7 @@ export default class DataContainer {
   constructor (data) {
     this._data = {}
     this._length = undefined
-    this._indexToRowNumber = {}
+    this._keyToRowNumber = {}
 
     this._domainsAndTypesCalculated = false
 
@@ -57,8 +57,8 @@ export default class DataContainer {
     return this._data
   }
 
-  row (index) {
-    const rowNumber = this._indexToRowNumber[index]
+  row (key) {
+    const rowNumber = this._keyToRowNumber[key]
     return this._row(rowNumber)
   }
 
@@ -86,19 +86,19 @@ export default class DataContainer {
     return mapColumn(columnPath, this, mapFunction)
   }
 
-  updateRow (index, row) {
-    const rowNumber = this._indexToRowNumber[index]
+  updateRow (key, row) {
+    const rowNumber = this._keyToRowNumber[key]
 
-    for (const key in row) {
-      checkIfColumnExists(key, this)
+    for (const columnName in row) {
+      checkIfColumnExists(columnName, this)
 
-      if (key === '$index') {
-        warn(`Cannot update '$index' of row`)
+      if (columnName === '$key') {
+        warn(`Cannot update '$key' of row`)
         continue
       }
 
-      const value = row[key]
-      this._data[key][rowNumber] = value
+      const value = row[columnName]
+      this._data[columnName][rowNumber] = value
     }
   }
 

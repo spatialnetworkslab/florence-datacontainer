@@ -40,22 +40,22 @@ const methods = {
     this._data = data
     this._length = getDataLength(data)
 
-    this._createIndexColumn()
+    this._createKeyColumn()
     this._calculateDomainsAndTypes()
   },
 
-  _createIndexColumn () {
-    if (!this._data.hasOwnProperty('$index')) {
-      const indexColumn = new Array(this._length).fill(0).map(_ => id())
+  _createKeyColumn () {
+    if (!this._data.hasOwnProperty('$key')) {
+      const keyColumn = new Array(this._length).fill(0).map(_ => id())
 
       this._data = produce(this._data, draft => {
-        draft.$index = indexColumn
+        draft.$key = keyColumn
       })
     }
 
     for (let i = 0; i < this._length; i++) {
-      const index = this._data.$index[i]
-      this._indexToRowNumber[index] = i
+      const key = this._data.$key[i]
+      this._keyToRowNumber[key] = i
     }
   }
 }

@@ -58,7 +58,7 @@ export function checkRegularColumnName (columnName) {
 const forbiddenChars = /[/$]/
 
 export function checkInternalDataColumnName (columnName) {
-  if (!['$index', '$geometry', '$grouped'].includes(columnName)) {
+  if (!['$key', '$geometry', '$grouped'].includes(columnName)) {
     checkRegularColumnName(columnName)
   }
 }
