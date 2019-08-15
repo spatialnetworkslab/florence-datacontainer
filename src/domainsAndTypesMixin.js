@@ -13,7 +13,7 @@ const methods = {
   },
 
   _calculateDomainsAndTypes () {
-    let { domains, types } = calculateDomainsAndGetTypes(this._data)
+    const { domains, types } = calculateDomainsAndGetTypes(this._data)
     this._domains = domains
     this._types = types
   }

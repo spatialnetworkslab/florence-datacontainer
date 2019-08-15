@@ -12,7 +12,7 @@ export default function (value, throwError = true) {
 }
 
 function isGeometry (value) {
-  return value.constructor === Object && value.hasOwnProperty('type') && value.hasOwnProperty('coordinates')
+  return value.constructor === Object && 'type' in value && 'coordinates' in value
 }
 
 function isInterval (value) {

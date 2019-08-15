@@ -3,6 +3,8 @@ import domainsAndTypesMixin from './domainsAndTypesMixin.js'
 import transformationsMixin from './transformationsMixin.js'
 
 import { isColumnOriented, isRowOriented, isGeoJSON } from './utils/checkFormat.js'
+import ensureValidRow from './utils/ensureValidRow.js'
+import id from './helpers/id.js'
 
 import TransformableDataContainer from './TransformableDataContainer/'
 import { Group } from './TransformableDataContainer/transformations/groupBy.js'
@@ -84,6 +86,20 @@ export default class DataContainer {
   map (columnPath, mapFunction) {
     checkColumnPath(columnPath, this)
     return mapColumn(columnPath, this, mapFunction)
+  }
+
+  addRow (row) {
+    ensureValidRow(row, this)
+
+    for (const columnName in row) {
+      this._data[columnName].push(row[columnName])
+    }
+
+    const rowNumber = this._length
+    const key = id()
+
+    this._data.$key.push(key)
+    this._keyToRowNumber[key] = rowNumber
   }
 
   updateRow (key, row) {
