@@ -91,7 +91,7 @@ describe('determining column types', () => {
     }
 
     const dataContainer = new DataContainer(data)
-    const groupedDataContainer = dataContainer.groupBy('category').done()
+    const groupedDataContainer = dataContainer.groupBy('category')
 
     expect(groupedDataContainer.type('$grouped')).toBe('nested')
   })

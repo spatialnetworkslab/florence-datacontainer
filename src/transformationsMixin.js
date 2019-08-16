@@ -1,70 +1,79 @@
-import TransformableDataContainer from './TransformableDataContainer'
-
-function proxyTransformationCall (data, transformation, options) {
-  let transformableDataContainer = new TransformableDataContainer(data)
-  transformableDataContainer = transformableDataContainer[transformation](options)
-  return transformableDataContainer
-}
+import transformations from './transformations'
 
 const methods = {
   arrange (sortInstructions) {
-    return proxyTransformationCall(this._data, 'arrange', sortInstructions)
+    this._data = transformations.arrange(this._data, sortInstructions)
+    return this
   },
 
   bin (binInstructions) {
-    return proxyTransformationCall(this._data, 'bin', binInstructions)
+    this._data = transformations.bin(this._data, binInstructions)
+    return this
   },
 
   dropNA (dropInstructions) {
-    return proxyTransformationCall(this._data, 'dropNA', dropInstructions)
+    this._data = transformations.dropNA(this._data, dropInstructions)
+    return this
   },
 
   filter (filterFunction) {
-    return proxyTransformationCall(this._data, 'filter', filterFunction)
+    this._data = transformations.filter(this._data, filterFunction)
+    return this
   },
 
   groupBy (groupByInstructions) {
-    return proxyTransformationCall(this._data, 'groupBy', groupByInstructions)
+    this._data = transformations.groupBy(this._data, groupByInstructions)
+    return this
   },
 
   mutarise (mutariseInstructions) {
-    return proxyTransformationCall(this._data, 'mutarise', mutariseInstructions)
+    this._data = transformations.mutarise(this._data, mutariseInstructions)
+    return this
   },
 
   mutarize (mutariseInstructions) {
-    return proxyTransformationCall(this._data, 'mutarize', mutariseInstructions)
+    this._data = transformations.mutarise(this._data, mutariseInstructions)
+    return this
   },
 
   mutate (mutateInstructions) {
-    return proxyTransformationCall(this._data, 'mutate', mutateInstructions)
+    this._data = transformations.mutate(this._data, mutateInstructions)
+    return this
   },
 
   transmute (transmuteInstructions) {
-    return proxyTransformationCall(this._data, 'transmute', transmuteInstructions)
+    this._data = transformations.transmute(this._data, transmuteInstructions)
+    return this
   },
 
   rename (renameInstructions) {
-    return proxyTransformationCall(this._data, 'rename', renameInstructions)
+    this._data = transformations.rename(this._data, renameInstructions)
+    return this
   },
 
   reproject (reprojectInstructions) {
-    return proxyTransformationCall(this._data, 'reproject', reprojectInstructions)
+    this._data = transformations.reproject(this._data, reprojectInstructions)
+    return this
   },
 
   select (selection) {
-    return proxyTransformationCall(this._data, 'select', selection)
+    this._data = transformations.select(this._data, selection)
+    return this
   },
 
   summarise (summariseInstructions) {
-    return proxyTransformationCall(this._data, 'summarise', summariseInstructions)
+    this._data = transformations.summarise(this._data, summariseInstructions)
+    return this
   },
 
   summarize (summariseInstructions) {
-    return proxyTransformationCall(this._data, 'summarize', summariseInstructions)
+    this._data = transformations.summarise(this._data, summariseInstructions)
+    return this
   },
 
   transform (transformFunction) {
-    return proxyTransformationCall(this._data, 'transform', transformFunction)
+    this._data = transformations.transform(this._data, transformFunction)
+    return this
   }
 }
 

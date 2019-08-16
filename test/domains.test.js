@@ -80,7 +80,7 @@ describe('calculating domains', () => {
     }
 
     const dataContainer = new DataContainer(data)
-    const groupedDataContainer = dataContainer.groupBy('category').done()
+    const groupedDataContainer = dataContainer.groupBy('category')
 
     expect(() => groupedDataContainer.domain('$grouped')).toThrow()
   })
