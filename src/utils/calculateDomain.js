@@ -4,6 +4,10 @@ import { isInvalid } from '../helpers/equals.js'
 import { warn } from '../helpers/logging.js'
 
 export function calculateDomain (column, columnName) {
+  if (['$index', '$grouped'].includes(columnName)) {
+    throw new Error(`Cannot calculate domain of column '${columnName}'.`)
+  }
+
   const { firstValidValue, nValidValues } = findFirstValidValue(column)
 
   if (nValidValues === 0) {
@@ -41,7 +45,7 @@ export function findFirstValidValue (column) {
 
 function calculateNonGeometryColumnDomain (column, columnName, nValidValues, firstValidValue, type) {
   let domain
-  const nUniqueValues = calculateNumberOfUniqueValues(column)
+  const nUniqueValues = calculateNumberOfUniqueValues(column, type)
 
   if (columnHasOnlyOneUniqueValue(nValidValues, nUniqueValues)) {
     domain = calculateDomainForColumnWithOneUniqueValue(
@@ -54,11 +58,29 @@ function calculateNonGeometryColumnDomain (column, columnName, nValidValues, fir
   return domain
 }
 
-function calculateNumberOfUniqueValues (col) {
+function calculateNumberOfUniqueValues (col, type) {
   const uniqueVals = {}
-  for (const val of col) {
-    const str = JSON.stringify(val)
-    uniqueVals[str] = 0
+
+  if (['quantitative', 'categorical'].includes(type)) {
+    for (let i = 0; i < col.length; i++) {
+      const val = col[i]
+      uniqueVals[val] = 0
+    }
+  }
+
+  if (type === 'temporal') {
+    for (let i = 0; i < col.length; i++) {
+      const val = col[i]
+      uniqueVals[val.getTime()] = 0
+    }
+  }
+
+  if (type === 'interval') {
+    for (let i = 0; i < col.length; i++) {
+      const val = col[i]
+      const str = JSON.stringify(val)
+      uniqueVals[str] = 0
+    }
   }
 
   return Object.keys(uniqueVals).length
