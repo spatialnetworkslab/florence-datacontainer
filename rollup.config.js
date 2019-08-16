@@ -18,7 +18,7 @@ export default [
   },
   {
     input: 'src/index.js',
-    external: ['d3-geo', 'proj4', 'immer'],
+    external: ['d3-geo', 'immer'],
     output: [
       { file: pkg.main, format: 'cjs' },
       { file: pkg.module, format: 'es' }
