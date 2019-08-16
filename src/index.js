@@ -4,18 +4,19 @@ import transformationsMixin from './transformationsMixin.js'
 import { isColumnOriented, isRowOriented, isGeoJSON } from './utils/checkFormat.js'
 import { ensureValidRow, ensureRowExists } from './utils/ensureValidRow.js'
 import { isValidColumn } from './utils/isValidColumn.js'
-import id from './helpers/id.js'
+import {
+  checkColumnPath, columnPathIsValid, ensureColumnExists,
+  getColumn, mapColumn,
+  getFinalColumnName
+} from './utils/parseColumnPath.js'
+import { calculateDomain } from './utils/calculateDomain.js'
+import { getColumnType } from './utils/getDataType.js'
 
 import TransformableDataContainer from './TransformableDataContainer/'
 import { Group } from './TransformableDataContainer/transformations/groupBy.js'
 
 import { warn } from './helpers/logging.js'
-
-import {
-  checkColumnPath, columnPathIsValid, checkIfColumnExists,
-  getColumn, mapColumn,
-  getFinalColumnName
-} from './utils/parseColumnPath.js'
+import id from './helpers/id.js'
 
 export default class DataContainer {
   constructor (data) {
@@ -86,12 +87,16 @@ export default class DataContainer {
     return mapColumn(columnPath, this, mapFunction)
   }
 
-  domain () {
-    // TODO
+  domain (columnName) {
+    ensureColumnExists(columnName, this)
+    const column = this.column(columnName)
+    return calculateDomain(column, columnName)
   }
 
-  type () {
-    // TODO
+  type (columnName) {
+    ensureColumnExists(columnName, this)
+    const column = this.column(columnName)
+    return getColumnType(column, columnName)
   }
 
   // Checks
@@ -129,7 +134,7 @@ export default class DataContainer {
     const rowNumber = this._keyToRowNumber[key]
 
     for (const columnName in row) {
-      checkIfColumnExists(columnName, this)
+      ensureColumnExists(columnName, this)
 
       if (columnName === '$key') {
         warn(`Cannot update '$key' of row`)

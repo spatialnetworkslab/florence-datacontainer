@@ -12,7 +12,7 @@ export function checkColumnPath (columnPath, dataContainer) {
   parseColumnPath(columnPathArray, dataContainer, columnPath)
 }
 
-export function checkIfColumnExists (columnName, dataContainer) {
+export function ensureColumnExists (columnName, dataContainer) {
   if (!(columnName in dataContainer.data())) {
     throw new Error(`Invalid column name: '${columnName}'`)
   }
