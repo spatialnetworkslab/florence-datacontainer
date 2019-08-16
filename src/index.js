@@ -15,8 +15,7 @@ import { getColumnType } from './utils/getDataType.js'
 import { warn } from './utils/logging.js'
 import id from './utils/id.js'
 
-import TransformableDataContainer from './TransformableDataContainer/'
-import { Group } from './TransformableDataContainer/transformations/groupBy.js'
+import { Group } from './transformations/groupBy.js'
 
 export default class DataContainer {
   constructor (data) {
@@ -41,11 +40,6 @@ export default class DataContainer {
 
     if (isGeoJSON(data)) {
       this._setGeoJSON(data)
-      return
-    }
-
-    if (data instanceof TransformableDataContainer) {
-      this._setTransformableDataContainer(data)
       return
     }
 
