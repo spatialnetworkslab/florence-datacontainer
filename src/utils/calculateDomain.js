@@ -64,22 +64,28 @@ function calculateNumberOfUniqueValues (col, type) {
   if (['quantitative', 'categorical'].includes(type)) {
     for (let i = 0; i < col.length; i++) {
       const val = col[i]
-      uniqueVals[val] = 0
+      if (!isInvalid(val)) {
+        uniqueVals[val] = 0
+      }
     }
   }
 
   if (type === 'temporal') {
     for (let i = 0; i < col.length; i++) {
       const val = col[i]
-      uniqueVals[val.getTime()] = 0
+      if (!isInvalid(val)) {
+        uniqueVals[val.getTime()] = 0
+      }
     }
   }
 
   if (type === 'interval') {
     for (let i = 0; i < col.length; i++) {
       const val = col[i]
-      const str = JSON.stringify(val)
-      uniqueVals[str] = 0
+      if (!isInvalid(val)) {
+        const str = JSON.stringify(val)
+        uniqueVals[str] = 0
+      }
     }
   }
 

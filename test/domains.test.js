@@ -73,7 +73,7 @@ describe('calculating domains', () => {
   })
 
   // nested
-  test('the domain of a nested column is undefined', () => {
+  test('requesting the the domain of a nested column throws an error', () => {
     const data = {
       category: ['a', 'a', 'b', 'b', 'c', 'c'],
       amount: [10, 15, 7, 2, 19, 13]
@@ -82,6 +82,6 @@ describe('calculating domains', () => {
     const dataContainer = new DataContainer(data)
     const groupedDataContainer = dataContainer.groupBy('category').done()
 
-    expect(groupedDataContainer.domain('$grouped')).toBeUndefined()
+    expect(() => groupedDataContainer.domain('$grouped')).toThrow()
   })
 })
