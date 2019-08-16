@@ -90,7 +90,23 @@ Returns an object representing a row.
 // TODO
 ```
 
+<a name="datacontainer_rows" href="#datacontainer_rows">#</a> <i>DataContainer</i>.<b>rows</b>()
 
+Returns an Array of rows.
+
+```js
+// TODO
+```
+
+<a name="datacontainer_column" href="#datacontainer_column">#</a> <i>DataContainer</i>.<b>column</b>(columnPath)
+
+Bla
+
+```js
+// TODO
+```
+
+<a name="datacontainer_map" href="#datacontainer_map">#</a> <i>DataContainer</i>.<b>map</b>(columnPath)
 
 ### Data validation
 
