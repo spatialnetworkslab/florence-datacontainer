@@ -1,4 +1,4 @@
-import getDataType from './getDataType.js'
+import { getDataType } from './getDataType.js'
 import { isInvalid } from '../helpers/equals.js'
 
 export function ensureValidRow (row, self) {

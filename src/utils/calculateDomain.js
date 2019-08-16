@@ -1,44 +1,25 @@
 import { calculateBBoxGeometries } from '../helpers/geometryUtils'
-import getDataType from './getDataType.js'
+import { getDataType } from './getDataType.js'
 import { isInvalid } from '../helpers/equals.js'
 import { warn } from '../helpers/logging.js'
 
-export default function (data) {
-  const domains = {}
-  const types = {}
-
-  for (const columnName in data) {
-    const column = data[columnName]
-
-    const { domain, type } = calculateColumnDomainAndGetType(column, columnName)
-
-    domains[columnName] = domain
-    types[columnName] = type
-  }
-
-  return { domains, types }
-}
-
-function calculateColumnDomainAndGetType (column, columnName) {
+export function calculateDomain (column, columnName) {
   const { firstValidValue, nValidValues } = findFirstValidValue(column)
 
   if (nValidValues === 0) {
-    throw new Error(`Column '${column}' contains only missing values. This is not allowed.`)
+    throw new Error(`Cannot calculate domain of column '${column}'. Column contains only missing values.`)
   }
 
   if (nValidValues > 0) {
     const type = getDataType(firstValidValue)
-    let domain
 
     if (columnName === '$geometry') {
-      domain = calculateBBoxGeometries(column)
+      return calculateBBoxGeometries(column)
     }
 
     if (columnName !== '$geometry') {
-      domain = calculateColumnDomain(column, columnName, nValidValues, firstValidValue, type)
+      return calculateNonGeometryColumnDomain(column, columnName, nValidValues, firstValidValue, type)
     }
-
-    return { domain, type }
   }
 }
 
@@ -58,12 +39,14 @@ export function findFirstValidValue (column) {
   return { firstValidValue, nValidValues }
 }
 
-function calculateColumnDomain (column, columnName, nValidValues, firstValidValue, type) {
+function calculateNonGeometryColumnDomain (column, columnName, nValidValues, firstValidValue, type) {
   let domain
   const nUniqueValues = calculateNumberOfUniqueValues(column)
 
-  if (isIrregularColumn(nValidValues, nUniqueValues)) {
-    domain = calculateDomainForIrregularColumn(nValidValues, nUniqueValues, type, firstValidValue, columnName)
+  if (columnHasOnlyOneUniqueValue(nValidValues, nUniqueValues)) {
+    domain = calculateDomainForColumnWithOneUniqueValue(
+      nValidValues, nUniqueValues, type, firstValidValue, columnName
+    )
   } else {
     domain = calculateDomainForRegularColumn(type, column, columnName)
   }
@@ -81,31 +64,19 @@ function calculateNumberOfUniqueValues (col) {
   return Object.keys(uniqueVals).length
 }
 
-function isIrregularColumn (nValidValues, nUniqueValues) {
+function columnHasOnlyOneUniqueValue (nValidValues, nUniqueValues) {
   return nValidValues === 1 || nUniqueValues === 1
 }
 
-function calculateDomainForIrregularColumn (nValidValues, nUniqueValues, type, firstValidValue, columnName) {
-  let domain
+function calculateDomainForColumnWithOneUniqueValue (nValidValues, nUniqueValues, type, firstValidValue, columnName) {
+  const domain = createDomainForSingleValue(type, firstValidValue)
+  const warningText = nValidValues === 1 ? 'valid' : 'unique'
 
-  if (nValidValues === 1) {
-    domain = createDomainForSingleValue(type, firstValidValue)
-
-    if (type !== 'categorical') {
-      warn(
-        `Column '${columnName}' contains only 1 valid value: ${firstValidValue}.\n` +
-        `Using domain ${JSON.stringify(domain)}`
-      )
-    }
-  } else if (nUniqueValues === 1) {
-    domain = createDomainForSingleValue(type, firstValidValue)
-
-    if (type !== 'categorical') {
-      warn(
-        `Column '${columnName}' contains only 1 unique value: ${firstValidValue}.\n` +
-        `Using domain ${JSON.stringify(domain)}`
-      )
-    }
+  if (type !== 'categorical') {
+    warn(
+      `Column '${columnName}' contains only 1 ${warningText} value: ${firstValidValue}.\n` +
+      `Using domain ${JSON.stringify(domain)}`
+    )
   }
 
   return domain
