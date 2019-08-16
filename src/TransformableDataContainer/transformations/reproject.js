@@ -1,4 +1,4 @@
-import proj4 from '@spatialnetworkslab/proj4js'
+import proj4 from 'proj4'
 import { transformGeometries } from '../../utils/transform.js'
 import { warn } from '../../utils/logging.js'
 
