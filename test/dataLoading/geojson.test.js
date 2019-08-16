@@ -39,7 +39,7 @@ describe('loading geojson data', () => {
     expect(() => new DataContainer(propertiesWith$())).toThrow()
   })
 
-  test('feature property names cannot contiain \'/\'', () => {
+  test('feature property names cannot contain \'/\'', () => {
     expect(() => new DataContainer(propertiesWithSlash())).toThrow()
   })
 })

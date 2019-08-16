@@ -16,6 +16,7 @@ export function isRowOriented (data) {
 }
 
 export function isGeoJSON (data) {
+  console.log(data)
   const hasCorrectType = data.type === 'FeatureCollection'
   const hasCorrectFeatures = data.features && data.features.length > 0
 
