@@ -23,11 +23,6 @@ export default class DataContainer {
     this._length = undefined
     this._keyToRowNumber = {}
 
-    this._domainsAndTypesCalculated = false
-
-    this._domains = {}
-    this._types = {}
-
     if (isColumnOriented(data)) {
       this._setColumnData(data)
       return
