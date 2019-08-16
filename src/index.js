@@ -46,7 +46,7 @@ export default class DataContainer {
     throw invalidDataError
   }
 
-  // Getters
+  // Accessing data
   data () {
     return this._data
   }
@@ -88,7 +88,7 @@ export default class DataContainer {
     return getColumnType(column, columnName)
   }
 
-  // Checks
+  // Data validation
   hasColumn (columnPath) {
     return columnPathIsValid(columnPath, this)
   }
@@ -110,7 +110,7 @@ export default class DataContainer {
     }
   }
 
-  // Modifiers
+  // Adding and removing rows
   addRow (row) {
     ensureValidRow(row, this)
 
