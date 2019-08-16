@@ -1,7 +1,7 @@
 import DataContainer from '../index.js'
 import { findFirstValidValue } from './calculateDomain.js'
 
-export function getColumnType (column, { throwError = true }) {
+export function getColumnType (column, { throwError = true } = {}) {
   const { firstValidValue, nValidValues } = findFirstValidValue(column)
 
   if (nValidValues === 0) {
@@ -15,7 +15,7 @@ export function getColumnType (column, { throwError = true }) {
   return getDataType(firstValidValue, { throwError })
 }
 
-export function getDataType (value, { throwError = true }) {
+export function getDataType (value, { throwError = true } = {}) {
   if (value.constructor === Number) return 'quantitative'
   if (value.constructor === String) return 'categorical'
   if (value.constructor === Date) return 'temporal'

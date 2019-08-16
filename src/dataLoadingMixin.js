@@ -41,7 +41,6 @@ const methods = {
     this._length = getDataLength(data)
 
     this._createKeyColumn()
-    this._calculateDomainsAndTypes()
   },
 
   _createKeyColumn () {

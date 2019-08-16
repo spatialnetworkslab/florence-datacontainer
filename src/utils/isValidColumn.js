@@ -1,7 +1,7 @@
 import { getColumnType, getDataType } from './getDataType.js'
 import { isInvalid } from './equals.js'
 
-export function isValidColumn (column, columnName, { throwError = true }) {
+export function isValidColumn (column, columnName, { throwError = true } = {}) {
   const columnType = getColumnType(column, { throwError })
 
   if (columnType === undefined) return false
@@ -11,7 +11,7 @@ export function isValidColumn (column, columnName, { throwError = true }) {
   return true
 }
 
-function columnNameMatchesType (columnName, columnType, { throwError }) {
+function columnNameMatchesType (columnName, columnType, { throwError } = {}) {
   if (columnName === '$geometry' && columnType !== 'geometry') {
     if (throwError) {
       throw new Error(`Column '$geometry' can only contain data of type 'geometry', received '${columnType}'`)
@@ -31,7 +31,7 @@ function columnNameMatchesType (columnName, columnType, { throwError }) {
   return true
 }
 
-function allValidValuesHaveTheSameType (column, columnType, columnName, { throwError }) {
+function allValidValuesHaveTheSameType (column, columnType, columnName, { throwError } = {}) {
   for (let i = 0; i < column.length; i++) {
     const value = column[i]
 
