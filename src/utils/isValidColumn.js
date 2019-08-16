@@ -1,5 +1,5 @@
 import { getColumnType, getDataType } from './getDataType.js'
-import { isInvalid } from '../helpers/equals.js'
+import { isInvalid } from './equals.js'
 
 export function isValidColumn (column, columnName, { throwError = true }) {
   const columnType = getColumnType(column, { throwError })

@@ -1,7 +1,7 @@
-import { calculateBBoxGeometries } from '../helpers/geometryUtils'
+import { calculateBBoxGeometries } from './calculateBBox.js'
 import { getDataType } from './getDataType.js'
-import { isInvalid } from '../helpers/equals.js'
-import { warn } from '../helpers/logging.js'
+import { isInvalid } from './equals.js'
+import { warn } from './logging.js'
 
 export function calculateDomain (column, columnName) {
   if (['$index', '$grouped'].includes(columnName)) {

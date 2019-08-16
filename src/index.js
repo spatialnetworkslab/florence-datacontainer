@@ -12,11 +12,11 @@ import {
 import { calculateDomain } from './utils/calculateDomain.js'
 import { getColumnType } from './utils/getDataType.js'
 
+import { warn } from './utils/logging.js'
+import id from './utils/id.js'
+
 import TransformableDataContainer from './TransformableDataContainer/'
 import { Group } from './TransformableDataContainer/transformations/groupBy.js'
-
-import { warn } from './helpers/logging.js'
-import id from './helpers/id.js'
 
 export default class DataContainer {
   constructor (data) {

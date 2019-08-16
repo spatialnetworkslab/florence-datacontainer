@@ -1,4 +1,4 @@
-import { isInvalid } from '../../helpers/equals.js'
+import { isInvalid } from '../../utils/equals.js'
 import filter from './filter.js'
 
 export default function (data, dropInstructions) {
@@ -46,7 +46,7 @@ export default function (data, dropInstructions) {
 
 function checkIfColumnsExist (data, columns) {
   for (const col of columns) {
-    if (!data.hasOwnProperty(col)) {
+    if (!(col in data)) {
       throw new Error(`Column '${col}' not found`)
     }
   }

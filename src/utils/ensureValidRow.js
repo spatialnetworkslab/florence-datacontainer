@@ -1,5 +1,5 @@
 import { getDataType } from './getDataType.js'
-import { isInvalid } from '../helpers/equals.js'
+import { isInvalid } from './equals.js'
 
 export function ensureValidRow (row, self) {
   for (const columnName in row) {
@@ -13,7 +13,7 @@ export function ensureValidRow (row, self) {
       if (!(columnName in row)) throw new Error(`Missing column '${columnName}'`)
 
       const value = row[columnName]
-      
+
       if (isInvalid(value)) {
         continue
       }

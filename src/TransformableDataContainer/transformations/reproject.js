@@ -1,6 +1,6 @@
 import proj4 from 'proj4'
-import { transformGeometries } from '../../helpers/geometryUtils'
-import { warn } from '../../helpers/logging.js'
+import { transformGeometries } from '../../utils/transform.js'
+import { warn } from '../../utils/logging.js'
 
 export default function (data, reprojectInstructions) {
   if (!('$geometry' in data)) {

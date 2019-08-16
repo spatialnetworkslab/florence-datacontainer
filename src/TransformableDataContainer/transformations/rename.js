@@ -1,5 +1,5 @@
 import { checkRegularColumnName } from '../../utils/checkFormat.js'
-import { warn } from '../../helpers/logging.js'
+import { warn } from '../../utils/logging.js'
 
 export default function (data, renameInstructions) {
   if (renameInstructions.constructor !== Object) {
@@ -7,7 +7,7 @@ export default function (data, renameInstructions) {
   }
 
   for (const oldName in renameInstructions) {
-    if (data.hasOwnProperty(oldName)) {
+    if (oldName in data) {
       const newName = renameInstructions[oldName]
       checkRegularColumnName(newName)
       data[newName] = data[oldName]
