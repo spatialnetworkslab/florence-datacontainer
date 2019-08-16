@@ -1,8 +1,8 @@
-import DataContainer from '../../index.js'
-import getDataLength from '../../utils/getDataLength.js'
-import Geostats from '../../utils/geoStats.js'
+import DataContainer from '../index.js'
+import getDataLength from '../utils/getDataLength.js'
+import Geostats from '../utils/geoStats.js'
 
-import { warn } from '../../utils/logging.js'
+import { warn } from '../utils/logging.js'
 
 export default function (data, binInstructions) {
   const intervalBounds = getIntervalBounds(data, binInstructions)

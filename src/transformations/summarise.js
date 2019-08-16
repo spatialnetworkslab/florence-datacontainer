@@ -1,6 +1,6 @@
 import aggregations from './aggregations'
-import checkKeyValuePair from '../../utils/checkKeyValuePair.js'
-import { checkRegularColumnName } from '../../utils/checkFormat.js'
+import checkKeyValuePair from '../utils/checkKeyValuePair.js'
+import { checkRegularColumnName } from '../utils/checkFormat.js'
 
 export default function (data, summariseInstructions) {
   if (summariseInstructions.constructor !== Object) {
@@ -9,17 +9,17 @@ export default function (data, summariseInstructions) {
 
   let newData = initNewData(summariseInstructions, data)
 
-  if (data.hasOwnProperty('$grouped')) {
+  if ('$grouped' in data) {
     checkSummariseInstructions(summariseInstructions, data)
 
-    for (let columnName in data) {
+    for (const columnName in data) {
       if (columnName !== '$grouped') {
         newData[columnName] = data[columnName]
       }
     }
 
-    for (let group of data.$grouped) {
-      let data = group.data()
+    for (const group of data.$grouped) {
+      const data = group.data()
       newData = summariseGroup(data, summariseInstructions, newData)
     }
   } else {
@@ -29,10 +29,10 @@ export default function (data, summariseInstructions) {
 }
 
 export function initNewData (summariseInstructions, data) {
-  let newData = {}
-  for (let newCol in summariseInstructions) { newData[newCol] = [] }
-  if (data && data.hasOwnProperty('$grouped')) {
-    for (let col in data) {
+  const newData = {}
+  for (const newCol in summariseInstructions) { newData[newCol] = [] }
+  if (data && '$grouped' in data) {
+    for (const col in data) {
       if (col !== '$grouped') {
         newData[col] = []
       }
@@ -42,14 +42,14 @@ export function initNewData (summariseInstructions, data) {
 }
 
 export function summariseGroup (data, summariseInstructions, newData) {
-  for (let newColName in summariseInstructions) {
-    let instruction = summariseInstructions[newColName]
+  for (const newColName in summariseInstructions) {
+    const instruction = summariseInstructions[newColName]
 
     // If the aggregation instructions are an Object, only one column will be
     // used as summary: the column that is used as key in the Object
     if (instruction.constructor === Object) {
-      let column = checkKeyValuePair(instruction, Object.keys(data))
-      let aggregation = instruction[column]
+      const column = checkKeyValuePair(instruction, Object.keys(data))
+      const aggregation = instruction[column]
 
       if (aggregation.constructor === String) {
         newData[newColName].push(aggregations[aggregation](data[column]))
@@ -65,13 +65,13 @@ export function summariseGroup (data, summariseInstructions, newData) {
 }
 
 export function checkSummariseInstructions (summariseInstructions, data) {
-  for (let newColName in summariseInstructions) {
-    let instruction = summariseInstructions[newColName]
-    let name = Object.keys(instruction)[0]
+  for (const newColName in summariseInstructions) {
+    const instruction = summariseInstructions[newColName]
+    const name = Object.keys(instruction)[0]
 
     checkRegularColumnName(name)
 
-    if (data.hasOwnProperty(name)) {
+    if (name in data) {
       throw new Error(`Cannot summarise the column '${name}': used for grouping`)
     }
   }

@@ -1,4 +1,4 @@
-import getDataLength from '../../utils/getDataLength.js'
+import getDataLength from '../utils/getDataLength.js'
 
 export function mutate (data, mutateInstructions) {
   const length = getDataLength(data)

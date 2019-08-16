@@ -4,7 +4,7 @@ export default function (data, selection) {
   }
 
   if (selection.constructor === Array) {
-    for (let key in data) {
+    for (const key in data) {
       if (!selection.includes(key)) {
         delete data[key]
       }

@@ -1,5 +1,5 @@
 import { initNewData, summariseGroup, checkSummariseInstructions } from './summarise.js'
-import getDataLength from '../../utils/getDataLength.js'
+import getDataLength from '../utils/getDataLength.js'
 
 export default function (data, mutariseInstructions) {
   if (mutariseInstructions.constructor !== Object) {
@@ -8,15 +8,15 @@ export default function (data, mutariseInstructions) {
 
   let newCols = initNewData(mutariseInstructions)
 
-  if (data.hasOwnProperty('$grouped')) {
+  if ('$grouped' in data) {
     checkSummariseInstructions(mutariseInstructions, data)
 
-    for (let group of data.$grouped) {
+    for (const group of data.$grouped) {
       let summarizedData = initNewData(mutariseInstructions)
-      let dataInGroup = group.data()
+      const dataInGroup = group.data()
       summarizedData = summariseGroup(dataInGroup, mutariseInstructions, summarizedData)
 
-      let length = getDataLength(dataInGroup)
+      const length = getDataLength(dataInGroup)
       newCols = addGroupSummaries(newCols, summarizedData, length)
     }
 
@@ -25,7 +25,7 @@ export default function (data, mutariseInstructions) {
     let summarizedData = initNewData(mutariseInstructions)
     summarizedData = summariseGroup(data, mutariseInstructions, summarizedData)
 
-    let length = getDataLength(data)
+    const length = getDataLength(data)
     newCols = addGroupSummaries(newCols, summarizedData, length)
   }
 
@@ -34,7 +34,7 @@ export default function (data, mutariseInstructions) {
 
 function addGroupSummaries (newCols, summarizedData, length) {
   for (let i = 0; i < length; i++) {
-    for (let key in summarizedData) {
+    for (const key in summarizedData) {
       newCols[key].push(summarizedData[key][0])
     }
   }
@@ -43,11 +43,11 @@ function addGroupSummaries (newCols, summarizedData, length) {
 }
 
 function ungroup (data) {
-  let newData = initNewData(data.$grouped[0].data())
+  const newData = initNewData(data.$grouped[0].data())
 
-  for (let group of data.$grouped) {
-    let groupData = group.data()
-    for (let col in newData) {
+  for (const group of data.$grouped) {
+    const groupData = group.data()
+    for (const col in newData) {
       newData[col].push(...groupData[col])
     }
   }
@@ -56,7 +56,7 @@ function ungroup (data) {
 }
 
 function join (data, newCols) {
-  for (let col in newCols) {
+  for (const col in newCols) {
     data[col] = newCols[col]
   }
 
