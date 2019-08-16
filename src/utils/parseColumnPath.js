@@ -8,44 +8,44 @@ export function columnPathIsValid (columnPath, dataContainer) {
 }
 
 export function checkColumnPath (columnPath, dataContainer) {
-  let columnPathArray = columnPath.split('/')
+  const columnPathArray = columnPath.split('/')
   parseColumnPath(columnPathArray, dataContainer, columnPath)
 }
 
 export function checkIfColumnExists (columnName, dataContainer) {
-  if (!dataContainer.data().hasOwnProperty(columnName)) {
+  if (!(columnName in dataContainer.data())) {
     throw new Error(`Invalid column name: '${columnName}'`)
   }
 }
 
 export function getColumn (columnPath, dataContainer) {
-  let columnPathArray = columnPath.split('/')
+  const columnPathArray = columnPath.split('/')
   return traverseColumnPath(columnPathArray, dataContainer)
 }
 
 export function mapColumn (columnPath, dataContainer, mapFunction) {
-  let column = getColumn(columnPath, dataContainer)
-  let levels = columnPath.split('/').length
+  const column = getColumn(columnPath, dataContainer)
+  const levels = columnPath.split('/').length
   return mapRecursive(levels, column, mapFunction)
 }
 
 function parseColumnPath (columnPathArray, dataContainer, originalPath) {
-  let data = dataContainer.data()
-  let ownColumnName = columnPathArray[0]
+  const data = dataContainer.data()
+  const ownColumnName = columnPathArray[0]
   ensureDataHasColumn(data, ownColumnName, originalPath)
 
   if (columnPathArray.length > 1) {
     ensureColumnIsGrouped(ownColumnName, originalPath)
 
-    let nestedColumnPathArray = removeFirstElement(columnPathArray)
-    let groupedColumn = data.$grouped
+    const nestedColumnPathArray = removeFirstElement(columnPathArray)
+    const groupedColumn = data.$grouped
 
     parseColumnPath(nestedColumnPathArray, groupedColumn[0], originalPath)
   }
 }
 
 function ensureDataHasColumn (data, columnName, originalPath) {
-  if (!data.hasOwnProperty(columnName)) throw columnNotFoundError(columnName, originalPath)
+  if (!(columnName in data)) throw columnNotFoundError(columnName, originalPath)
 }
 
 function ensureColumnIsGrouped (columnName, originalPath) {
@@ -58,16 +58,16 @@ function removeFirstElement (array) {
 
 function traverseColumnPath (columnPathArray, dataContainer) {
   let newColumn = []
-  let ownColumnName = columnPathArray[0]
-  let data = dataContainer.data()
+  const ownColumnName = columnPathArray[0]
+  const data = dataContainer.data()
 
   if (columnPathArray.length === 1) {
     newColumn = data[ownColumnName]
   }
 
   if (columnPathArray.length > 1) {
-    let groupedColumn = data[ownColumnName]
-    let nestedColumnPathArray = removeFirstElement(columnPathArray)
+    const groupedColumn = data[ownColumnName]
+    const nestedColumnPathArray = removeFirstElement(columnPathArray)
 
     groupedColumn.forEach(groupedContainer => {
       newColumn.push(
@@ -92,3 +92,8 @@ const columnNotFoundError = (columnName, originalPath) => {
   return new Error(`Could not find column '${columnName}' while traversing column path '${originalPath}'`)
 }
 const invalidColumnPathError = columnPath => new Error(`Invalid column path: '${columnPath}`)
+
+export function getFinalColumnName (path) {
+  const splitPath = path.split('/')
+  return splitPath[splitPath.length - 1]
+}

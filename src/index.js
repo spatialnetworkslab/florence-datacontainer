@@ -1,9 +1,9 @@
 import dataLoadingMixin from './dataLoadingMixin.js'
-import domainsAndTypesMixin from './domainsAndTypesMixin.js'
 import transformationsMixin from './transformationsMixin.js'
 
 import { isColumnOriented, isRowOriented, isGeoJSON } from './utils/checkFormat.js'
 import { ensureValidRow, ensureRowExists } from './utils/ensureValidRow.js'
+import { isValidColumn } from './utils/isValidColumn.js'
 import id from './helpers/id.js'
 
 import TransformableDataContainer from './TransformableDataContainer/'
@@ -13,7 +13,8 @@ import { warn } from './helpers/logging.js'
 
 import {
   checkColumnPath, columnPathIsValid, checkIfColumnExists,
-  getColumn, mapColumn
+  getColumn, mapColumn,
+  getFinalColumnName
 } from './utils/parseColumnPath.js'
 
 export default class DataContainer {
@@ -55,6 +56,7 @@ export default class DataContainer {
     throw invalidDataError
   }
 
+  // Getters
   data () {
     return this._data
   }
@@ -74,10 +76,6 @@ export default class DataContainer {
     return rows
   }
 
-  hasColumn (columnPath) {
-    return columnPathIsValid(columnPath, this)
-  }
-
   column (columnPath) {
     checkColumnPath(columnPath, this)
     return getColumn(columnPath, this)
@@ -88,6 +86,30 @@ export default class DataContainer {
     return mapColumn(columnPath, this, mapFunction)
   }
 
+  domain () {
+    // TODO
+  }
+
+  type () {
+    // TODO
+  }
+
+  // Checks
+  hasColumn (columnPath) {
+    return columnPathIsValid(columnPath, this)
+  }
+
+  columnIsValid (columnPath) {
+    const column = this.column(columnPath)
+    return isValidColumn(column, getFinalColumnName(columnPath), { throwError: false })
+  }
+
+  validateColumn (columnPath) {
+    const column = this.column(columnPath)
+    isValidColumn(column, getFinalColumnName(columnPath), { throwError: true })
+  }
+
+  // Modifiers
   addRow (row) {
     ensureValidRow(row, this)
 
@@ -129,6 +151,7 @@ export default class DataContainer {
     }
   }
 
+  // Private methods
   _row (rowNumber) {
     const row = {}
 
@@ -142,7 +165,6 @@ export default class DataContainer {
 }
 
 dataLoadingMixin(DataContainer)
-domainsAndTypesMixin(DataContainer)
 transformationsMixin(DataContainer)
 
 const invalidDataError = new Error('Data passed to DataContainer is of unknown format')

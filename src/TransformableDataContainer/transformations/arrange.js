@@ -5,7 +5,7 @@ export default function (data, sortInstructions) {
     sort(data, sortInstructions)
   } else if (sortInstructions.constructor === Array) {
     for (let i = sortInstructions.length - 1; i >= 0; i--) {
-      let instruction = sortInstructions[i]
+      const instruction = sortInstructions[i]
       sort(data, instruction)
     }
   } else {
@@ -21,23 +21,23 @@ const sortFuncs = {
   },
   categorical: {
     ascending: (a, b) => {
-      let sorted = [a, b].sort()
+      const sorted = [a, b].sort()
       return sorted[0] === a ? -1 : 1
     },
     descending: (a, b) => {
-      let sorted = [a, b].sort()
+      const sorted = [a, b].sort()
       return sorted[0] === a ? 1 : -1
     }
   },
   temporal: {
     ascending: (c, d) => {
-      let a = c.getTime()
-      let b = c.getTime()
+      const a = c.getTime()
+      const b = c.getTime()
       return a < b ? -1 : a > b ? 1 : a >= b ? 0 : NaN
     },
     descending: (c, d) => {
-      let a = c.getTime()
-      let b = c.getTime()
+      const a = c.getTime()
+      const b = c.getTime()
       return b < a ? -1 : b > a ? 1 : b >= a ? 0 : NaN
     }
   }
@@ -48,10 +48,10 @@ function sort (data, sortInstructions) {
     throw new Error('Only one key-value pair allowed')
   }
 
-  let variable = Object.keys(sortInstructions)[0]
-  let sortMethod = sortInstructions[variable]
+  const variable = Object.keys(sortInstructions)[0]
+  const sortMethod = sortInstructions[variable]
 
-  let dataType = getDataType(data[variable][0])
+  const dataType = getDataType(data[variable][0])
 
   let sortFunc
   if (sortMethod.constructor === String) {
@@ -61,12 +61,12 @@ function sort (data, sortInstructions) {
     sortFunc = sortMethod
   }
 
-  let column = data[variable]
+  const column = data[variable]
 
-  let indices = column.map((v, i) => i)
-  let sortedIndices = indices.sort((a, b) => sortFunc(column[a], column[b]))
+  const indices = column.map((v, i) => i)
+  const sortedIndices = indices.sort((a, b) => sortFunc(column[a], column[b]))
 
-  for (let colName in data) {
+  for (const colName in data) {
     data[colName] = reorder(data[colName], sortedIndices)
   }
 }

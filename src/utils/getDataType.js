@@ -1,17 +1,21 @@
 import DataContainer from '../index.js'
 import { findFirstValidValue } from './calculateDomain.js'
 
-export function getColumnType (column) {
+export function getColumnType (column, { throwError = true }) {
   const { firstValidValue, nValidValues } = findFirstValidValue(column)
 
   if (nValidValues === 0) {
-    throw new Error(`Cannot determine type of column '${column}'. Column contains only missing values.`)
+    if (throwError) {
+      throw new Error(`Cannot determine type of column '${column}'. Column contains only missing values.`)
+    } else {
+      return
+    }
   }
 
-  return getDataType(firstValidValue)
+  return getDataType(firstValidValue, { throwError })
 }
 
-export function getDataType (value, throwError = true) {
+export function getDataType (value, { throwError = true }) {
   if (value.constructor === Number) return 'quantitative'
   if (value.constructor === String) return 'categorical'
   if (value.constructor === Date) return 'temporal'

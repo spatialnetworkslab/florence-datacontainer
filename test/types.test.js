@@ -1,5 +1,5 @@
-import DataContainer from '../../src/index.js'
-import { valid } from '../__data__/makeGeoJSON.js'
+import DataContainer from '../src/index.js'
+import { valid } from './__data__/makeGeoJSON.js'
 
 describe('determining column types', () => {
   // quantitative
