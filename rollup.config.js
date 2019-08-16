@@ -23,13 +23,13 @@ export default [
   },
   {
     input: 'src/index.js',
-    external: ['@turf/meta', 'd3-array', 'd3-geo', 'd3-interpolate', 'robust-point-in-polygon', 'proj4', 'immer'],
+    external: ['proj4', 'immer'],
     output: [
       { file: pkg.main, format: 'cjs' },
       { file: pkg.module, format: 'es' }
     ],
     plugins: [
       resolve()
-	  ]
+    ]
   }
 ]
