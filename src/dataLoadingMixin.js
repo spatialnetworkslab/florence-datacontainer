@@ -41,6 +41,7 @@ const methods = {
     this._length = getDataLength(data)
 
     this._createKeyColumn()
+    this.validateAllColumns()
   },
 
   _createKeyColumn () {

@@ -114,6 +114,13 @@ export default class DataContainer {
     isValidColumn(column, getFinalColumnName(columnPath), { throwError: true })
   }
 
+  validateAllColumns () {
+    for (const columnName in this._data) {
+      const column = this.column(columnName)
+      isValidColumn(column, columnName, { throwError: true })
+    }
+  }
+
   // Modifiers
   addRow (row) {
     ensureValidRow(row, this)
