@@ -97,6 +97,24 @@ const dataContainer = new DataContainer({ fruit: ['apple', 'banana'], amount: [1
 dataContainer.row(0) // { fruit: 'apple', amount: 1, $key: 0 }
 ```
 
+<a name="datacontainer_prevrow" href="#datacontainer_prevrow">#</a> <i>DataContainer</i>.<b>prevRow</b>(key)
+
+Returns the previous row.
+
+```js
+const dataContainer = new DataContainer({ fruit: ['apple', 'banana'], amount: [1, 2] })
+dataContainer.prevRow(1) // { fruit: 'apple', amount: 1, $key: 0 }
+```
+
+<a name="datacontainer_nextrow" href="#datacontainer_nextrow">#</a> <i>DataContainer</i>.<b>nextRow</b>(key)
+
+Returns the next row.
+
+```js
+const dataContainer = new DataContainer({ fruit: ['apple', 'banana'], amount: [1, 2] })
+dataContainer.nextRow(0) // { fruit: 'banana', amount: 2, $key: 1 }
+```
+
 <a name="datacontainer_rows" href="#datacontainer_rows">#</a> <i>DataContainer</i>.<b>rows</b>()
 
 Returns an Array of rows.
@@ -129,11 +147,19 @@ Equivalent to `.column(columnName).map(func)`
 
 <a name="datacontainer_domain" href="#datacontainer_domain">#</a> <i>DataContainer</i>.<b>domain</b>(columnName)
 
-TODO
+Returns the domain of a column.
 
-<a name="datacontainer_map" href="#datacontainer_map">#</a> <i>DataContainer</i>.<b>map</b>(columnName, func)
+```js
 
-TODO
+```
+
+<a name="datacontainer_type" href="#datacontainer_type">#</a> <i>DataContainer</i>.<b>type</b>(columnName)
+
+Returns the type of a column.
+
+```js
+
+```
 
 ### Data validation
 
