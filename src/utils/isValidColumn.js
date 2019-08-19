@@ -16,7 +16,7 @@ export function ensureValidColumn (column, columnName) {
 
   if (columnType === undefined) throw new Error(`Column '${columnName}' contains unknown data type`)
   ensureColumnNameMatchesType(columnType)
-  ensureAllValidValuesHaveTheSameType(column, columnName)
+  ensureAllValidValuesHaveTheSameType(column, columnType, columnName)
 }
 
 function columnNameMatchesType (columnName, columnType) {
