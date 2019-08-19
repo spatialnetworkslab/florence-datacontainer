@@ -50,3 +50,18 @@ function allValidValuesHaveTheSameType (column, columnType, columnName, { throwE
 
   return true
 }
+
+export function columnExists (columnName, self) {
+  try {
+    ensureColumnExists(columnName, self)
+    return true
+  } catch (e) {
+    return false
+  }
+}
+
+export function ensureColumnExists (columnName, self) {
+  if (!(columnName in self._data)) {
+    throw new Error(`Invalid column name: '${columnName}'`)
+  }
+}

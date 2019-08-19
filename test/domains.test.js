@@ -73,7 +73,7 @@ describe('calculating domains', () => {
   })
 
   // nested
-  test('requesting the the domain of a nested column throws an error', () => {
+  test('requesting the the domain of a \'$grouped\' column throws an error', () => {
     const data = {
       category: ['a', 'a', 'b', 'b', 'c', 'c'],
       amount: [10, 15, 7, 2, 19, 13]

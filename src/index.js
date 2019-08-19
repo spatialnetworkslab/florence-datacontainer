@@ -3,12 +3,7 @@ import transformationsMixin from './transformationsMixin.js'
 
 import { isColumnOriented, isRowOriented, isGeoJSON } from './utils/checkFormat.js'
 import { ensureValidRow, ensureRowExists } from './utils/ensureValidRow.js'
-import { isValidColumn } from './utils/isValidColumn.js'
-import {
-  checkColumnPath, columnPathIsValid, ensureColumnExists,
-  getColumn, mapColumn,
-  getFinalColumnName
-} from './utils/parseColumnPath.js'
+import { isValidColumn, columnExists, ensureColumnExists } from './utils/isValidColumn.js'
 import { calculateDomain } from './utils/calculateDomain.js'
 import { getColumnType } from './utils/getDataType.js'
 
@@ -66,41 +61,38 @@ export default class DataContainer {
     return rows
   }
 
-  column (columnPath) {
-    checkColumnPath(columnPath, this)
-    return getColumn(columnPath, this)
+  column (columnName) {
+    ensureColumnExists(columnName, this)
+    return this._data[columnName]
   }
 
-  map (columnPath, mapFunction) {
-    checkColumnPath(columnPath, this)
-    return mapColumn(columnPath, this, mapFunction)
+  map (columnName, mapFunction) {
+    return this.column(columnName).map(mapFunction)
   }
 
   domain (columnName) {
-    ensureColumnExists(columnName, this)
     const column = this.column(columnName)
     return calculateDomain(column, columnName)
   }
 
   type (columnName) {
-    ensureColumnExists(columnName, this)
     const column = this.column(columnName)
     return getColumnType(column, columnName)
   }
 
   // Data validation
-  hasColumn (columnPath) {
-    return columnPathIsValid(columnPath, this)
+  hasColumn (columnName) {
+    return columnExists(columnName, this)
   }
 
-  columnIsValid (columnPath) {
-    const column = this.column(columnPath)
-    return isValidColumn(column, getFinalColumnName(columnPath), { throwError: false })
+  columnIsValid (columnName) {
+    const column = this.column(columnName)
+    return isValidColumn(column, columnName, { throwError: false })
   }
 
-  validateColumn (columnPath) {
-    const column = this.column(columnPath)
-    isValidColumn(column, getFinalColumnName(columnPath), { throwError: true })
+  validateColumn (columnName) {
+    const column = this.column(columnName)
+    isValidColumn(column, columnName, { throwError: true })
   }
 
   validateAllColumns () {
