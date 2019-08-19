@@ -9,11 +9,19 @@ describe('cumsum transformation', () => {
     expect(dataContainer.column('cumsum_a')).toEqual([1, 3, 6, 10])
   })
 
-  // test('cumsum ignores invalid values', () => {
+  test('cumsum ignores invalid values', () => {
+    const dataContainer = new DataContainer({
+      a: [1, 2, NaN, 4]
+    }).cumsum({ cumsum_a: 'a' })
 
-  // })
+    expect(dataContainer.column('cumsum_a')).toEqual([1, 3, 3, 7])
+  })
 
-  // test('cumsum throw error for non-quantitative columns', () => {
+  test('cumsum throw error for non-quantitative columns', () => {
+    const dataContainer = new DataContainer({
+      a: ['a', 'a', 'b', 'b']
+    })
 
-  // })
+    expect(() => dataContainer.cumsum('a')).toThrow()
+  })
 })
