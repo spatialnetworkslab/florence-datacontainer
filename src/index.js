@@ -51,6 +51,18 @@ export default class DataContainer {
     return this._row(rowNumber)
   }
 
+  prevRow (key) {
+    const rowNumber = this._keyToRowNumber[key]
+    const previousRowNumber = rowNumber - 1
+    return this._row(previousRowNumber)
+  }
+
+  nextRow (key) {
+    const rowNumber = this._keyToRowNumber[key]
+    const nextRowNumber = rowNumber + 1
+    return this._row(nextRowNumber)
+  }
+
   rows () {
     const rows = []
 
@@ -148,6 +160,10 @@ export default class DataContainer {
 
   // Private methods
   _row (rowNumber) {
+    if (rowNumber < 0 || rowNumber >= this._length) {
+      return undefined
+    }
+
     const row = {}
 
     for (const columnName in this._data) {
