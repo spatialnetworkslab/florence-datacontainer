@@ -9,7 +9,7 @@ A simple, light-weight interface to manage data. Designed for use with [florence
 * [Domains and types](#domains-and-types)
 * [Data validation](#data-validation)
 * [Transformations](#transformations)
-* [Adding and removing rows](#adding-and-removing-rows)]
+* [Adding and removing rows](#adding-and-removing-rows)
 
 ### Loading data
 
@@ -136,7 +136,7 @@ dataContainer.nextRow(0) // { fruit: 'banana', amount: 2, $key: 1 }
 
 <a name="datacontainer_rows" href="#datacontainer_rows">#</a> <i>DataContainer</i>.<b>rows</b>()
 
-Returns an Array of rows.
+Returns an `Array` of rows.
 
 ```js
 const dataContainer = new DataContainer({ fruit: ['apple', 'banana'], amount: [1, 2] })
@@ -150,7 +150,7 @@ dataContainer.rows()
 
 <a name="datacontainer_column" href="#datacontainer_column">#</a> <i>DataContainer</i>.<b>column</b>(columnName)
 
-Returns a column as an Array.
+Returns a column as an `Array`.
 
 ```js
 const dataContainer = new DataContainer({ fruit: ['apple', 'banana'], amount: [1, 2] })
@@ -214,13 +214,13 @@ where it makes sense like `filter`, [immer](https://github.com/immerjs/immer) is
 
 ```js
 const dataContainer = new DataContainer({
-  fruit: ['apple', 'banana', 'apple', 'banana'],
-  quantity: [1, 2, 3, 4],
-  dayOfSale: [new Date(2019, 4, 3), new Date(2019, 4, 4), new Date(2019, 4, 5), new Date(2019, 4, 6)]
+  fruit: ['apple', 'banana'],
+  quantity: [1, 2],
+  dayOfSale: [new Date(2019, 4, 3), new Date(2019, 4, 4)]
 })
 
 const withoutDayOfSale = dataContainer.select(['fruit', 'quantity'])
-withoutDayOfSale.data() // { fruit: ['apple', 'apple', 'banana', 'banana'], quantity: [1, 2, 3, 4] }
+withoutDayOfSale.data() // { fruit: ['apple', 'banana'], quantity: [1, 2], $key: [0, 1] }
 ```
 
 <a name="datacontainer_rename" href="#datacontainer_rename">#</a> <i>DataContainer</i>.<b>rename</b>(renameInstructions)
@@ -256,12 +256,69 @@ const dataContainer = new DataContainer(
   { a: [1, 2, undefined, 4], b: [5, null, 7, 8], c: [NaN, 10, 11, 12] }
 )
 
-dataContainer.dropNA(null).data() // { a: [4], b: [8], c: [12] }
-dataContainer.dropNA(['a', 'b']).data() // { a: [1, 4], b: [5, 8], c: [NaN, 12] }
+dataContainer.dropNA(null).data() // { a: [4], b: [8], c: [12], $key: [3] }
+dataContainer.dropNA(['a', 'b']).data() // { a: [1, 4], b: [5, 8], c: [NaN, 12], $key: [0, 3] }
 ```
 
 <a name="datacontainer_arrange" href="#datacontainer_arrange">#</a> <i>DataContainer</i>.<b>arrange</b>(arrangeInstructions)
 
-`arrange` is used to sort data. 
+`arrange` is used to sort data. `arrangeInstructions` can be an
 
-### Adding and removing rows
+- `Object`, with exactly one key (the column by which to sort) and one value 
+(how to sort it, either `'ascending'`, `'descending`' or a [compareFunction](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort#Description))
+- `Array`, containing `Object`s as described in the line above
+
+```js
+const dataContainer = new DataContainer({
+  fruit: ['apple', 'banana', 'coconut' 'durian', 'coconut', 'banana'],
+  amount: [4, 3, 7, 2, 4, 5]
+})
+
+const arranged = dataContainer.arrange([ { fruit: 'descending' }, { amount: 'ascending' } ])
+arranged.data()
+/* {
+ *   fruit: ['durian', 'coconut', 'coconut', 'banana', 'banana', 'apple']
+ *   value: [2, 4, 7, 3, 5, 4],
+ *   $key: [3, 4, 2, 1, 5, 0]
+ * } */
+```
+
+<a name="datacontainer_mutate" href="#datacontainer_mutate">#</a> <i>DataContainer</i>.<b>mutate</b>(mutateInstructions)
+
+`mutate` can be used to generate a new column based on existing rows.
+`mutateInstructions` must be an object with new column names as keys, and functions showing how to calculate the new column as values.
+
+```js
+const dataContainer = new DataContainer({ a: [1, 2, 3, 4 ]})
+const dataContainerWithASquared = dataContainer.mutate({ aSquared: row => row.a * row.a })
+dataContainerWithASquared.column('aSquared') // [1, 4, 9, 16]
+```
+
+<a name="datacontainer_transmute" href="#datacontainer_transmute">#</a> <i>DataContainer</i>.<b>transmute</b>(mutateInstructions)
+
+Same as `mutate`, except that it removes all the old columns.
+
+<a name="datacontainer_groupby" href="#datacontainer_groupby">#</a> <i>DataContainer</i>.<b>groupBy</b>(groupByInstructions)
+
+Used to split up a `DataContainer` in several `DataContainer`s based on different categories.
+
+```js
+const dataContainer = new DataContainer(
+  { fruit: ['apple', 'banana', 'banana', 'apple'], amount: [10, 5, 13, 9] }
+)
+
+const grouped = dataContainer.groupBy('fruit')
+// TODO
+```
+
+<a name="datacontainer_bin" href="#datacontainer_bin">#</a> <i>DataContainer</i>.<b>bin</b>(binInstructions)
+
+TODO
+
+<a name="datacontainer_summarise" href="#datacontainer_summarise">#</a> <i>DataContainer</i>.<b>summarise</b>(summariseInstructions)
+
+TODO
+
+<a name="datacontainer_mutarise" href="#datacontainer_mutarise">#</a> <i>DataContainer</i>.<b>mutarise</b>(mutariseInstructions)
+
+TODO
