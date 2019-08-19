@@ -204,4 +204,64 @@ TODO
 
 ### Transformations
 
+`DataContainer`'s transformations are heavily inspired by R's [dplyr](https://dplyr.tidyverse.org/) 
+(part of the [tidyverse](https://www.tidyverse.org/)). All transformations will return a new `DataContainer`. For transformations
+where it makes sense like `filter`, [immer](https://github.com/immerjs/immer) is used to avoid unnecessary deep cloning while still allowing subsequent transformations without modifying the original data.
+
+<a name="datacontainer_select" href="#datacontainer_select">#</a> <i>DataContainer</i>.<b>select</b>(selectInstructions)
+
+`select` returns a `DataContainer` with only the columns specified in `selectInstructions`. `selectInstructions` can be a single `String` column name, or an `Array` of column names.
+
+```js
+const dataContainer = new DataContainer({
+  fruit: ['apple', 'banana', 'apple', 'banana'],
+  quantity: [1, 2, 3, 4],
+  dayOfSale: [new Date(2019, 4, 3), new Date(2019, 4, 4), new Date(2019, 4, 5), new Date(2019, 4, 6)]
+})
+
+const withoutDayOfSale = dataContainer.select(['fruit', 'quantity'])
+withoutDayOfSale.data() // { fruit: ['apple', 'apple', 'banana', 'banana'], quantity: [1, 2, 3, 4] }
+```
+
+<a name="datacontainer_rename" href="#datacontainer_rename">#</a> <i>DataContainer</i>.<b>rename</b>(renameInstructions)
+
+`rename` is used to rename columns. `renameInstructions` must be an object with current column names as keys, and desired new column names as values.
+
+```js
+const dataContainer = new DataContainer({ f: ['apple', 'banana'], a: [1, 2] })
+const renamed = dataContainer.rename({ f: 'fruit', a: 'amount' })
+renamed.column('fruit') // ['apple', 'banana']
+```
+
+<a name="datacontainer_filter" href="#datacontainer_filter">#</a> <i>DataContainer</i>.<b>filter</b>(filterFunction)
+
+`filter` will throw away all rows that do not satisfy the condition expressed in the `filterFunction`.
+
+```js
+const dataContainer = new DataContainer({ fruit: ['apple', 'banana'], amount: [1, 2] })
+dataContainer.filter(row => row.fruit !== 'banana').data() // { fruit: ['apple'], amount: [1] }
+```
+
+<a name="datacontainer_dropna" href="#datacontainer_dropna">#</a> <i>DataContainer</i>.<b>dropNA</b>(dropNAInstructions)
+
+`dropNA` is essentially a special case of `filter` that disposes of invalid values like `NaN`, `null` or `undefined`.
+`dropNAInstructions` can be 
+
+- `null`, in which case it will dispose of all rows in all columns that contain invalid values
+- a `String` value with a column name. All rows that have invalid values in this column will be removed
+- an `Array` of column names (`String`s). All rows that have invalid values in any of these columns will be removed
+
+```js
+const dataContainer = new DataContainer(
+  { a: [1, 2, undefined, 4], b: [5, null, 7, 8], c: [NaN, 10, 11, 12] }
+)
+
+dataContainer.dropNA(null).data() // { a: [4], b: [8], c: [12] }
+dataContainer.dropNA(['a', 'b']).data() // { a: [1, 4], b: [5, 8], c: [NaN, 12] }
+```
+
+<a name="datacontainer_arrange" href="#datacontainer_arrange">#</a> <i>DataContainer</i>.<b>arrange</b>(arrangeInstructions)
+
+`arrange` is used to sort data. 
+
 ### Adding and removing rows
