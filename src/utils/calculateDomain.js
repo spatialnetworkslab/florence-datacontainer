@@ -4,7 +4,7 @@ import { isInvalid } from './equals.js'
 import { warn } from './logging.js'
 
 export function calculateDomain (column, columnName) {
-  if (['$index', '$grouped'].includes(columnName)) {
+  if (columnName === '$grouped') {
     throw new Error(`Cannot calculate domain of column '${columnName}'.`)
   }
 

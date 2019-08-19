@@ -111,7 +111,7 @@ dataContainer.rows()
  */
 ```
 
-<a name="datacontainer_column" href="#datacontainer_column">#</a> <i>DataContainer</i>.<b>column</b>(columnPath)
+<a name="datacontainer_column" href="#datacontainer_column">#</a> <i>DataContainer</i>.<b>column</b>(columnName)
 
 Returns a column as an Array.
 
@@ -121,17 +121,17 @@ dataContainer.column('fruit') // ['apple', 'banana']
 dataContainer.column('$key') // [0, 1]
 ```
 
-<a name="datacontainer_map" href="#datacontainer_map">#</a> <i>DataContainer</i>.<b>map</b>(columnPath, func)
+<a name="datacontainer_map" href="#datacontainer_map">#</a> <i>DataContainer</i>.<b>map</b>(columnName, func)
 
-Equivalent to `.column(columnPath).map(func)`
+Equivalent to `.column(columnName).map(func)`
 
 ### Domains and types
 
-<a name="datacontainer_domain" href="#datacontainer_domain">#</a> <i>DataContainer</i>.<b>domain</b>(columnPath)
+<a name="datacontainer_domain" href="#datacontainer_domain">#</a> <i>DataContainer</i>.<b>domain</b>(columnName)
 
 TODO
 
-<a name="datacontainer_map" href="#datacontainer_map">#</a> <i>DataContainer</i>.<b>map</b>(columnPath, func)
+<a name="datacontainer_map" href="#datacontainer_map">#</a> <i>DataContainer</i>.<b>map</b>(columnName, func)
 
 TODO
 

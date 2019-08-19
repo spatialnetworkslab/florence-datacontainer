@@ -6,9 +6,9 @@ import { ensureValidRow, ensureRowExists } from './utils/ensureValidRow.js'
 import { isValidColumn, ensureValidColumn, columnExists, ensureColumnExists } from './utils/isValidColumn.js'
 import { calculateDomain } from './utils/calculateDomain.js'
 import { getColumnType } from './utils/getDataType.js'
+import getNewKey from './utils/getNewKey.js'
 
 import { warn } from './utils/logging.js'
-import id from './utils/id.js'
 
 import { Group } from './transformations/groupBy.js'
 
@@ -110,10 +110,11 @@ export default class DataContainer {
     }
 
     const rowNumber = this._length
-    const key = id()
+    const key = getNewKey(this._data.$key)
 
     this._data.$key.push(key)
     this._keyToRowNumber[key] = rowNumber
+    this._length++
   }
 
   updateRow (key, row) {
@@ -141,6 +142,8 @@ export default class DataContainer {
     for (const columnName in this._data) {
       this._data[columnName].splice(rowNumber, 1)
     }
+
+    this._length--
   }
 
   // Private methods

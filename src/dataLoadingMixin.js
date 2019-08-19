@@ -6,8 +6,6 @@ import getDataLength from './utils/getDataLength.js'
 import convertRowToColumnData from './utils/convertRowToColumnData.js'
 import parseGeoJSON from './utils/parseGeoJSON.js'
 
-import id from './utils/id.js'
-
 const methods = {
   _setColumnData (data) {
     checkFormatColumnData(data)
@@ -46,7 +44,7 @@ const methods = {
 
   _createKeyColumn () {
     if (!('$key' in this._data)) {
-      const keyColumn = new Array(this._length).fill(0).map(_ => id())
+      const keyColumn = new Array(this._length).fill(0).map((_, i) => i)
 
       this._data = produce(this._data, draft => {
         draft.$key = keyColumn
