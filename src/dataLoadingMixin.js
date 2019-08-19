@@ -36,22 +36,23 @@ const methods = {
 
   _storeData (data) {
     this._data = data
-    this._length = getDataLength(data)
 
     this._createKeyColumn()
     this.validateAllColumns()
   },
 
   _createKeyColumn () {
+    const length = getDataLength(this._data)
+
     if (!('$key' in this._data)) {
-      const keyColumn = new Array(this._length).fill(0).map((_, i) => i)
+      const keyColumn = new Array(length).fill(0).map((_, i) => i)
 
       this._data = produce(this._data, draft => {
         draft.$key = keyColumn
       })
     }
 
-    for (let i = 0; i < this._length; i++) {
+    for (let i = 0; i < length; i++) {
       const key = this._data.$key[i]
       this._keyToRowNumber[key] = i
     }

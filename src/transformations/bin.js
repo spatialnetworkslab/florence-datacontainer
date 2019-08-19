@@ -1,6 +1,7 @@
 import DataContainer from '../index.js'
 import getDataLength from '../utils/getDataLength.js'
 import Geostats from '../utils/geoStats.js'
+import { calculateDomain } from './utils/calculateDomain.js'
 
 import { warn } from '../utils/logging.js'
 
@@ -50,7 +51,7 @@ export function getIntervalBounds (data, binInstructions) {
   if (method === 'IntervalSize') {
     let binSize = binInstructions.binSize
 
-    const domain = variableDomain(variableData)
+    const domain = calculateDomain(variableData)
     if (!binSize) {
       warn(`binSize not specified for IntervalSize binning, defaulting to ${(domain[1] - domain[0])}`)
       binSize = domain[1] - domain[0]
@@ -77,17 +78,6 @@ export function getIntervalBounds (data, binInstructions) {
   }
 
   return ranges
-}
-
-// Extract domain of variable of interest
-function variableDomain (column) {
-  const asc = column.sort((a, b) => a - b)
-
-  const domain = []
-  domain.push(asc[0])
-  domain.push(asc[asc.length - 1])
-
-  return domain
 }
 
 function rangeFromInterval (domain, interval, binCount) {

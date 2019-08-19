@@ -83,8 +83,8 @@ describe('determining column types', () => {
     expect(dataContainer.type('$geometry')).toBe('geometry')
   })
 
-  // nested
-  test('a column of other DataContainers is of type nested', () => {
+  // grouped
+  test('a column of other DataContainers is of type grouped', () => {
     const data = {
       category: ['a', 'a', 'b', 'b', 'c', 'c'],
       amount: [10, 15, 7, 2, 19, 13]
@@ -93,6 +93,6 @@ describe('determining column types', () => {
     const dataContainer = new DataContainer(data)
     const groupedDataContainer = dataContainer.groupBy('category')
 
-    expect(groupedDataContainer.type('$grouped')).toBe('nested')
+    expect(groupedDataContainer.type('$grouped')).toBe('grouped')
   })
 })

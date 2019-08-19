@@ -72,7 +72,7 @@ describe('calculating domains', () => {
     })
   })
 
-  // nested
+  // grouped
   test('requesting the the domain of a \'$grouped\' column throws an error', () => {
     const data = {
       category: ['a', 'a', 'b', 'b', 'c', 'c'],

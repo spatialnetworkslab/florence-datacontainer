@@ -7,6 +7,7 @@ import { isValidColumn, ensureValidColumn, columnExists, ensureColumnExists } fr
 import { calculateDomain } from './utils/calculateDomain.js'
 import { getColumnType } from './utils/getDataType.js'
 import getNewKey from './utils/getNewKey.js'
+import getDataLength from './utils/getDataLength.js'
 
 import { warn } from './utils/logging.js'
 
@@ -15,7 +16,6 @@ import { Group } from './transformations/groupBy.js'
 export default class DataContainer {
   constructor (data) {
     this._data = {}
-    this._length = undefined
     this._keyToRowNumber = {}
 
     if (isColumnOriented(data)) {
@@ -65,8 +65,9 @@ export default class DataContainer {
 
   rows () {
     const rows = []
+    const length = getDataLength(this._data)
 
-    for (let i = 0; i < this._length; i++) {
+    for (let i = 0; i < length; i++) {
       rows.push(this._row(i))
     }
 
@@ -121,12 +122,11 @@ export default class DataContainer {
       this._data[columnName].push(row[columnName])
     }
 
-    const rowNumber = this._length
+    const rowNumber = getDataLength(this._data)
     const key = getNewKey(this._data.$key)
 
     this._data.$key.push(key)
     this._keyToRowNumber[key] = rowNumber
-    this._length++
   }
 
   updateRow (key, row) {
@@ -154,13 +154,13 @@ export default class DataContainer {
     for (const columnName in this._data) {
       this._data[columnName].splice(rowNumber, 1)
     }
-
-    this._length--
   }
 
   // Private methods
   _row (rowNumber) {
-    if (rowNumber < 0 || rowNumber >= this._length) {
+    const length = getDataLength(this._data)
+
+    if (rowNumber < 0 || rowNumber >= length) {
       return undefined
     }
 

@@ -17,7 +17,7 @@ export function getDataType (value) {
   if (value.constructor === Date) return 'temporal'
   if (isInterval(value)) return 'interval'
   if (isGeometry(value)) return 'geometry'
-  if (value.constructor === DataContainer) return 'nested'
+  if (value.constructor === DataContainer) return 'grouped'
 
   throw new Error('Invalid data')
 }
