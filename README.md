@@ -79,7 +79,12 @@ geojson.column('fruit') // ['apple']
 Returns whatever data is currently loaded to the `DataContainer` in a column-oriented format.
 
 ```js
-// TODO
+const dataContainer = new DataContainer([
+  { fruit: 'apple', amount: 1 },
+  { fruit: 'banana', amount: 2 }
+])
+
+dataContainer.data() // { fruit: ['apple', 'banana'], amount: [1, 2], $key: [0, 1] }
 ```
 
 <a name="datacontainer_row" href="#datacontainer_row">#</a> <i>DataContainer</i>.<b>row</b>(key)
@@ -87,7 +92,8 @@ Returns whatever data is currently loaded to the `DataContainer` in a column-ori
 Returns an object representing a row.
 
 ```js
-// TODO
+const dataContainer = new DataContainer({ fruit: ['apple', 'banana'], amount: [1, 2] })
+dataContainer.row(0) // { fruit: 'apple', amount: 1, $key: 0 }
 ```
 
 <a name="datacontainer_rows" href="#datacontainer_rows">#</a> <i>DataContainer</i>.<b>rows</b>()
@@ -95,18 +101,28 @@ Returns an object representing a row.
 Returns an Array of rows.
 
 ```js
-// TODO
+const dataContainer = new DataContainer({ fruit: ['apple', 'banana'], amount: [1, 2] })
+dataContainer.rows() 
+/* [
+ *   { fruit: 'apple', amount: 1, $key: 0 },
+ *   { fruit: 'banana', amount: 2, $key: 1 },
+ * ] 
+ */
 ```
 
 <a name="datacontainer_column" href="#datacontainer_column">#</a> <i>DataContainer</i>.<b>column</b>(columnPath)
 
-Bla
+Returns a column as an Array.
 
 ```js
-// TODO
+const dataContainer = new DataContainer({ fruit: ['apple', 'banana'], amount: [1, 2] })
+dataContainer.column('fruit') // ['apple', 'banana']
+dataContainer.column('$key') // [0, 1]
 ```
 
-<a name="datacontainer_map" href="#datacontainer_map">#</a> <i>DataContainer</i>.<b>map</b>(columnPath)
+<a name="datacontainer_map" href="#datacontainer_map">#</a> <i>DataContainer</i>.<b>map</b>(columnPath, func)
+
+Equivalent to `.column(columnPath).map(func)`
 
 ### Data validation
 
