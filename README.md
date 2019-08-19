@@ -6,6 +6,7 @@ A light-weight container to manage client-side data.
 
 * [Loading data](#loading-data)
 * [Accessing data](#accessing-data)
+* [Domains and types](#domains-and-types)
 * [Data validation](#data-validation)
 * [Transformations](#transformations)
 * [Adding and removing rows](#adding-and-removing-rows)]
@@ -124,7 +125,19 @@ dataContainer.column('$key') // [0, 1]
 
 Equivalent to `.column(columnPath).map(func)`
 
+### Domains and types
+
+<a name="datacontainer_domain" href="#datacontainer_domain">#</a> <i>DataContainer</i>.<b>domain</b>(columnPath)
+
+TODO
+
+<a name="datacontainer_map" href="#datacontainer_map">#</a> <i>DataContainer</i>.<b>map</b>(columnPath, func)
+
+TODO
+
 ### Data validation
+
+
 
 ### Transformations
 
