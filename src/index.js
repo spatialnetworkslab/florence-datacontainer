@@ -3,7 +3,7 @@ import transformationsMixin from './transformationsMixin.js'
 
 import { isColumnOriented, isRowOriented, isGeoJSON } from './utils/checkFormat.js'
 import { ensureValidRow, ensureRowExists } from './utils/ensureValidRow.js'
-import { isValidColumn, columnExists, ensureColumnExists } from './utils/isValidColumn.js'
+import { isValidColumn, ensureValidColumn, columnExists, ensureColumnExists } from './utils/isValidColumn.js'
 import { calculateDomain } from './utils/calculateDomain.js'
 import { getColumnType } from './utils/getDataType.js'
 
@@ -87,18 +87,17 @@ export default class DataContainer {
 
   columnIsValid (columnName) {
     const column = this.column(columnName)
-    return isValidColumn(column, columnName, { throwError: false })
+    return isValidColumn(column, columnName)
   }
 
   validateColumn (columnName) {
     const column = this.column(columnName)
-    isValidColumn(column, columnName, { throwError: true })
+    ensureValidColumn(column, columnName)
   }
 
   validateAllColumns () {
     for (const columnName in this._data) {
-      const column = this.column(columnName)
-      isValidColumn(column, columnName, { throwError: true })
+      this.validateColumn(columnName)
     }
   }
 

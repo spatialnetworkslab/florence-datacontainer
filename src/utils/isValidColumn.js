@@ -1,37 +1,42 @@
 import { getColumnType, getDataType } from './getDataType.js'
 import { isInvalid } from './equals.js'
 
-export function isValidColumn (column, columnName, { throwError = true } = {}) {
-  const columnType = getColumnType(column, { throwError })
+export function isValidColumn (column, columnName) {
+  const columnType = getColumnType(column)
 
   if (columnType === undefined) return false
-  if (!columnNameMatchesType(columnName, columnType, { throwError })) return false
-  if (!allValidValuesHaveTheSameType(column, columnType, columnName, { throwError })) return false
+  if (!columnNameMatchesType(columnName, columnType)) return false
+  if (!allValidValuesHaveTheSameType(column, columnType, columnName)) return false
 
   return true
 }
 
-function columnNameMatchesType (columnName, columnType, { throwError } = {}) {
+export function ensureValidColumn (column, columnName) {
+  const columnType = getColumnType(column)
+
+  if (columnType === undefined) throw new Error(`Column '${columnName}' contains unknown data type`)
+  ensureColumnNameMatchesType(columnType)
+  ensureAllValidValuesHaveTheSameType(column, columnName)
+}
+
+function columnNameMatchesType (columnName, columnType) {
+  if (columnName === '$geometry' && columnType !== 'geometry') return false
+  if (columnName !== '$geometry' && columnType === 'geometry') return false
+
+  return true
+}
+
+function ensureColumnNameMatchesType (columnName, columnType) {
   if (columnName === '$geometry' && columnType !== 'geometry') {
-    if (throwError) {
-      throw new Error(`Column '$geometry' can only contain data of type 'geometry', received '${columnType}'`)
-    } else {
-      return false
-    }
+    throw new Error(`Column '$geometry' can only contain data of type 'geometry', received '${columnType}'`)
   }
 
   if (columnName !== '$geometry' && columnType === 'geometry') {
-    if (throwError) {
-      throw new Error(`Only the '$geometry' column can contain data of type 'geometry'`)
-    } else {
-      return false
-    }
+    throw new Error(`Only the '$geometry' column can contain data of type 'geometry'`)
   }
-
-  return true
 }
 
-function allValidValuesHaveTheSameType (column, columnType, columnName, { throwError } = {}) {
+function allValidValuesHaveTheSameType (column, columnType) {
   for (let i = 0; i < column.length; i++) {
     const value = column[i]
 
@@ -40,28 +45,25 @@ function allValidValuesHaveTheSameType (column, columnType, columnName, { throwE
     const valueType = getDataType(value)
 
     if (valueType !== columnType) {
-      if (throwError) {
-        throw new Error(`Column '${columnName}' mixes types '${columnType}' and '${valueType}'`)
-      } else {
-        return false
-      }
+      return false
     }
   }
 
   return true
 }
 
-export function columnExists (columnName, self) {
-  try {
-    ensureColumnExists(columnName, self)
-    return true
-  } catch (e) {
-    return false
+function ensureAllValidValuesHaveTheSameType (column, columnType, columnName) {
+  if (!allValidValuesHaveTheSameType(column, columnType)) {
+    throw new Error(`Column '${columnName}' mixes types`)
   }
 }
 
+export function columnExists (columnName, self) {
+  return columnName in self._data
+}
+
 export function ensureColumnExists (columnName, self) {
-  if (!(columnName in self._data)) {
+  if (!columnExists(columnName, self)) {
     throw new Error(`Invalid column name: '${columnName}'`)
   }
 }

@@ -1,21 +1,17 @@
 import DataContainer from '../index.js'
 import { findFirstValidValue } from './calculateDomain.js'
 
-export function getColumnType (column, { throwError = true } = {}) {
+export function getColumnType (column) {
   const { firstValidValue, nValidValues } = findFirstValidValue(column)
 
   if (nValidValues === 0) {
-    if (throwError) {
-      throw new Error(`Cannot determine type of column '${column}'. Column contains only missing values.`)
-    } else {
-      return
-    }
+    throw new Error(`Cannot determine type of column '${column}'. Column contains only missing values.`)
   }
 
-  return getDataType(firstValidValue, { throwError })
+  return getDataType(firstValidValue)
 }
 
-export function getDataType (value, { throwError = true } = {}) {
+export function getDataType (value) {
   if (value.constructor === Number) return 'quantitative'
   if (value.constructor === String) return 'categorical'
   if (value.constructor === Date) return 'temporal'
@@ -23,7 +19,7 @@ export function getDataType (value, { throwError = true } = {}) {
   if (isGeometry(value)) return 'geometry'
   if (value.constructor === DataContainer) return 'nested'
 
-  throwIf(throwError)
+  throw new Error('Invalid data')
 }
 
 function isGeometry (value) {
@@ -32,10 +28,4 @@ function isGeometry (value) {
 
 function isInterval (value) {
   return value.constructor === Array && value.length === 2 && value.every(entry => entry.constructor === Number)
-}
-
-function throwIf (throwError) {
-  if (throwError) {
-    throw new Error('Invalid data')
-  }
 }
