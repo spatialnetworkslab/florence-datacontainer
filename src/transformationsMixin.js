@@ -11,6 +11,11 @@ const methods = {
     return this
   },
 
+  cumsum (cumsumInstructions) {
+    this._data = transformations.cumsum(this._data, cumsumInstructions)
+    return this
+  },
+
   dropNA (dropInstructions) {
     this._data = transformations.dropNA(this._data, dropInstructions)
     return this

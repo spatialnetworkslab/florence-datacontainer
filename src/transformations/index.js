@@ -12,6 +12,7 @@ import bin from './bin.js'
 import dropNA from './dropNA.js'
 import reproject from './reproject.js'
 import transform from './transform.js'
+import cumsum from './cumsum.js'
 
 const transformations = {
   filter: produce(filter),
@@ -26,7 +27,8 @@ const transformations = {
   bin,
   dropNA: produce(dropNA),
   reproject,
-  transform
+  transform,
+  cumsum: produce(cumsum)
 }
 
 export default transformations
