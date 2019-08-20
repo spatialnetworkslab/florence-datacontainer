@@ -146,6 +146,6 @@ function bin (data, variable, ranges) {
 
   // Add new grouped column to newData
   newData.$grouped = groups.map(group => new DataContainer(group, { validate: false }))
-  console.log(newData.$grouped[1])
+
   return newData
 }
