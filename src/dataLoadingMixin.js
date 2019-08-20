@@ -48,7 +48,7 @@ const methods = {
     const length = getDataLength(this._data)
 
     if ('$key' in this._data) {
-      validateKeyColumn(this._data.$key)
+      validateKeyColumn(this._data.$key, length)
       this._syncKeyToRowNumber()
       return
     }
