@@ -1,4 +1,4 @@
-import { getDataType } from '../utils/getDataType.js'
+import { getDataType, ensureValidDataType } from '../utils/getDataType.js'
 
 export default function (data, sortInstructions) {
   if (sortInstructions.constructor === Object) {
@@ -51,6 +51,7 @@ function sort (data, sortInstructions) {
   const variable = Object.keys(sortInstructions)[0]
   const sortMethod = sortInstructions[variable]
 
+  ensureValidDataType(data[variable][0])
   const dataType = getDataType(data[variable][0])
 
   let sortFunc

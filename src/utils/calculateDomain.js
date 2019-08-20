@@ -1,5 +1,5 @@
 import { calculateBBoxGeometries } from './calculateBBox.js'
-import { getDataType } from './getDataType.js'
+import { getDataType, ensureValidDataType } from './getDataType.js'
 import { isInvalid } from './equals.js'
 import { warn } from './logging.js'
 
@@ -15,6 +15,7 @@ export function calculateDomain (column, columnName) {
   }
 
   if (nValidValues > 0) {
+    ensureValidDataType(firstValidValue)
     const type = getDataType(firstValidValue)
 
     if (columnName === '$geometry') {

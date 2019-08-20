@@ -1,4 +1,4 @@
-import { getColumnType, getDataType } from './getDataType.js'
+import { getColumnType, getDataType, ensureValidDataType } from './getDataType.js'
 import { isInvalid } from './equals.js'
 
 export function isValidColumn (column, columnName) {

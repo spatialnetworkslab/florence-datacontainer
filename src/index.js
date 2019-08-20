@@ -8,7 +8,7 @@ import { ensureValidRow, ensureRowExists } from './utils/ensureValidRow.js'
 import { isValidColumn, ensureValidColumn, columnExists, ensureColumnExists } from './utils/isValidColumn.js'
 import { calculateDomain } from './utils/calculateDomain.js'
 import { getColumnType } from './utils/getDataType.js'
-import getNewKey from './utils/getNewKey.js'
+import { getNewKey } from './utils/key.js'
 import getDataLength from './utils/getDataLength.js'
 
 import { warn } from './utils/logging.js'
@@ -16,27 +16,27 @@ import { warn } from './utils/logging.js'
 import { Group } from './transformations/groupBy.js'
 
 export default class DataContainer {
-  constructor (data) {
+  constructor (data, options = { validate: true, key: undefined }) {
     this._data = {}
     this._keyToRowNumber = {}
 
     if (isColumnOriented(data)) {
-      this._setColumnData(data)
+      this._setColumnData(data, options)
       return
     }
 
     if (isRowOriented(data)) {
-      this._setRowData(data)
+      this._setRowData(data, options)
       return
     }
 
     if (isGeoJSON(data)) {
-      this._setGeoJSON(data)
+      this._setGeoJSON(data, options)
       return
     }
 
     if (data instanceof Group) {
-      this._setGroup(data)
+      this._setGroup(data, options)
       return
     }
 

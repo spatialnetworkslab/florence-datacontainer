@@ -1,5 +1,6 @@
 import DataContainer from '../index.js'
 import { findFirstValidValue } from './calculateDomain.js'
+import { isInvalid } from './equals.js'
 
 export function getColumnType (column) {
   const { firstValidValue, nValidValues } = findFirstValidValue(column)
@@ -8,6 +9,7 @@ export function getColumnType (column) {
     throw new Error(`Cannot determine type of column '${column}'. Column contains only missing values.`)
   }
 
+  ensureValidDataType(firstValidValue)
   return getDataType(firstValidValue)
 }
 
@@ -19,7 +21,13 @@ export function getDataType (value) {
   if (isGeometry(value)) return 'geometry'
   if (value.constructor === DataContainer) return 'grouped'
 
-  throw new Error('Invalid data')
+  return undefined
+}
+
+export function ensureValidDataType (value) {
+  if (isInvalid(getDataType(value))) {
+    throw new Error('Invalid data')
+  }
 }
 
 function isGeometry (value) {
