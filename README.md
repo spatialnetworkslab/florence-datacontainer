@@ -358,9 +358,25 @@ TODO
 Used for arbitrary transformations on the data. `transformFunction` receives an `Object` with all the columns currently loaded, 
 which must be modified in-place (i.e. `transformFunction` must return void).
 
+```js
+const dataContainer = new DataContainer({ a: [1, 2, 3, 4] })
+const transformed = dataContainer.transform(columns => {
+  columns.b = columns.a.map(a => a ** 2)
+})
+
+transformed.column('b') // [1, 4, 9, 16]
+```
+
 <a name="datacontainer_reproject" href="#datacontainer_reproject">#</a> <i>DataContainer</i>.<b>reproject</b>(reprojectFunction)
 
-TODO
+Used to reproject data in the `$geometry` column. Can only be used when a `$geometry` column is present.
+`reprojectFunction` should be a function that accepts an `Array` of two `Number`s and returns an `Array` of two `Number`s.
+Particularly convenient to use with [proj4](https://github.com/proj4js/proj4js)`:
+
+```js
+const reprojectFunction = proj4('EPSG:4326', 'EPSG:3857').forward
+const dataContainer = new DataContainer(geojson).reproject(reprojectFunction)
+```
 
 ### Adding and removing rows
 
