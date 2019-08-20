@@ -37,6 +37,7 @@ const methods = {
 
   _storeData (data, options) {
     this._data = data
+
     this._setupKeyColumn(options.key)
 
     if (options.validate === true) {

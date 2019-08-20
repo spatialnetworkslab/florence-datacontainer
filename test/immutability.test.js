@@ -1,7 +1,7 @@
 import DataContainer from '../src/index.js'
 
 describe('immutability', () => {
-  test('changed transformed DataContainer levaes old one intact (updateRow)', () => {
+  test('changed transformed DataContainer leaves old one intact (updateRow)', () => {
     const original = new DataContainer({
       a: [1, 2, 3, 4],
       b: ['a', 'b', 'a', 'b']
@@ -13,7 +13,7 @@ describe('immutability', () => {
     expect(original.row(0)).toEqual({ a: 1, b: 'a', $key: 0 })
   })
 
-  test('changed transformed DataContainer levaes old one intact (deleteRow)', () => {
+  test('changed transformed DataContainer leaves old one intact (deleteRow)', () => {
     const original = new DataContainer({
       a: [1, 2, 3, 4],
       b: ['a', 'b', 'a', 'b']
@@ -25,7 +25,7 @@ describe('immutability', () => {
     expect(original.row(0)).toEqual({ a: 1, b: 'a', $key: 0 })
   })
 
-  test('mutated transformed DataContainer columns are same as old ones', () => {
+  test('unmutated transformed DataContainer columns are same as old ones', () => {
     const original = new DataContainer({
       a: [1, 2, 3, 4],
       b: ['a', 'b', 'a', 'b']
