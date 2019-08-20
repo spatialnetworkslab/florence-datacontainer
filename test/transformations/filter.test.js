@@ -1,6 +1,6 @@
 import DataContainer from '../../src/index.js'
 
-describe('various simple transformations', () => {
+describe('filter transformation', () => {
   test('filter works as expected', () => {
     const dataContainer = new DataContainer({
       a: [1, 2, 3, 4, 5],
