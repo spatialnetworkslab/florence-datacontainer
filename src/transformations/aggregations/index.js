@@ -14,7 +14,7 @@ function count (column) {
 
 function sum (column) {
   let total = 0
-  for (let value of column) {
+  for (const value of column) {
     total += value
   }
 
@@ -26,25 +26,25 @@ function mean (column) {
 }
 
 function median (column) {
-  let asc = column.sort((a, b) => a > b)
-  let len = count(column)
+  const asc = column.sort((a, b) => a > b)
+  const len = count(column)
 
   if (len % 2 === 1) {
     // Odd
     return asc[Math.floor(len / 2)]
   } else {
     // Even
-    let lower = asc[(len / 2) - 1]
-    let upper = asc[(len / 2)]
+    const lower = asc[(len / 2) - 1]
+    const upper = asc[(len / 2)]
     return (lower + upper) / 2
   }
 }
 
 function mode (column) {
-  let counts = {}
+  const counts = {}
 
-  for (let value of column) {
-    if (counts.hasOwnProperty(value)) {
+  for (const value of column) {
+    if (value in counts) {
       counts[value]++
     } else {
       counts[value] = 1
@@ -54,7 +54,7 @@ function mode (column) {
   let winner
   let winningVal = 0
 
-  for (let value in counts) {
+  for (const value in counts) {
     if (counts[value] > winningVal) {
       winningVal = counts[value]
       winner = value
@@ -66,7 +66,7 @@ function mode (column) {
 
 function min (column) {
   let winner = Infinity
-  for (let value of column) {
+  for (const value of column) {
     if (value < winner) { winner = value }
   }
   return winner
@@ -74,7 +74,7 @@ function min (column) {
 
 function max (column) {
   let winner = -Infinity
-  for (let value of column) {
+  for (const value of column) {
     if (value > winner) { winner = value }
   }
   return winner

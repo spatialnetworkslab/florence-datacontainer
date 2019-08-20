@@ -301,6 +301,7 @@ Same as `mutate`, except that it removes all the old columns.
 <a name="datacontainer_groupby" href="#datacontainer_groupby">#</a> <i>DataContainer</i>.<b>groupBy</b>(groupByInstructions)
 
 Used to split up a `DataContainer` in several `DataContainer`s based on different categories.
+`groupByInstructions` can be a `String` containing a single column name, or an `Array` containing multiple column names.
 
 ```js
 const dataContainer = new DataContainer(
@@ -347,11 +348,43 @@ The classification is performed internally by [Geostats](https://github.com/simo
 
 <a name="datacontainer_summarise" href="#datacontainer_summarise">#</a> <i>DataContainer</i>.<b>summarise</b>(summariseInstructions)
 
-TODO
+Used to summarise columns. You can also use `summarize` if you prefer. `summariseInstructions` must be an Object with new column 
+names as keys, and `columnInstruction` `Object`s as values. These `columnInstruction`s must have the name of the column
+that is to be summarised as key, and the `summaryMethod` as value.
+When applying `summarise` to a grouped `DataContainer`, the summaries of the groups will be taken.
+
+```js
+const dataContainer = new DataContainer({ a: [1, 2, 3, 4], b: ['a', 'b', 'a', 'b'] })
+const grouped = dataContainer.groupBy('b')
+
+dataContainer.summarise({ mean_a: { a: 'mean' }}).data() // { mean_a: [2.5], $key: [0] }
+grouped.summarise({ mean_a: { a: 'mean' } }).data() // { b: ['a', 'b'], mean_a: [2, 3], $key: [0, 1] }
+```
+
+The following `summaryMethod`s are available:
+
+- count
+- sum
+- mean
+- median
+- mode
+- min
+- max
+
+It also possible to create your own `summaryMethod` by providing a function that receives the requested column as first argument,
+and returns a value that's either quantitative, categorical, temporal or an interval.
 
 <a name="datacontainer_mutarise" href="#datacontainer_mutarise">#</a> <i>DataContainer</i>.<b>mutarise</b>(mutariseInstructions)
 
-TODO
+`mutarise` (or `mutarize`) is similar to `summarise`, but instead of collapsing the data to a single row, the summarised value
+will be added as a new column.
+
+```js
+const dataContainer = new DataContainer({ a: [1, 2, 3, 4], b: ['a', 'b', 'a', 'b'] })
+const mutarised = dataContainer.groupBy('b').mutarise({ mean_a: { a: 'mean' } })
+mutarised.column('a') // [1, 2, 3, 4]
+mutarised.column('mean_a') // [2, 3, 2, 3]
+```
 
 <a name="datacontainer_transform" href="#datacontainer_transform">#</a> <i>DataContainer</i>.<b>transform</b>(transformFunction)
 

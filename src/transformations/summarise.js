@@ -45,18 +45,20 @@ export function summariseGroup (data, summariseInstructions, newData) {
   for (const newColName in summariseInstructions) {
     const instruction = summariseInstructions[newColName]
 
-    // If the aggregation instructions are an Object, only one column will be
-    // used as summary: the column that is used as key in the Object
     if (instruction.constructor === Object) {
       const column = checkKeyValuePair(instruction, Object.keys(data))
       const aggregation = instruction[column]
 
       if (aggregation.constructor === String) {
+        if (!(aggregation in aggregations)) {
+          throw new Error(`Unkown summaryMethod: '${aggregation}'.`)
+        }
+
         newData[newColName].push(aggregations[aggregation](data[column]))
       } else if (aggregation.constructor === Function) {
         newData[newColName].push(aggregation(data[column]))
       } else {
-        throw new Error(`Invalid aggregation instruction: ${aggregation}. Must be String or Function`)
+        throw new Error(`Invalid summaryMethod: '${aggregation}'. Must be String or Function`)
       }
     }
   }
