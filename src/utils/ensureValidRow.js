@@ -1,5 +1,5 @@
 import { getDataType } from './getDataType.js'
-import { isInvalid } from './equals.js'
+import { isInvalid, isUndefined } from './equals.js'
 
 export function ensureValidRow (row, self) {
   for (const columnName in row) {
@@ -29,7 +29,7 @@ export function ensureValidRow (row, self) {
 }
 
 export function ensureRowExists (key, self) {
-  if (!self._keyToRowIndex[key]) {
+  if (isUndefined(self._keyToRowNumber[key])) {
     throw new Error(`Key '${key}' not found`)
   }
 }

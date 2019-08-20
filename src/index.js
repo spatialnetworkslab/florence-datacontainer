@@ -1,3 +1,5 @@
+import produce from 'immer'
+
 import dataLoadingMixin from './dataLoadingMixin.js'
 import transformationsMixin from './transformationsMixin.js'
 
@@ -118,9 +120,11 @@ export default class DataContainer {
   addRow (row) {
     ensureValidRow(row, this)
 
-    for (const columnName in row) {
-      this._data[columnName].push(row[columnName])
-    }
+    this._data = produce(this._data, draft => {
+      for (const columnName in row) {
+        draft[columnName].push(row[columnName])
+      }
+    })
 
     const rowNumber = getDataLength(this._data)
     const key = getNewKey(this._data.$key)
@@ -133,17 +137,19 @@ export default class DataContainer {
     ensureRowExists(key, this)
     const rowNumber = this._keyToRowNumber[key]
 
-    for (const columnName in row) {
-      ensureColumnExists(columnName, this)
+    this._data = produce(this._data, draft => {
+      for (const columnName in row) {
+        ensureColumnExists(columnName, this)
 
-      if (columnName === '$key') {
-        warn(`Cannot update '$key' of row`)
-        continue
+        if (columnName === '$key') {
+          warn(`Cannot update '$key' of row`)
+          continue
+        }
+
+        const value = row[columnName]
+        draft[columnName][rowNumber] = value
       }
-
-      const value = row[columnName]
-      this._data[columnName][rowNumber] = value
-    }
+    })
   }
 
   deleteRow (key) {

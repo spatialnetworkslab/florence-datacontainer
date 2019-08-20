@@ -1,7 +1,7 @@
 import DataContainer from '../index.js'
 import getDataLength from '../utils/getDataLength.js'
 import Geostats from '../utils/geoStats.js'
-import { calculateDomain } from './utils/calculateDomain.js'
+import { calculateDomain } from '../utils/calculateDomain.js'
 
 import { warn } from '../utils/logging.js'
 
