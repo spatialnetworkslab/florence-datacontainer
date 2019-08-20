@@ -22,4 +22,15 @@ describe('groupBy transformation', () => {
 
     expect(summarised.column('$key')).toEqual([0, 1, 2])
   })
+
+  test('groupBy results in a new column of DataContainers', () => {
+    const dataContainer = new DataContainer(
+      { fruit: ['apple', 'banana', 'banana', 'apple'], amount: [10, 5, 13, 9] }
+    )
+
+    const grouped = dataContainer.groupBy('fruit')
+
+    expect(grouped.column('fruit')).toEqual(['apple', 'banana'])
+    expect(grouped.map('$grouped', group => group.column('amount'))).toEqual([[10, 9], [5, 13]])
+  })
 })

@@ -308,7 +308,9 @@ const dataContainer = new DataContainer(
 )
 
 const grouped = dataContainer.groupBy('fruit')
-// TODO
+grouped.column('fruit') // ['apple', 'banana']
+grouped.column('$grouped') // [<DataContainer>, <DataContainer>]
+grouped.map('$grouped', group => group.column('amount')) // [[10, 9], [5, 13]]
 ```
 
 <a name="datacontainer_bin" href="#datacontainer_bin">#</a> <i>DataContainer</i>.<b>bin</b>(binInstructions)
