@@ -1,84 +1,99 @@
+import produce from 'immer'
 import transformations from './transformations'
+import DataContainer from './index.js'
 
 const methods = {
   arrange (sortInstructions) {
-    this._data = transformations.arrange(this._data, sortInstructions)
-    return this
+    const data = transformations.arrange(this._data, sortInstructions)
+    return this._handleTransformation(data)
   },
 
   bin (binInstructions) {
-    this._data = transformations.bin(this._data, binInstructions)
-    return this
+    const data = transformations.bin(this._data, binInstructions)
+    return this._handleTransformation(data)
   },
 
   cumsum (cumsumInstructions) {
-    this._data = transformations.cumsum(this._data, cumsumInstructions)
-    return this
+    const data = transformations.cumsum(this._data, cumsumInstructions)
+    return this._handleTransformation(data)
   },
 
   dropNA (dropInstructions) {
-    this._data = transformations.dropNA(this._data, dropInstructions)
-    return this
+    const data = transformations.dropNA(this._data, dropInstructions)
+    return this._handleTransformation(data)
   },
 
   filter (filterFunction) {
-    this._data = transformations.filter(this._data, filterFunction)
-    return this
+    const data = transformations.filter(this._data, filterFunction)
+    return this._handleTransformation(data)
   },
 
   groupBy (groupByInstructions) {
-    this._data = transformations.groupBy(this._data, groupByInstructions)
-    return this
+    const data = transformations.groupBy(this._data, groupByInstructions)
+    return this._handleTransformation(data)
   },
 
   mutarise (mutariseInstructions) {
-    this._data = transformations.mutarise(this._data, mutariseInstructions)
-    return this
+    const data = transformations.mutarise(this._data, mutariseInstructions)
+    return this._handleTransformation(data)
   },
 
   mutarize (mutariseInstructions) {
-    this._data = transformations.mutarise(this._data, mutariseInstructions)
-    return this
+    const data = transformations.mutarise(this._data, mutariseInstructions)
+    return this._handleTransformation(data)
   },
 
   mutate (mutateInstructions) {
-    this._data = transformations.mutate(this._data, mutateInstructions)
-    return this
+    const data = transformations.mutate(this._data, mutateInstructions)
+    return this._handleTransformation(data)
   },
 
   transmute (transmuteInstructions) {
-    this._data = transformations.transmute(this._data, transmuteInstructions)
-    return this
+    const data = transformations.transmute(this._data, transmuteInstructions)
+    return this._handleTransformation(data)
   },
 
   rename (renameInstructions) {
-    this._data = transformations.rename(this._data, renameInstructions)
-    return this
+    const data = transformations.rename(this._data, renameInstructions)
+    return this._handleTransformation(data)
   },
 
   reproject (reprojectInstructions) {
-    this._data = transformations.reproject(this._data, reprojectInstructions)
-    return this
+    const data = transformations.reproject(this._data, reprojectInstructions)
+    return this._handleTransformation(data)
   },
 
   select (selection) {
-    this._data = transformations.select(this._data, selection)
-    return this
+    const data = transformations.select(this._data, selection)
+    return this._handleTransformation(data)
   },
 
   summarise (summariseInstructions) {
-    this._data = transformations.summarise(this._data, summariseInstructions)
-    return this
+    const data = transformations.summarise(this._data, summariseInstructions)
+    return this._handleTransformation(data)
   },
 
   summarize (summariseInstructions) {
-    this._data = transformations.summarise(this._data, summariseInstructions)
-    return this
+    const data = transformations.summarise(this._data, summariseInstructions)
+    return this._handleTransformation(data)
   },
 
   transform (transformFunction) {
-    this._data = transformations.transform(this._data, transformFunction)
-    return this
+    const data = transformations.transform(this._data, transformFunction)
+    return this._handleTransformation(data)
+  },
+
+  _handleTransformation (data) {
+    if ('$key' in data) {
+      const key = data.$key
+      data = produce(data, draft => {
+        delete draft.$key
+      })
+
+      return new DataContainer(data, { key, validate: false })
+    } else {
+      return new DataContainer(data, { validate: false })
+    }
   }
 }
 
