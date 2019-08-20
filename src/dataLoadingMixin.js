@@ -47,6 +47,12 @@ const methods = {
   _setupKeyColumn (key) {
     const length = getDataLength(this._data)
 
+    if ('$key' in this._data) {
+      validateKeyColumn(this._data.$key)
+      this._syncKeyToRowNumber()
+      return
+    }
+
     if (isUndefined(key)) {
       const keyColumn = generateKeyColumn(length)
       this._setKeyColumn(keyColumn)

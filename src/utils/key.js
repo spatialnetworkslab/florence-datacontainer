@@ -12,7 +12,7 @@ export function generateKeyColumn (length) {
 
 export function validateKeyColumn (keyColumn, requiredLength) {
   if (keyColumn.length !== requiredLength) {
-    throw new Error('key array must be of same length as rest of the data')
+    throw new Error('Key column must be of same length as rest of the data')
   }
 
   ensureAllSameType(keyColumn)
@@ -20,23 +20,18 @@ export function validateKeyColumn (keyColumn, requiredLength) {
 }
 
 function ensureAllSameType (keyColumn) {
-  const type = getKeyType(keyColumn[0])
-
-  for (let i = 1; i < keyColumn.length; i++) {
+  for (let i = 0; i < keyColumn.length; i++) {
     const key = keyColumn[i]
-    if (getKeyType(key) !== type) {
-      throw new Error('mixing types not allowed in key column')
-    }
+    validateKey(key)
   }
 }
 
-function getKeyType (key) {
+function validateKey (key) {
   const type = getDataType(key)
 
-  if (type === 'quantitative' && Number.isInteger(key)) return type
-  if (type === 'categorical' && key.length > 0) return type
-
-  throw new Error('key column must contain only integers or strings')
+  if (type !== 'quantitative' || !Number.isInteger(key)) {
+    throw new Error('Key column can contain only integers')
+  }
 }
 
 function ensureUnique (keyColumn) {
