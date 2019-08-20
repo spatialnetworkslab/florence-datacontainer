@@ -95,7 +95,7 @@ export default class DataContainer {
     return getColumnType(column, columnName)
   }
 
-  // Data validation
+  // Checks
   hasColumn (columnName) {
     return columnExists(columnName, this)
   }

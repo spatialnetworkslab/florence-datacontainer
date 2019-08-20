@@ -1,13 +1,13 @@
 # Florence DataContainer
 
-A simple, light-weight interface to manage data. Designed for use with [florence](https://github.com/spatialnetworkslab/florence).
+A powerful, light-weight interface to manage data. Designed to be used with [florence](https://github.com/spatialnetworkslab/florence).
 
 ## API Reference
 
 * [Loading data](#loading-data)
 * [Accessing data](#accessing-data)
 * [Domains and types](#domains-and-types)
-* [Data validation](#data-validation)
+* [Checks](#checks)
 * [Transformations](#transformations)
 * [Adding and removing rows](#adding-and-removing-rows)
 
@@ -21,7 +21,7 @@ A simple, light-weight interface to manage data. Designed for use with [florence
 
 More structures might be supported in the future.
 `DataContainer` internally stores data in a [column-oriented](https://www.kdnuggets.com/2017/02/apache-arrow-parquet-columnar-data.html) format.
-This means that loading column-oriented data will be faster than row-oriented data.
+This means that loading column-oriented data will be slightly faster than row-oriented data.
 
 `DataContainer` supports 6 data types. These data types correspond to native JS data types/structures (see table below).
 
@@ -198,7 +198,34 @@ dataContainer.type('quantity') // quantitative
 dataContainer.type('dayOfScale') // temporal
 ```
 
-### Data validation
+### Checks
+
+Some convenience functions to check data during development.
+
+<a name="datacontainer_hascolumn" href="#datacontainer_hascolumn">#</a> <i>DataContainer</i>.<b>hasColumn</b>(columnName)
+
+Check if the `DataContainer` has a column.
+
+```js
+const dataContainer = new DataContainer({ a: [1, 2, 3, 4] })
+dataContainer.hasColumn('a') // true
+dataContainer.hasColumn('b') // false
+```
+
+<a name="datacontainer_columnisvalid" href="#datacontainer_columnisvalid">#</a> <i>DataContainer</i>.<b>columnIsValid</b>(columnName)
+
+TODO
+
+<a name="datacontainer_validatecolumn" href="#datacontainer_validatecolumn">#</a> <i>DataContainer</i>.<b>validateColumn</b>(columnName)
+
+TODO
+
+<a name="datacontainer_validateallcolumns" href="#datacontainer_validateallcolumns">#</a> <i>DataContainer</i>.<b>validateAllColumns</b>()
+
+When data is first loaded to the `DataContainer`, `validateAllColumns` is ran by default.
+To avoid wasting time on checks after every subsequent transformation, it is not ran after that.
+If you want `DataContainer` to throw an error if any data has somehow become invalid, you can call this method manually.
+Invalid here means that they contain mixed types, or only have invalid data like `NaN`.
 
 TODO
 
@@ -413,3 +440,4 @@ const dataContainer = new DataContainer(geojson).reproject(reprojectFunction)
 
 ### Adding and removing rows
 
+TODO
