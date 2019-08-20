@@ -157,9 +157,11 @@ export default class DataContainer {
     const rowNumber = this._keyToRowNumber[key]
     delete this._keyToRowNumber[key]
 
-    for (const columnName in this._data) {
-      this._data[columnName].splice(rowNumber, 1)
-    }
+    this._data = produce(this._data, draft => {
+      for (const columnName in draft) {
+        draft[columnName].splice(rowNumber, 1)
+      }
+    })
   }
 
   // Private methods
