@@ -113,15 +113,14 @@ function pairRange (ranges) {
 function bin (data, variable, ranges) {
   const newData = { bins: ranges }
 
-  // Create an empty array to store new DataContainers divided by range
-  const bins = Array(ranges.length)
+  // Create an empty array to store new groups divided by range
+  const groups = Array(ranges.length)
 
-  for (let b = 0; b < bins.length; b++) {
-    bins[b] = {}
+  for (let i = 0; i < groups.length; i++) {
+    groups[i] = {}
 
     for (const col in data) {
-      // If data key does not exist, create it
-      bins[b][col] = []
+      groups[i][col] = []
     }
   }
 
@@ -140,18 +139,13 @@ function bin (data, variable, ranges) {
       }
     })
 
-    const newRow = bins[binIndex]
-
     for (const col in data) {
-      newRow[col].push(data[col][ix])
+      groups[binIndex][col].push(data[col][ix])
     }
-
-    // Update the bins column with new DataContainer
-    const dataContainer = new DataContainer(newRow)
-    bins[binIndex] = dataContainer
   }
 
   // Add new grouped column to newData
-  newData.$grouped = bins
+  newData.$grouped = groups.map(group => new DataContainer(group, { validate: false }))
+  console.log(newData.$grouped[1])
   return newData
 }

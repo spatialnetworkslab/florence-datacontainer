@@ -315,7 +315,18 @@ grouped.map('$grouped', group => group.column('amount')) // [[10, 9], [5, 13]]
 
 <a name="datacontainer_bin" href="#datacontainer_bin">#</a> <i>DataContainer</i>.<b>bin</b>(binInstructions)
 
-TODO
+Used to split up a `DataContainer` in several `DataContainers` based on classification of quantitative data.
+
+```js
+const dataContainer = new DataContainer(
+  { a: [1, 2, 3, 4, 5, 6, 7], b: [8, 9, 10, 11, 12, 13, 14] }
+)
+
+const binned = dataContainer.bin({ groupBy: 'a', method: 'EqualInterval', numClasses: 3 })
+binned.column('bins') // [[1, 3], [3, 5], [5, 7]]
+binned.type('bins') // 'interval'
+binned.row(1).$grouped.rows() // [{ a: 3, b: 10, $key: 2 }, { a: 4, b: 11, $key: 3 }]
+```
 
 <a name="datacontainer_summarise" href="#datacontainer_summarise">#</a> <i>DataContainer</i>.<b>summarise</b>(summariseInstructions)
 
