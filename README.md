@@ -328,6 +328,23 @@ binned.type('bins') // 'interval'
 binned.row(1).$grouped.rows() // [{ a: 3, b: 10, $key: 2 }, { a: 4, b: 11, $key: 3 }]
 ```
 
+Besides `'EqualInterval'`, other methods of classification are supported. Different methods might require different additional
+keys to be passed to `binInstructions`. See the table below for an overview.
+
+|       Class. method       |   option name   | default for option |
+| ------------------------- | --------------- | ------------------ |
+| `'EqualInterval'`         | `numClasses`    | `5`                |
+| `' StandardDeviation'`    | `numClasses`    | `5`                |
+| `'ArithmeticProgression'` | `numClasses`    | `5`                |
+| `'GeometricProgression'`  | `numClasses`    | `5`                |
+| `'Quantile'`              | `numClasses`    | `5`                |
+| `'Jenks'`                 | `numClasses`    | `5`                |
+| `'IntervalSize'`          | `binSize`       | `1`                |
+| `'Manual'`                | `manualClasses` | `undefined`        |
+
+For `'Manual'`, `manualClasses` is required and must be an Array of `interval`s, which will become the bins.
+The classification is performed internally by [Geostats](https://github.com/simogeo/geostats).
+
 <a name="datacontainer_summarise" href="#datacontainer_summarise">#</a> <i>DataContainer</i>.<b>summarise</b>(summariseInstructions)
 
 TODO
@@ -335,3 +352,14 @@ TODO
 <a name="datacontainer_mutarise" href="#datacontainer_mutarise">#</a> <i>DataContainer</i>.<b>mutarise</b>(mutariseInstructions)
 
 TODO
+
+<a name="datacontainer_transform" href="#datacontainer_transform">#</a> <i>DataContainer</i>.<b>transform</b>(transformFunction)
+
+TODO
+
+<a name="datacontainer_reproject" href="#datacontainer_reproject">#</a> <i>DataContainer</i>.<b>reproject</b>(reprojectFunction)
+
+TODO
+
+### Adding and removing rows
+
