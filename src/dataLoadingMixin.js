@@ -10,7 +10,12 @@ import parseGeoJSON from './utils/parseGeoJSON.js'
 
 const methods = {
   _setColumnData (data, options) {
-    checkFormatColumnData(data)
+    if (options.validate === false) {
+      checkFormatInternal(data)
+    } else {
+      checkFormatColumnData(data)
+    }
+
     this._storeData(data, options)
   },
 
@@ -24,12 +29,6 @@ const methods = {
     this._storeData(data, options)
   },
 
-  _setTransformableDataContainer (transformableDataContainer, options) {
-    const data = transformableDataContainer._data
-    checkFormatInternal(data)
-    this._storeData(data, options)
-  },
-
   _setGroup (group, options) {
     const data = group.data
     checkFormatInternal(data)
@@ -37,10 +36,7 @@ const methods = {
   },
 
   _storeData (data, options) {
-    this._data = produce(this._data, draft => {
-      draft = data
-    })
-
+    this._data = data
     this._setupKeyColumn(options.key)
 
     if (options.validate === true) {

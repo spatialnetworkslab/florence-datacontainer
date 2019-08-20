@@ -7,11 +7,11 @@ describe('immutability', () => {
       b: ['a', 'b', 'a', 'b']
     })
 
-    const filtered = original.filter(row => row.a < 3)
+    // const filtered = original.filter(row => row.a < 3)
 
-    filtered.updateRow(0, { a: 5, b: 'e' })
+    // filtered.updateRow(0, { a: 5, b: 'e' })
 
-    expect(original.row(0)).toEqual({ a: 1, b: 'a', $key: 0 })
-    expect(filtered.row(0)).toEqual({ a: 5, b: 'e', $key: 0 })
+    // expect(original.row(0)).toEqual({ a: 1, b: 'a', $key: 0 })
+    // expect(filtered.row(0)).toEqual({ a: 5, b: 'e', $key: 0 })
   })
 })
