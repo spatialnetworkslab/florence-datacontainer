@@ -1,4 +1,4 @@
-import { getDataType, ensureValidDataType } from './getDataType.js'
+import { getDataType, getColumnType, ensureValidDataType } from './getDataType.js'
 import { isInvalid, isUndefined } from './equals.js'
 
 export function ensureValidRow (row, self) {
@@ -18,7 +18,8 @@ export function ensureValidRow (row, self) {
         continue
       }
 
-      const columnType = self._types[columnName]
+      const columnType = getColumnType(self._data[columnName])
+
       ensureValidDataType(value)
       const valueType = getDataType(value)
 

@@ -126,7 +126,7 @@ export default class DataContainer {
       }
     })
 
-    const rowNumber = getDataLength(this._data)
+    const rowNumber = getDataLength(this._data) - 1
     const key = getNewKey(this._data.$key)
 
     this._data.$key.push(key)
