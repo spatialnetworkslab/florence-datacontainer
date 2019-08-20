@@ -1,6 +1,6 @@
 # Florence DataContainer
 
-A powerful, light-weight interface to manage data. Designed to be used with [florence](https://github.com/spatialnetworkslab/florence).
+A powerful yet light-weight interface to manage data. Designed to be used with [florence](https://github.com/spatialnetworkslab/florence).
 
 ## API Reference
 
@@ -362,7 +362,7 @@ keys to be passed to `binInstructions`. See the table below for an overview.
 |       Class. method       |   option name   | default for option |
 | ------------------------- | --------------- | ------------------ |
 | `'EqualInterval'`         | `numClasses`    | `5`                |
-| `' StandardDeviation'`    | `numClasses`    | `5`                |
+| `'StandardDeviation'`     | `numClasses`    | `5`                |
 | `'ArithmeticProgression'` | `numClasses`    | `5`                |
 | `'GeometricProgression'`  | `numClasses`    | `5`                |
 | `'Quantile'`              | `numClasses`    | `5`                |
@@ -371,7 +371,7 @@ keys to be passed to `binInstructions`. See the table below for an overview.
 | `'Manual'`                | `manualClasses` | `undefined`        |
 
 For `'Manual'`, `manualClasses` is required and must be an Array of `interval`s, which will become the bins.
-The classification is performed internally by [Geostats](https://github.com/simogeo/geostats).
+The classification is performed internally by [geostats](https://github.com/simogeo/geostats).
 
 <a name="datacontainer_summarise" href="#datacontainer_summarise">#</a> <i>DataContainer</i>.<b>summarise</b>(summariseInstructions)
 
