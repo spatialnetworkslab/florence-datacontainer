@@ -355,7 +355,8 @@ TODO
 
 <a name="datacontainer_transform" href="#datacontainer_transform">#</a> <i>DataContainer</i>.<b>transform</b>(transformFunction)
 
-TODO
+Used for arbitrary transformations on the data. `transformFunction` receives an `Object` with all the columns currently loaded, 
+which must be modified in-place (i.e. `transformFunction` must return void).
 
 <a name="datacontainer_reproject" href="#datacontainer_reproject">#</a> <i>DataContainer</i>.<b>reproject</b>(reprojectFunction)
 

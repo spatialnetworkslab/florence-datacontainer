@@ -3,5 +3,5 @@ export default function (data, transformFunction) {
     throw new Error(`Invalid 'transform' transformation: must be a Function`)
   }
 
-  return transformFunction(data)
+  transformFunction(data)
 }

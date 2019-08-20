@@ -27,7 +27,7 @@ const transformations = {
   bin,
   dropNA: produce(dropNA),
   reproject,
-  transform,
+  transform: produce(transform),
   cumsum: produce(cumsum)
 }
 
