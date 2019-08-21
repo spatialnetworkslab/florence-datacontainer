@@ -4,8 +4,8 @@ import filter from './filter.js'
 export default function (data, dropInstructions) {
   let filterFunc
 
-  if (dropInstructions === undefined) {
-    // If the instructions are undefined, we will check all columns for invalid values
+  if (!dropInstructions) {
+    // If the instructions are falsy, we will check all columns for invalid values
     filterFunc = row => {
       let keep = true
 

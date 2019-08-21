@@ -267,8 +267,6 @@ To avoid wasting time on checks after every subsequent transformation, it is not
 If you want `DataContainer` to throw an error if any data has somehow become invalid, you can call this method manually.
 Invalid here means that they contain mixed types, or only have invalid data like `NaN`.
 
-TODO
-
 ### Transformations
 
 `DataContainer`'s transformations are heavily inspired by R's [dplyr](https://dplyr.tidyverse.org/) 
@@ -314,7 +312,7 @@ dataContainer.filter(row => row.fruit !== 'banana').data() // { fruit: ['apple']
 `dropNA` is essentially a special case of `filter` that disposes of invalid values like `NaN`, `null` or `undefined`.
 `dropNAInstructions` can be 
 
-- `null`, in which case it will dispose of all rows in all columns that contain invalid values
+- nothing or something else that's falsy, in which case it will dispose of all rows in all columns that contain invalid values
 - a `String` value with a column name. All rows that have invalid values in this column will be removed
 - an `Array` of column names (`String`s). All rows that have invalid values in any of these columns will be removed
 
@@ -323,7 +321,7 @@ const dataContainer = new DataContainer(
   { a: [1, 2, undefined, 4], b: [5, null, 7, 8], c: [NaN, 10, 11, 12] }
 )
 
-dataContainer.dropNA(null).data() // { a: [4], b: [8], c: [12], $key: [3] }
+dataContainer.dropNA().data() // { a: [4], b: [8], c: [12], $key: [3] }
 dataContainer.dropNA(['a', 'b']).data() // { a: [1, 4], b: [5, 8], c: [NaN, 12], $key: [0, 3] }
 ```
 
