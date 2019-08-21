@@ -1,4 +1,5 @@
-import { getColumnType, getDataType, ensureValidDataType } from './getDataType.js'
+import { getColumnType, getDataType } from './getDataType.js'
+import { findFirstValidValue } from './calculateDomain.js'
 import { isInvalid } from './equals.js'
 
 export function isValidColumn (column, columnName) {
@@ -12,9 +13,15 @@ export function isValidColumn (column, columnName) {
 }
 
 export function ensureValidColumn (column, columnName) {
+  const { nValidValues } = findFirstValidValue(column)
+
+  if (nValidValues === 0) {
+    throw new Error(`Invalid column '${columnName}'. Column contains only invalid values.`)
+  }
+
   const columnType = getColumnType(column)
 
-  if (columnType === undefined) throw new Error(`Column '${columnName}' contains unknown data type`)
+  if (columnType === undefined) throw new Error(`Column '${columnName}' contains data of unknown type`)
   ensureColumnNameMatchesType(columnType)
   ensureAllValidValuesHaveTheSameType(column, columnType, columnName)
 }

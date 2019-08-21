@@ -3,17 +3,13 @@ import { findFirstValidValue } from './calculateDomain.js'
 import { isInvalid } from './equals.js'
 
 export function getColumnType (column) {
-  const { firstValidValue, nValidValues } = findFirstValidValue(column)
-
-  if (nValidValues === 0) {
-    throw new Error(`Cannot determine type of column '${column}'. Column contains only missing values.`)
-  }
-
-  ensureValidDataType(firstValidValue)
+  const { firstValidValue } = findFirstValidValue(column)
   return getDataType(firstValidValue)
 }
 
 export function getDataType (value) {
+  if (isInvalid(value)) return undefined
+
   if (value.constructor === Number) return 'quantitative'
   if (value.constructor === String) return 'categorical'
   if (value.constructor === Date) return 'temporal'

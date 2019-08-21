@@ -214,11 +214,27 @@ dataContainer.hasColumn('b') // false
 
 <a name="datacontainer_columnisvalid" href="#datacontainer_columnisvalid">#</a> <i>DataContainer</i>.<b>columnIsValid</b>(columnName)
 
-TODO
+Check if a column is valid.
+
+```js
+const dataContainer = new DataContainer({ a: [1, NaN, 3] })
+  .mutate({ b: () => NaN })
+
+dataContainer.columnIsValid('a') // true
+dataContainer.columnIsValid('b') // false
+```
 
 <a name="datacontainer_validatecolumn" href="#datacontainer_validatecolumn">#</a> <i>DataContainer</i>.<b>validateColumn</b>(columnName)
 
-TODO
+Similar to `columnIsValid`, but throws an error instead of return a `Boolean`.
+
+```js
+const dataContainer = new DataContainer({ a: [1, NaN, 3] })
+  .mutate({ b: () => NaN })
+
+dataContainer.validateColumn('a') // nothing happens
+dataContainer.validateColumn('b') // throws error
+```
 
 <a name="datacontainer_validateallcolumns" href="#datacontainer_validateallcolumns">#</a> <i>DataContainer</i>.<b>validateAllColumns</b>()
 
@@ -431,7 +447,7 @@ transformed.column('b') // [1, 4, 9, 16]
 
 Used to reproject data in the `$geometry` column. Can only be used when a `$geometry` column is present.
 `reprojectFunction` should be a function that accepts an `Array` of two `Number`s and returns an `Array` of two `Number`s.
-Particularly convenient to use with [proj4](https://github.com/proj4js/proj4js)`:
+Particularly convenient to use with [proj4](https://github.com/proj4js/proj4js):
 
 ```js
 const reprojectFunction = proj4('EPSG:4326', 'EPSG:3857').forward
