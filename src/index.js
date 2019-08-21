@@ -135,12 +135,11 @@ export default class DataContainer {
 
   updateRow (key, row) {
     ensureRowExists(key, this)
+    ensureValidRow(row, this)
     const rowNumber = this._keyToRowNumber[key]
 
     this._data = produce(this._data, draft => {
       for (const columnName in row) {
-        ensureColumnExists(columnName, this)
-
         if (columnName === '$key') {
           warn(`Cannot update '$key' of row`)
           continue

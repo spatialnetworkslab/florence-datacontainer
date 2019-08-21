@@ -226,8 +226,8 @@ dataContainer.columnIsValid('b') // false
 
 <a name="datacontainer_validatecolumn" href="#datacontainer_validatecolumn">#</a> <i>DataContainer</i>.<b>validateColumn</b>(columnName)
 
-Similar to `columnIsValid`, but throws an error instead of return a `Boolean`.
-
+Similar to `columnIsValid`, but throws an error if a column is invalid, instead of returning `false`.
+, 
 ```js
 const dataContainer = new DataContainer({ a: [1, NaN, 3] })
   .mutate({ b: () => NaN })
@@ -456,4 +456,34 @@ const dataContainer = new DataContainer(geojson).reproject(reprojectFunction)
 
 ### Adding and removing rows
 
-TODO
+All of these functions work in-place.
+
+<a name="datacontainer_addrow" href="#datacontainer_addrow">#</a> <i>DataContainer</i>.<b>addRow</b>(row)
+
+Adds a new row to the `DataContainer`. `row` must be an object with one key for every column.
+
+```js
+const dataContainer = new DataContainer({ a: [1, 2, 3], b: ['a', 'b', 'c'] })
+dataContainer.addRow({ a: 4, b: 'd' })
+dataContainer.column('b') // ['a', 'b', 'c', 'd']
+```
+
+<a name="datacontainer_updaterow" href="#datacontainer_updaterow">#</a> <i>DataContainer</i>.<b>updateRow</b>(key, row)
+
+Updates an existing row.
+
+```js
+const dataContainer = new DataContainer({ a: [1, 2, 3], b: ['a', 'b', 'c'] })
+dataContainer.updateRow(2, { a: 100, b: 'fff' })
+dataContainer.column('a') // [1, 2, 100]
+```
+
+<a name="datacontainer_deleterow" href="#datacontainer_deleterow">#</a> <i>DataContainer</i>.<b>deleteRow</b>(key)
+
+Deletes an existing row,
+
+```js
+const dataContainer = new DataContainer({ a: [1, 2, 3], b: ['a', 'b', 'c'] })
+dataContainer.deleteRow(2)
+dataContainer.column('a') // [1, 2]
+```
