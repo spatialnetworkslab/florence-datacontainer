@@ -1,7 +1,6 @@
 import produce from 'immer'
 
 import { checkFormatColumnData, checkFormatInternal } from './utils/checkFormat.js'
-import { isUndefined } from './utils/equals.js'
 import { generateKeyColumn, validateKeyColumn } from './utils/key.js'
 
 import getDataLength from './utils/getDataLength.js'
@@ -38,35 +37,23 @@ const methods = {
   _storeData (data, options) {
     this._data = data
 
-    this._setupKeyColumn(options.key)
+    this._setupKeyColumn()
 
     if (options.validate === true) {
       this.validateAllColumns()
     }
   },
 
-  _setupKeyColumn (key) {
+  _setupKeyColumn () {
     const length = getDataLength(this._data)
 
     if ('$key' in this._data) {
       validateKeyColumn(this._data.$key, length)
       this._syncKeyToRowNumber()
-      return
-    }
-
-    if (isUndefined(key)) {
+    } else {
       const keyColumn = generateKeyColumn(length)
       this._setKeyColumn(keyColumn)
-      return
     }
-
-    if (key.constructor === Array) {
-      validateKeyColumn(key, length)
-      this._setKeyColumn(key)
-      return
-    }
-
-    throw new Error('Invalid \'key\' option: expected Array')
   },
 
   _setKeyColumn (keyColumn) {

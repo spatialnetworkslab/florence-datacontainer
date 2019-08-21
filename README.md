@@ -104,20 +104,17 @@ geojson.column('fruit') // ['apple']
 The `DataContainer` constructor takes a second argument, which is an optional object of options:
 
 ```js
-const dataContainer = new DataContainer(data, { validate: true, key: undefined })
+const dataContainer = new DataContainer(data, { validate: true })
 ```
 
 | Option name | Default value |  Type   |
 | ----------- | ------------- | ------- |
 | validate    | `true`        | Boolean |
-| key         | `undefined`   | Array   |
 
 Setting the `validate` option to `false` will disable column validation. This can save a bit of time
 when you are certain your data is completely valid (i.e. all columns have only one data type and contain
 at least one valid that is not `NaN`, `undefined`, `null`, or `Infinity`) or don't care if it is.
-
-`key` can be passed an `Array` of integers that will be used instead of the default `$key` column.
-Note that this `Array` must be the same length as the rest of the data.
+More options might be added in the future.
 
 ### Accessing data
 

@@ -16,7 +16,7 @@ import { warn } from './utils/logging.js'
 import { Group } from './transformations/groupBy.js'
 
 export default class DataContainer {
-  constructor (data, options = { validate: true, key: undefined }) {
+  constructor (data, options = { validate: true }) {
     this._data = {}
     this._keyToRowNumber = {}
 
