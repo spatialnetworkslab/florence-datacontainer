@@ -5,6 +5,7 @@ A powerful yet light-weight interface to manage data. Designed to be used with [
 ## API Reference
 
 * [Loading data](#loading-data)
+* [Options](#options)
 * [Accessing data](#accessing-data)
 * [Domains and types](#domains-and-types)
 * [Checks](#checks)
@@ -12,6 +13,12 @@ A powerful yet light-weight interface to manage data. Designed to be used with [
 * [Adding and removing rows](#adding-and-removing-rows)
 
 ### Loading data
+
+Loading data to `DataContainer` is done by passing a supported data structure as first argument to the `DataContainer` constructor:
+
+```js
+const dataContainer = new DataContainer(supportedDataStructure)
+```
 
 `DataContainer` currently supports 3 data structures:
 
@@ -91,6 +98,26 @@ geojson.column('$geometry') // [{ type: 'Point', coordinates: [0, 0] }]
 geojson.column('fruit') // ['apple']
 
 ```
+
+### Options
+
+The `DataContainer` constructor takes a second argument, which is an optional object of options:
+
+```js
+const dataContainer = new DataContainer(data, { validate: true, key: undefined })
+```
+
+| Option name | Default value |  Type   |
+| ----------- | ------------- | ------- |
+| validate    | `true`        | Boolean |
+| key         | `undefined`   | Array   |
+
+Setting the `validate` option to `false` will disable column validation. This can save a bit of time
+when you are certain your data is completely valid (i.e. all columns have only one data type and contain
+at least one valid that is not `NaN`, `undefined`, `null`, or `Infinity`) or don't care if it is.
+
+`key` can be passed an `Array` of integers that will be used instead of the default `$key` column.
+Note that this `Array` must be the same length as the rest of the data.
 
 ### Accessing data
 
