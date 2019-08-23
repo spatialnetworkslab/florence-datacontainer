@@ -1,6 +1,6 @@
 export function isColumnOriented (data) {
   if (data.constructor === Object) {
-    let columns = Object.keys(data).map(key => data[key])
+    const columns = Object.keys(data).map(key => data[key])
     return columns.every(column => column.constructor === Array)
   }
 
@@ -16,8 +16,8 @@ export function isRowOriented (data) {
 }
 
 export function isGeoJSON (data) {
-  let hasCorrectType = data.type === 'FeatureCollection'
-  let hasCorrectFeatures = data.features && data.features.length > 0
+  const hasCorrectType = data.type === 'FeatureCollection'
+  const hasCorrectFeatures = data.features && data.features.length > 0
 
   return hasCorrectType && hasCorrectFeatures
 }
@@ -33,9 +33,9 @@ export function checkFormatInternal (data) {
 function checkFormat (data, columnNameChecker) {
   let dataLength = null
 
-  for (let columnName in data) {
+  for (const columnName in data) {
     columnNameChecker(columnName)
-    let column = data[columnName]
+    const column = data[columnName]
 
     dataLength = dataLength || column.length
 
@@ -58,7 +58,7 @@ export function checkRegularColumnName (columnName) {
 const forbiddenChars = /[/$]/
 
 export function checkInternalDataColumnName (columnName) {
-  if (!['$index', '$geometry', '$grouped'].includes(columnName)) {
+  if (!['$key', '$geometry', '$grouped'].includes(columnName)) {
     checkRegularColumnName(columnName)
   }
 }

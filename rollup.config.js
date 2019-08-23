@@ -1,6 +1,5 @@
 import resolve from 'rollup-plugin-node-resolve'
 import commonjs from 'rollup-plugin-commonjs'
-import json from 'rollup-plugin-json'
 import pkg from './package.json'
 
 export default [
@@ -14,22 +13,18 @@ export default [
     },
     plugins: [
       resolve(),
-      commonjs(),
-      json({
-        include: 'node_modules/proj4/**',
-        compact: true
-      })
+      commonjs()
     ]
   },
   {
     input: 'src/index.js',
-    external: ['@turf/meta', 'd3-array', 'd3-geo', 'd3-interpolate', 'robust-point-in-polygon', 'proj4', 'immer'],
+    external: ['d3-geo', 'immer'],
     output: [
       { file: pkg.main, format: 'cjs' },
       { file: pkg.module, format: 'es' }
     ],
     plugins: [
       resolve()
-	  ]
+    ]
   }
 ]

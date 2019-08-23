@@ -1,70 +1,85 @@
-import TransformableDataContainer from './TransformableDataContainer'
-
-function proxyTransformationCall (data, transformation, options) {
-  let transformableDataContainer = new TransformableDataContainer(data)
-  transformableDataContainer = transformableDataContainer[transformation](options)
-  return transformableDataContainer
-}
+import transformations from './transformations'
+import DataContainer from './index.js'
 
 const methods = {
   arrange (sortInstructions) {
-    return proxyTransformationCall(this._data, 'arrange', sortInstructions)
+    const data = transformations.arrange(this._data, sortInstructions)
+    return new DataContainer(data, { validate: false })
   },
 
   bin (binInstructions) {
-    return proxyTransformationCall(this._data, 'bin', binInstructions)
+    const data = transformations.bin(this._data, binInstructions)
+    return new DataContainer(data, { validate: false })
+  },
+
+  cumsum (cumsumInstructions) {
+    const data = transformations.cumsum(this._data, cumsumInstructions)
+    return new DataContainer(data, { validate: false })
   },
 
   dropNA (dropInstructions) {
-    return proxyTransformationCall(this._data, 'dropNA', dropInstructions)
+    const data = transformations.dropNA(this._data, dropInstructions)
+    return new DataContainer(data, { validate: false })
   },
 
   filter (filterFunction) {
-    return proxyTransformationCall(this._data, 'filter', filterFunction)
+    const data = transformations.filter(this._data, filterFunction)
+    return new DataContainer(data, { validate: false })
   },
 
   groupBy (groupByInstructions) {
-    return proxyTransformationCall(this._data, 'groupBy', groupByInstructions)
+    const data = transformations.groupBy(this._data, groupByInstructions)
+    return new DataContainer(data, { validate: false })
   },
 
   mutarise (mutariseInstructions) {
-    return proxyTransformationCall(this._data, 'mutarise', mutariseInstructions)
+    const data = transformations.mutarise(this._data, mutariseInstructions)
+    return new DataContainer(data, { validate: false })
   },
 
   mutarize (mutariseInstructions) {
-    return proxyTransformationCall(this._data, 'mutarize', mutariseInstructions)
+    const data = transformations.mutarise(this._data, mutariseInstructions)
+    return new DataContainer(data, { validate: false })
   },
 
   mutate (mutateInstructions) {
-    return proxyTransformationCall(this._data, 'mutate', mutateInstructions)
+    const data = transformations.mutate(this._data, mutateInstructions)
+    return new DataContainer(data, { validate: false })
   },
 
   transmute (transmuteInstructions) {
-    return proxyTransformationCall(this._data, 'transmute', transmuteInstructions)
+    const data = transformations.transmute(this._data, transmuteInstructions)
+    return new DataContainer(data, { validate: false })
   },
 
   rename (renameInstructions) {
-    return proxyTransformationCall(this._data, 'rename', renameInstructions)
+    const data = transformations.rename(this._data, renameInstructions)
+    return new DataContainer(data, { validate: false })
   },
 
   reproject (reprojectInstructions) {
-    return proxyTransformationCall(this._data, 'reproject', reprojectInstructions)
+    const data = transformations.reproject(this._data, reprojectInstructions)
+    return new DataContainer(data, { validate: false })
   },
 
   select (selection) {
-    return proxyTransformationCall(this._data, 'select', selection)
+    const data = transformations.select(this._data, selection)
+    return new DataContainer(data, { validate: false })
   },
 
   summarise (summariseInstructions) {
-    return proxyTransformationCall(this._data, 'summarise', summariseInstructions)
+    const data = transformations.summarise(this._data, summariseInstructions)
+    return new DataContainer(data, { validate: false })
   },
 
   summarize (summariseInstructions) {
-    return proxyTransformationCall(this._data, 'summarize', summariseInstructions)
+    const data = transformations.summarise(this._data, summariseInstructions)
+    return new DataContainer(data, { validate: false })
   },
 
   transform (transformFunction) {
-    return proxyTransformationCall(this._data, 'transform', transformFunction)
+    const data = transformations.transform(this._data, transformFunction)
+    return new DataContainer(data, { validate: false })
   }
 }
 
