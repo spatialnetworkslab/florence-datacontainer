@@ -1,4 +1,6 @@
 # Florence DataContainer
+[![CircleCI](https://circleci.com/gh/spatialnetworkslab/florence-datacontainer.svg?style=svg&circle-token=12a730f66abe07d3f5d94bf85c9549c289178054)](https://circleci.com/gh/spatialnetworkslab/florence-datacontainer)
+![npm bundle size](https://img.shields.io/bundlephobia/minzip/@snlab/florence-datacontainer)
 
 A powerful yet light-weight interface to manage data. Designed to be used with [florence](https://github.com/spatialnetworkslab/florence).
 
