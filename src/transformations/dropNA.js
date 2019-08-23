@@ -41,7 +41,7 @@ export default function (data, dropInstructions) {
     throw new Error('dropNA can only be passed undefined, a String or an Array of Strings')
   }
 
-  filter(data, filterFunc)
+  return filter(data, filterFunc)
 }
 
 function checkIfColumnsExist (data, columns) {

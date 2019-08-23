@@ -15,7 +15,7 @@ import transform from './transform.js'
 import cumsum from './cumsum.js'
 
 const transformations = {
-  filter: produce(filter),
+  filter,
   select: produce(select),
   arrange: produce(arrange),
   rename: produce(rename),
@@ -25,7 +25,7 @@ const transformations = {
   mutarise,
   groupBy,
   bin,
-  dropNA: produce(dropNA),
+  dropNA,
   reproject,
   transform: produce(transform),
   cumsum: produce(cumsum)
