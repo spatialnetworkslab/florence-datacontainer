@@ -1,23 +1,23 @@
 import { checkFormatColumnData } from './checkFormat.js'
 
 export default function (geojsonData) {
-  let geometryData = []
-  let data = {}
+  const geometryData = []
+  const data = {}
 
-  let features = geojsonData.features
-  let firstFeature = features[0]
+  const features = geojsonData.features
+  const firstFeature = features[0]
 
-  if (firstFeature.hasOwnProperty('properties')) {
-    for (let columnName in firstFeature.properties) {
+  if ('properties' in firstFeature) {
+    for (const columnName in firstFeature.properties) {
       data[columnName] = []
     }
   }
 
   for (let i = 0; i < features.length; i++) {
-    let { geometry, properties } = features[i]
+    const { geometry, properties } = features[i]
     geometryData.push(geometry)
 
-    for (let columnName in properties) {
+    for (const columnName in properties) {
       data[columnName].push(properties[columnName])
     }
   }

@@ -1,108 +1,176 @@
+import produce from 'immer'
+
 import dataLoadingMixin from './dataLoadingMixin.js'
-import domainsAndTypesMixin from './domainsAndTypesMixin.js'
 import transformationsMixin from './transformationsMixin.js'
 
 import { isColumnOriented, isRowOriented, isGeoJSON } from './utils/checkFormat.js'
+import { ensureValidRow, ensureRowExists } from './utils/ensureValidRow.js'
+import { isValidColumn, ensureValidColumn, columnExists, ensureColumnExists } from './utils/isValidColumn.js'
+import { calculateDomain } from './utils/calculateDomain.js'
+import { getColumnType } from './utils/getDataType.js'
+import { getNewKey } from './utils/key.js'
+import getDataLength from './utils/getDataLength.js'
 
-import TransformableDataContainer from './TransformableDataContainer/'
-import { Group } from './TransformableDataContainer/transformations/groupBy.js'
+import { warn } from './utils/logging.js'
 
-import { warn } from './helpers/logging.js'
-
-import {
-  checkColumnPath, columnPathIsValid, checkIfColumnExists,
-  getColumn, mapColumn
-} from './utils/parseColumnPath.js'
+import { Group } from './transformations/groupBy.js'
 
 export default class DataContainer {
-  constructor (data) {
+  constructor (data, options = { validate: true }) {
     this._data = {}
-    this._length = undefined
-    this._indexToRowNumber = {}
-
-    this._domainsAndTypesCalculated = false
-
-    this._domains = {}
-    this._types = {}
+    this._keyToRowNumber = {}
 
     if (isColumnOriented(data)) {
-      this._setColumnData(data)
+      this._setColumnData(data, options)
       return
     }
 
     if (isRowOriented(data)) {
-      this._setRowData(data)
+      this._setRowData(data, options)
       return
     }
 
     if (isGeoJSON(data)) {
-      this._setGeoJSON(data)
-      return
-    }
-
-    if (data instanceof TransformableDataContainer) {
-      this._setTransformableDataContainer(data)
+      this._setGeoJSON(data, options)
       return
     }
 
     if (data instanceof Group) {
-      this._setGroup(data)
+      this._setGroup(data, options)
       return
     }
 
     throw invalidDataError
   }
 
+  // Accessing data
   data () {
     return this._data
   }
 
-  row (index) {
-    const rowNumber = this._indexToRowNumber[index]
+  row (key) {
+    const rowNumber = this._keyToRowNumber[key]
     return this._row(rowNumber)
+  }
+
+  prevRow (key) {
+    const rowNumber = this._keyToRowNumber[key]
+    const previousRowNumber = rowNumber - 1
+    return this._row(previousRowNumber)
+  }
+
+  nextRow (key) {
+    const rowNumber = this._keyToRowNumber[key]
+    const nextRowNumber = rowNumber + 1
+    return this._row(nextRowNumber)
   }
 
   rows () {
     const rows = []
+    const length = getDataLength(this._data)
 
-    for (let i = 0; i < this._length; i++) {
+    for (let i = 0; i < length; i++) {
       rows.push(this._row(i))
     }
 
     return rows
   }
 
-  hasColumn (columnPath) {
-    return columnPathIsValid(columnPath, this)
+  column (columnName) {
+    ensureColumnExists(columnName, this)
+    return this._data[columnName]
   }
 
-  column (columnPath) {
-    checkColumnPath(columnPath, this)
-    return getColumn(columnPath, this)
+  map (columnName, mapFunction) {
+    return this.column(columnName).map(mapFunction)
   }
 
-  map (columnPath, mapFunction) {
-    checkColumnPath(columnPath, this)
-    return mapColumn(columnPath, this, mapFunction)
+  domain (columnName) {
+    const column = this.column(columnName)
+    return calculateDomain(column, columnName)
   }
 
-  updateRow (index, row) {
-    const rowNumber = this._indexToRowNumber[index]
+  type (columnName) {
+    const column = this.column(columnName)
+    return getColumnType(column, columnName)
+  }
 
-    for (const key in row) {
-      checkIfColumnExists(key, this)
+  // Checks
+  hasColumn (columnName) {
+    return columnExists(columnName, this)
+  }
 
-      if (key === '$index') {
-        warn(`Cannot update '$index' of row`)
-        continue
-      }
+  columnIsValid (columnName) {
+    const column = this.column(columnName)
+    return isValidColumn(column, columnName)
+  }
 
-      const value = row[key]
-      this._data[key][rowNumber] = value
+  validateColumn (columnName) {
+    const column = this.column(columnName)
+    ensureValidColumn(column, columnName)
+  }
+
+  validateAllColumns () {
+    for (const columnName in this._data) {
+      this.validateColumn(columnName)
     }
   }
 
+  // Adding and removing rows
+  addRow (row) {
+    ensureValidRow(row, this)
+
+    this._data = produce(this._data, draft => {
+      for (const columnName in row) {
+        draft[columnName].push(row[columnName])
+      }
+    })
+
+    const rowNumber = getDataLength(this._data) - 1
+    const key = getNewKey(this._data.$key)
+
+    this._data.$key.push(key)
+    this._keyToRowNumber[key] = rowNumber
+  }
+
+  updateRow (key, row) {
+    ensureRowExists(key, this)
+    ensureValidRow(row, this)
+    const rowNumber = this._keyToRowNumber[key]
+
+    this._data = produce(this._data, draft => {
+      for (const columnName in row) {
+        if (columnName === '$key') {
+          warn(`Cannot update '$key' of row`)
+          continue
+        }
+
+        const value = row[columnName]
+        draft[columnName][rowNumber] = value
+      }
+    })
+  }
+
+  deleteRow (key) {
+    ensureRowExists(key, this)
+    const rowNumber = this._keyToRowNumber[key]
+    delete this._keyToRowNumber[key]
+
+    this._data = produce(this._data, draft => {
+      for (const columnName in draft) {
+        draft[columnName].splice(rowNumber, 1)
+      }
+    })
+  }
+
+  // Private methods
   _row (rowNumber) {
+    const length = getDataLength(this._data)
+
+    if (rowNumber < 0 || rowNumber >= length) {
+      return undefined
+    }
+
     const row = {}
 
     for (const columnName in this._data) {
@@ -115,7 +183,6 @@ export default class DataContainer {
 }
 
 dataLoadingMixin(DataContainer)
-domainsAndTypesMixin(DataContainer)
 transformationsMixin(DataContainer)
 
 const invalidDataError = new Error('Data passed to DataContainer is of unknown format')

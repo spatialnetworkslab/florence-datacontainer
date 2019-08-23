@@ -1,37 +1,32 @@
 export function valid () {
-  let obj = {}
-  obj = addType(obj)
-  obj['features'] = dummyFeatures
+  const obj = initObj()
+  obj.features = dummyFeatures
 
   return obj
 }
 
 export function missingType () {
-  let obj = {}
-  obj['features'] = dummyFeatures
+  const obj = {}
+  obj.features = dummyFeatures
 
   return obj
 }
 
 export function missingFeatures () {
-  let obj = {}
-  obj = addType(obj)
-
+  const obj = initObj()
   return obj
 }
 
 export function emptyFeatures () {
-  let obj = {}
-  obj = addType(obj)
-  obj['features'] = []
+  const obj = initObj()
+  obj.features = []
 
   return obj
 }
 
 export function notSameProperties () {
-  let obj = {}
-  obj = addType(obj)
-  obj['features'] = [...dummyFeatures, featureWithDifferentProperty]
+  const obj = initObj()
+  obj.features = [...dummyFeatures, featureWithDifferentProperty]
 
   return obj
 }
@@ -56,42 +51,43 @@ export function propertiesWithSlash () {
   }))
 }
 
-function addType (obj) {
-  obj['type'] = 'FeatureCollection'
-  return obj
+function initObj (obj) {
+  return {
+    type: 'FeatureCollection'
+  }
 }
 
 const dummyFeatures = [
   {
-    'type': 'Feature',
-    'geometry': {
-      'type': 'Point',
-      'coordinates': [102.0, 0.5]
+    type: 'Feature',
+    geometry: {
+      type: 'Point',
+      coordinates: [102.0, 0.5]
     },
-    'properties': {
-      'prop0': 'value0'
+    properties: {
+      prop0: 'value0'
     }
   },
 
   {
-    'type': 'Feature',
-    'geometry': {
-      'type': 'Point',
-      'coordinates': [52.0, 30.5]
+    type: 'Feature',
+    geometry: {
+      type: 'Point',
+      coordinates: [52.0, 30.5]
     },
-    'properties': {
-      'prop0': 'value1'
+    properties: {
+      prop0: 'value1'
     }
   }
 ]
 
 const featureWithDifferentProperty = {
-  'type': 'Feature',
-  'geometry': {
-    'type': 'Point',
-    'coordinates': [32.0, 100.5]
+  type: 'Feature',
+  geometry: {
+    type: 'Point',
+    coordinates: [32.0, 100.5]
   },
-  'properties': {
-    'prop1': 'value2'
+  properties: {
+    prop1: 'value2'
   }
 }

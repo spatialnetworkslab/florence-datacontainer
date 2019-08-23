@@ -40,15 +40,6 @@ describe('loading column-oriented data', () => {
     expect(() => new DataContainer(emptyData)).toThrow()
   })
 
-  test('columns with only missing values throw an error', () => {
-    const data = {
-      a: [1, 2, 3, 4],
-      b: [NaN, null, undefined, NaN]
-    }
-
-    expect(() => new DataContainer(data)).toThrow()
-  })
-
   test('column names cannot contain \'$\'', () => {
     const data = {
       $fruit: ['apple', 'banana', 'coconut'],
