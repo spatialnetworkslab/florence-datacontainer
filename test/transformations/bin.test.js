@@ -1,7 +1,7 @@
 import DataContainer from '../../src/index.js'
 
 describe('bin transformation', () => {
-  test('EqualInterval works as expected', () => {
+  test('EqualInterval works', () => {
     const dataContainer = new DataContainer(
       { a: [1, 2, 3, 4, 5, 6, 7], b: [8, 9, 10, 11, 12, 13, 14] }
     )
@@ -13,7 +13,7 @@ describe('bin transformation', () => {
     expect(binned.row(1).$grouped.rows()).toEqual([{ a: 3, b: 10, $key: 2 }, { a: 4, b: 11, $key: 3 }])
   })
 
-  test('IntervalSize works as expected', () => {
+  test('IntervalSize works', () => {
     const dataContainer = new DataContainer(
       { a: [1, 2, 3, 4, 5, 6, 7], b: [8, 9, 10, 11, 12, 13, 14] }
     )
@@ -21,5 +21,15 @@ describe('bin transformation', () => {
     const binned = dataContainer.bin({ groupBy: 'a', method: 'IntervalSize', binSize: 2 })
 
     expect(binned.column('bins')).toEqual([[1, 3], [3, 5], [5, 7]])
+  })
+
+  test('empty bins are removed', () => {
+    const dataContainer = new DataContainer(
+      { a: [1, 2, 5, 6, 7], b: [8, 9, 12, 13, 14] }
+    )
+
+    const binned = dataContainer.bin({ groupBy: 'a', method: 'IntervalSize', binSize: 2 })
+
+    expect(binned.column('bins')).toEqual([[1, 3], [5, 7]])
   })
 })
