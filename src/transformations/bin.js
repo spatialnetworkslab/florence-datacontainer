@@ -87,7 +87,7 @@ function createRangesFromBinSize (variableData, binSize) {
     ranges.push(upperBound)
     lowerBound = upperBound
   }
-  
+
   ranges.push(domain[1])
 
   return ranges

@@ -413,6 +413,24 @@ keys to be passed to `binInstructions`. See the table below for an overview.
 For `'Manual'`, `manualClasses` is required and must be an Array of `interval`s, which will become the bins.
 The classification is performed internally by [geostats](https://github.com/simogeo/geostats).
 
+It is also possible to bin over multiple dimensions by providing an `Array` of `binInstructions`.
+Instead of a single `bins` column, this will create multiple columns called `bins_<original column name>`:
+
+```js
+const dataContainer = new DataContainer({
+  a: [1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5, 1, 2, 3, 5],
+  b: [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 5, 5, 5, 5]
+})
+
+const binned = dataContainer.bin([
+  { groupBy: 'a', method: 'IntervalSize', binSize: 2 },
+  { groupBy: 'b', method: 'IntervalSize', binSize: 2 }
+])
+
+console.log(binned.column('bins_a')) // [[1, 3], [1, 3], [3, 5], [3, 5]]
+console.log(binned.column('bins_b')) // [[1, 3], [3, 5], [1, 3], [3, 5]]
+```
+
 <a name="datacontainer_summarise" href="#datacontainer_summarise">#</a> <i>DataContainer</i>.<b>summarise</b>(summariseInstructions)
 
 Used to summarise columns. You can also use `summarize` if you prefer. `summariseInstructions` must be an Object with new column 

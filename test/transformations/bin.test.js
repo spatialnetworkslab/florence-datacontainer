@@ -33,7 +33,7 @@ describe('bin transformation', () => {
     expect(binned.column('bins')).toEqual([[1, 3], [5, 7]])
   })
 
-  test('[1, 2, 3, 4, 5], IntervalSize with binSize 2 should result in bins [1, 3] and [3, 5]', () => {
+  test('[1, 2, 3, 4, 5], IntervalSize with binSize 2 results in bins [1, 3] and [3, 5]', () => {
     const dataContainer = new DataContainer({
       a: [1, 2, 3, 4, 5]
     })
