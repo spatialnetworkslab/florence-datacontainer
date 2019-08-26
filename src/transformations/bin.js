@@ -14,12 +14,51 @@ export default function (data, binInstructions) {
 }
 
 export function getIntervalBounds (data, binInstructions) {
+  const { groupBy, method, numClasses } = parseBinInstructions(binInstructions)
+
+  const variableData = data[groupBy]
+  if (!variableData) {
+    throw new Error(`groupBy variable ${groupBy} does not exist`)
+  }
+
+  const geoStat = new Geostats(variableData)
+
+  // Calculate ranges to obtain bins of a specified size
+  if (method === 'IntervalSize') {
+    let binSize = binInstructions.binSize
+
+    const domain = calculateDomain(variableData)
+    if (!binSize) {
+      warn(`binSize not specified for IntervalSize binning, defaulting to ${(domain[1] - domain[0])}`)
+      binSize = domain[1] - domain[0]
+    }
+    const binCount = Math.floor((domain[1] - domain[0]) / binSize)
+
+    return createRangesFromInterval(domain, binSize, binCount)
+  } else if (method === 'EqualInterval') {
+    return geoStat.getClassEqInterval(numClasses)
+  } else if (method === 'StandardDeviation') {
+    return geoStat.getClassStdDeviation(numClasses)
+  } else if (method === 'ArithmeticProgression') {
+    return geoStat.getClassArithmeticProgression(numClasses)
+  } else if (method === 'GeometricProgression') {
+    return geoStat.getClassGeometricProgression(numClasses)
+  } else if (method === 'Quantile') {
+    return geoStat.getClassQuantile(numClasses)
+  } else if (method === 'Jenks') {
+    return geoStat.getClassJenks(numClasses)
+  } else if (method === 'Manual') {
+    return binInstructions.manualClasses
+  }
+}
+
+function parseBinInstructions (binInstructions) {
   if (binInstructions.constructor !== Object) {
     throw new Error('Bin only accepts an Object')
   }
 
-  const key = binInstructions.groupBy
-  if (key.constructor !== String) {
+  const groupBy = binInstructions.groupBy
+  if (groupBy.constructor !== String) {
     throw new Error('groupBy only accepts a String variable name')
   }
 
@@ -39,63 +78,21 @@ export function getIntervalBounds (data, binInstructions) {
     numClasses = 5
   }
 
-  const variableData = data[key]
-  if (!variableData) {
-    throw new Error(`groupBy variable ${key} does not exist`)
-  }
-  const geoStat = new Geostats(variableData)
-
-  let ranges
-
-  // Calculate ranges to obtain bins of a specified size
-  if (method === 'IntervalSize') {
-    let binSize = binInstructions.binSize
-
-    const domain = calculateDomain(variableData)
-    if (!binSize) {
-      warn(`binSize not specified for IntervalSize binning, defaulting to ${(domain[1] - domain[0])}`)
-      binSize = domain[1] - domain[0]
-    }
-    const binCount = Math.floor((domain[1] - domain[0]) / binSize)
-
-    ranges = rangeFromInterval(domain, binSize, binCount)
-    const newData = bin(data, key, ranges)
-    return newData
-  } else if (method === 'EqualInterval') {
-    ranges = geoStat.getClassEqInterval(numClasses)
-  } else if (method === 'StandardDeviation') {
-    ranges = geoStat.getClassStdDeviation(numClasses)
-  } else if (method === 'ArithmeticProgression') {
-    ranges = geoStat.getClassArithmeticProgression(numClasses)
-  } else if (method === 'GeometricProgression') {
-    ranges = geoStat.getClassGeometricProgression(numClasses)
-  } else if (method === 'Quantile') {
-    ranges = geoStat.getClassQuantile(numClasses)
-  } else if (method === 'Jenks') {
-    ranges = geoStat.getClassJenks(numClasses)
-  } else if (method === 'Manual') {
-    ranges = binInstructions.manualClasses
-  }
-
-  return ranges
+  return { groupBy, method, numClasses }
 }
 
-function rangeFromInterval (domain, interval, binCount) {
-  const ranges = []
-
-  // Ranges should start at the minimum value of variable of interest
+function createRangesFromInterval (domain, interval, binCount) {
   let lowerBound = domain[0]
+  const ranges = [lowerBound]
 
-  for (let i = 0; i < binCount; i++) {
+  for (let i = 0; i < binCount - 1; i++) {
     const upperBound = lowerBound + interval
-
-    ranges.push([lowerBound, upperBound])
-
+    ranges.push(upperBound)
     lowerBound = upperBound
   }
-  if (lowerBound < domain[1]) {
-    ranges.push([lowerBound, domain[1]])
-  }
+
+  ranges.push(domain[1])
+
   return ranges
 }
 

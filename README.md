@@ -41,7 +41,7 @@ This means that loading column-oriented data will be slightly faster than row-or
 | temporal     | `Date`                                                                                           | yes                     | NA          |
 | interval     | `Array` of two `Number`s                                                                         | yes                     | NA          |
 | geometry     | [GeoJSON geometry](https://tools.ietf.org/html/rfc7946#appendix-A) (except `GeometryCollection`) | only by loading GeoJSON | `$geometry` |
-| grouped      | `DataContainer`                                                                                  | No                      | `$grouped`  |
+| grouped      | `DataContainer`                                                                                  | no                      | `$grouped`  |
 
 Data of the types quantitative, categorical, temporal and interval are 'loadable', which means that they can be passed 
 in either column-oriented or row-oriented format to the `DataContainer` constructor. 
