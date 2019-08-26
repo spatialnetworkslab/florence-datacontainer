@@ -2,9 +2,7 @@ import DataContainer from '../index.js'
 import getDataLength from '../utils/getDataLength.js'
 import Geostats from '../utils/geoStats.js'
 import { calculateDomain } from '../utils/calculateDomain.js'
-
 import { warn } from '../utils/logging.js'
-import filter from './filter.js';
 
 export default function (data, binInstructions) {
   if (binInstructions.constructor === Object) {
@@ -89,7 +87,7 @@ function createRangesFromBinSize (variableData, binSize) {
     ranges.push(upperBound)
     lowerBound = upperBound
   }
-
+  
   ranges.push(domain[1])
 
   return ranges
@@ -129,21 +127,14 @@ function bin1d (data, variable, ranges) {
 
   const length = getDataLength(data)
 
-  // Loop through data
-  for (let ix = 0; ix < length; ix++) {
-    const instance = data[variable][ix]
+  for (let i = 0; i < length; i++) {
+    const value = data[variable][i]
+    const binIndex = getBinIndex(ranges, value)
 
-    // Find index of bin in which the instance belongs
-    const binIndex = ranges.findIndex(function (el, i) {
-      if (i === ranges.length - 1) {
-        return instance >= el[0] && instance <= el[1]
-      } else {
-        return instance >= el[0] && instance < el[1]
+    if (binIndex !== -1) {
+      for (const col in data) {
+        groups[binIndex][col].push(data[col][i])
       }
-    })
-
-    for (const col in data) {
-      groups[binIndex][col].push(data[col][ix])
     }
   }
 
@@ -156,9 +147,22 @@ function bin1d (data, variable, ranges) {
   const newData = {
     bins: nonEmptyRanges,
     $grouped: nonEmptyGroups.map(group => new DataContainer(group, { validate: false }))
-  }  
+  }
 
   return newData
+}
+
+function getBinIndex (bins, value) {
+  // Find index of bin in which the instance belongs
+  const binIndex = bins.findIndex(function (bin, i) {
+    if (i === bins.length - 1) {
+      return value >= bin[0] && value <= bin[1]
+    } else {
+      return value >= bin[0] && value < bin[1]
+    }
+  })
+
+  return binIndex
 }
 
 function getNonEmptyBinIndices (groups) {
@@ -172,5 +176,155 @@ function getNonEmptyBinIndices (groups) {
 }
 
 function binKd (data, variables, rangesPerVariable) {
-  // TODO
+  const binIndexTree = constructBinIndexTree(data, variables, rangesPerVariable)
+  const binnedData = convertTreeIntoColumnData(binIndexTree, variables, rangesPerVariable)
+
+  binnedData.$grouped = binnedData.$grouped.map(group => new DataContainer(group, { validate: false }))
+
+  return binnedData
+}
+
+function constructBinIndexTree (data, variables, rangesPerVariable) {
+  let binIndexTree = {}
+  const dataLength = getDataLength(data)
+
+  for (let i = 0; i < dataLength; i++) {
+    const binIndices = getBinIndices(data, i, variables, rangesPerVariable)
+    if (rowIsNotEmpty(binIndices)) {
+      binIndexTree = updateBranch(binIndexTree, binIndices, data, i)
+    }
+  }
+
+  return binIndexTree
+}
+
+function getBinIndices (data, index, variables, rangesPerVariable) {
+  const binIndices = []
+
+  for (let i = 0; i < variables.length; i++) {
+    const variable = variables[i]
+    const value = data[variable][index]
+
+    binIndices.push(getBinIndex(rangesPerVariable[i], value))
+  }
+
+  return binIndices
+}
+
+function rowIsNotEmpty (binIndices) {
+  return binIndices.every(binIndex => binIndex > -1)
+}
+
+function updateBranch (tree, indices, data, rowIndex) {
+  let currentLevel = tree
+
+  for (let i = 0; i < indices.length; i++) {
+    const index = indices[i]
+
+    if (lastIndex(i, indices.length)) {
+      if (!(index in currentLevel)) {
+        currentLevel[index] = initGroup(data)
+      }
+
+      currentLevel[index] = addRow(currentLevel[index], data, rowIndex)
+    } else {
+      if (!(index in currentLevel)) {
+        currentLevel[index] = {}
+      }
+
+      currentLevel = currentLevel[index]
+    }
+  }
+
+  return tree
+}
+
+function lastIndex (i, length) {
+  return i === (length - 1)
+}
+
+function initGroup (data) {
+  const group = {}
+  for (const columnName in data) {
+    group[columnName] = []
+  }
+
+  return group
+}
+
+function addRow (group, data, rowIndex) {
+  for (const columnName in data) {
+    group[columnName].push(data[columnName][rowIndex])
+  }
+
+  return group
+}
+
+function convertTreeIntoColumnData (binIndexTree, variables, binsPerVariable) {
+  const columnData = initColumnData(variables)
+  const dataIndex = variables.length
+
+  forEachBranch(binIndexTree, branchArray => {
+    for (let i = 0; i < variables.length; i++) {
+      const binIndex = branchArray[i]
+      const bin = binsPerVariable[i][binIndex]
+
+      const binnedColumnName = getBinnedColumnName(variables[i])
+
+      columnData[binnedColumnName].push(bin)
+    }
+
+    columnData.$grouped.push(branchArray[dataIndex])
+  })
+
+  return columnData
+}
+
+function initColumnData (variables) {
+  const columnData = { $grouped: [] }
+
+  for (let i = 0; i < variables.length; i++) {
+    const binnedColumnName = getBinnedColumnName(variables[i])
+    columnData[binnedColumnName] = []
+  }
+
+  return columnData
+}
+
+function forEachBranch (tree, callback) {
+  for (const path of traverse(tree)) {
+    callback(path)
+  }
+}
+
+// https://stackoverflow.com/a/45628445
+function * traverse (o) {
+  const memory = new Set()
+
+  function * innerTraversal (o, path = []) {
+    if (memory.has(o)) {
+      // we've seen this object before don't iterate it
+      return
+    }
+
+    // add the new object to our memory.
+    memory.add(o)
+
+    for (const i of Object.keys(o)) {
+      const itemPath = path.concat(i)
+
+      if (!('$key' in o[i])) {
+        yield * innerTraversal(o[i], itemPath)
+      } else {
+        itemPath.push(o[i])
+        yield itemPath
+      }
+    }
+  }
+
+  yield * innerTraversal(o)
+}
+
+function getBinnedColumnName (columnName) {
+  return 'bins_' + columnName
 }
