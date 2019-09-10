@@ -1,7 +1,7 @@
 import DataContainer from '../../src/index.js'
 
 describe('stack transformation', () => {
-  test('stack works', () => {
+  test('stack works with quantitative data', () => {
     const data = new DataContainer({
       a: [1, 2, 3, 4],
       b: [1, 2, 3, 4],
@@ -15,5 +15,22 @@ describe('stack transformation', () => {
     expect(data.column('stacked_a')).toEqual(expectedA)
     expect(data.column('stacked_b')).toEqual(expectedB)
     expect(data.column('stacked_c')).toEqual(expectedC)
+  })
+
+  test('non-existing columns throw error', () => {
+    const data = new DataContainer({
+      a: [1, 2, 3, 4]
+    })
+
+    expect(() => data.stack(['a', 'b'])).toThrow()
+  })
+
+  test('invalid column types throw error', () => {
+    const data = new DataContainer({
+      a: [1, 2, 3, 4],
+      b: ['a', 'b', 'a', 'c']
+    })
+
+    expect(() => data.stack(['a', 'b'])).toThrow()
   })
 })

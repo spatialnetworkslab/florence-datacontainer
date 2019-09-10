@@ -39,8 +39,6 @@ function validateStackInstructions (stackInstructions) {
 }
 
 function validateColumns (data, stackInstructions) {
-  let dataType
-
   for (const columnName of stackInstructions) {
     const column = data[columnName]
 
@@ -50,16 +48,8 @@ function validateColumns (data, stackInstructions) {
 
     const columnType = getColumnType(column)
 
-    if (!['quantitative', 'temporal'].includes(columnType)) {
-      throw new Error('Stack columns can only be of types \'quantitative\' or \'temporal\'')
-    }
-
-    if (dataType) {
-      if (dataType !== columnType) {
-        throw new Error('Stack columns must all be of the same type.')
-      }
-    } else {
-      dataType = columnType
+    if (columnType !== 'quantitative') {
+      throw new Error('Stack columns can only be of type \'quantitative\'')
     }
   }
 }
