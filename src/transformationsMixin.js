@@ -67,6 +67,11 @@ const methods = {
     return new DataContainer(data, { validate: false })
   },
 
+  stack (stackInstructions) {
+    const data = transformations.stack(this._data, stackInstructions)
+    return new DataContainer(data, { validate: false })
+  },
+
   summarise (summariseInstructions) {
     const data = transformations.summarise(this._data, summariseInstructions)
     return new DataContainer(data, { validate: false })

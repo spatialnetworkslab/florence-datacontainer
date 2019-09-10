@@ -30,7 +30,7 @@ const transformations = {
   reproject,
   transform: produce(transform),
   cumsum: produce(cumsum),
-  stack
+  stack: produce(stack)
 }
 
 export default transformations
