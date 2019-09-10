@@ -8,7 +8,6 @@ import { ensureValidRow, ensureRowExists } from './utils/ensureValidRow.js'
 import { isValidColumn, ensureValidColumn, columnExists, ensureColumnExists } from './utils/isValidColumn.js'
 import { calculateDomain } from './utils/calculateDomain.js'
 import { getColumnType } from './utils/getDataType.js'
-import { getNewKey } from './utils/key.js'
 import getDataLength from './utils/getDataLength.js'
 
 import { warn } from './utils/logging.js'
@@ -19,6 +18,7 @@ export default class DataContainer {
   constructor (data, options = { validate: true }) {
     this._data = {}
     this._keyToRowNumber = {}
+    this._domains = {}
 
     if (isColumnOriented(data)) {
       this._setColumnData(data, options)
@@ -86,8 +86,14 @@ export default class DataContainer {
   }
 
   domain (columnName) {
+    if (columnName in this._domains) {
+      return this._domains[columnName]
+    }
+
     const column = this.column(columnName)
-    return calculateDomain(column, columnName)
+    const domain = calculateDomain(column, columnName)
+    this._domains[columnName] = domain
+    return domain
   }
 
   type (columnName) {
@@ -127,7 +133,9 @@ export default class DataContainer {
     })
 
     const rowNumber = getDataLength(this._data) - 1
-    const key = getNewKey(this._data.$key)
+    const keyDomain = this.domain('$key')
+    keyDomain[1]++
+    const key = keyDomain[1]
 
     this._data.$key.push(key)
     this._keyToRowNumber[key] = rowNumber
@@ -141,7 +149,7 @@ export default class DataContainer {
     this._data = produce(this._data, draft => {
       for (const columnName in row) {
         if (columnName === '$key') {
-          warn(`Cannot update '$key' of row`)
+          warn('Cannot update \'$key\' of row')
           continue
         }
 

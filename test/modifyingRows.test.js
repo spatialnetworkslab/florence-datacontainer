@@ -9,8 +9,6 @@ describe('modifying rows', () => {
 
     dataContainer.addRow({ a: 5, b: 'c' })
 
-    console.log(dataContainer)
-
     expect(dataContainer.row(4)).toEqual({ a: 5, b: 'c', $key: 4 })
   })
 
