@@ -496,6 +496,33 @@ const reprojectFunction = proj4('EPSG:4326', 'EPSG:3857').forward
 const dataContainer = new DataContainer(geojson).reproject(reprojectFunction)
 ```
 
+<a name="datacontainer_cumsum" href="#datacontainer_cumsum">#</a> <i>DataContainer</i>.<b>cumsum</b>(cumsumInstructions)
+
+Calculates the cumulative sum of one or more columns. `cumsumInstructions` is an `Object` with new column 
+names as keys, and the columns on which the cumulative sum should be based as values. Only quantitative
+columns can be used.
+
+```js
+const dataContainer = new DataContainer({ a: [1, 2, 3, 4] })
+dataContainer.cumsum({ cumsum_a: 'a' }).column('cumsum_a') // [1, 3, 6, 10]
+```
+
+<a name="datacontainer_stack" href="#datacontainer_stack">#</a> <i>DataContainer</i>.<b>stack</b>(stackInstructions)
+
+Calculates the cumulative sum over all rows for the selected columns. `stackInstructions` in a `Array` of column
+names that have to be stacked. Only quantitative columns can be used. The new columns will be called
+`stacked_` plus the original name.
+
+```js
+const dataContainer = new DataContainer({
+  a: [1, 2, 3, 4],
+  b: [1, 2, 3, 4]
+}).stack(['a', 'b'])
+
+dataContainer.column('stacked_a') // [1, 2, 3, 4]
+dataContainer.column('stacked_b') // [2, 4, 6, 8]
+```
+
 ### Adding and removing rows
 
 All of these functions work in-place.

@@ -8,9 +8,9 @@ describe('stack transformation', () => {
       c: [1, 2, 3, 4]
     }).stack(['a', 'b', 'c'])
 
-    const expectedA = [[0, 1], [0, 2], [0, 3], [0, 4]]
-    const expectedB = [[1, 2], [2, 4], [3, 6], [4, 8]]
-    const expectedC = [[2, 3], [4, 6], [6, 9], [8, 12]]
+    const expectedA = [1, 2, 3, 4]
+    const expectedB = [2, 4, 6, 8]
+    const expectedC = [3, 6, 9, 12]
 
     expect(data.column('stacked_a')).toEqual(expectedA)
     expect(data.column('stacked_b')).toEqual(expectedB)

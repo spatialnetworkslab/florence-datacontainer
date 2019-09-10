@@ -12,13 +12,10 @@ export default function (data, stackInstructions) {
     const stackedColumnName = `stacked_${columnName}`
 
     if (!previousStackedColumnName) {
-      const stackedColumn = unstackedColumn.map(value => [0, value])
-      stackedColumns[stackedColumnName] = stackedColumn
+      stackedColumns[stackedColumnName] = unstackedColumn
     } else {
       const previousStackedColumn = stackedColumns[previousStackedColumnName]
-      const stackedColumn = previousStackedColumn.map((values, i) => {
-        return [values[1], values[1] + unstackedColumn[i]]
-      })
+      const stackedColumn = previousStackedColumn.map((value, i) => value + unstackedColumn[i])
       stackedColumns[stackedColumnName] = stackedColumn
     }
 

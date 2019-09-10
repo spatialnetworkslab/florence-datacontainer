@@ -13,7 +13,7 @@ export default function (data, cumsumInstructions) {
     const oldColName = cumsumInstructions[newColName]
 
     if (getColumnType(data[oldColName]) !== 'quantitative') {
-      throw new Error(`cumsum only works with quantitative data.`)
+      throw new Error('cumsum only works with quantitative data.')
     }
 
     let currentSum = 0
