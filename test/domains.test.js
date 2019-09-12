@@ -84,4 +84,52 @@ describe('calculating domains', () => {
 
     expect(() => groupedDataContainer.domain('$grouped')).toThrow()
   })
+
+  // addRow
+  test('domain is correct after adding row', () => {
+    const dataContainer = new DataContainer({
+      a: [1, 2],
+      b: ['apple', 'banana']
+    })
+
+    dataContainer.domain('a')
+    dataContainer.domain('b')
+
+    dataContainer.addRow({ a: 3, b: 'coconut' })
+
+    expect(dataContainer.domain('a')).toEqual([1, 3])
+    expect(dataContainer.domain('b')).toEqual(['apple', 'banana', 'coconut'])
+  })
+
+  // updateRow
+  test('domain is correct after updating row', () => {
+    const dataContainer = new DataContainer({
+      a: [1, 2],
+      b: ['apple', 'banana']
+    })
+
+    dataContainer.domain('a')
+    dataContainer.domain('b')
+
+    dataContainer.updateRow(0, { a: 3, b: 'coconut' })
+
+    expect(dataContainer.domain('a')).toEqual([2, 3])
+    expect(dataContainer.domain('b')).toEqual(['coconut', 'banana'])
+  })
+
+  // // deleteRow
+  test('domain is correct after deleting row', () => {
+    const dataContainer = new DataContainer({
+      a: [1, 2, 3],
+      b: ['apple', 'banana', 'coconut']
+    })
+
+    dataContainer.domain('a')
+    dataContainer.domain('b')
+
+    dataContainer.deleteRow(0)
+
+    expect(dataContainer.domain('a')).toEqual([2, 3])
+    expect(dataContainer.domain('b')).toEqual(['banana', 'coconut'])
+  })
 })

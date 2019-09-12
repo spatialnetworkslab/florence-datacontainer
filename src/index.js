@@ -6,8 +6,8 @@ import transformationsMixin from './transformationsMixin.js'
 import { isColumnOriented, isRowOriented, isGeoJSON } from './utils/checkFormat.js'
 import { ensureValidRow, ensureRowExists } from './utils/ensureValidRow.js'
 import { isValidColumn, ensureValidColumn, columnExists, ensureColumnExists } from './utils/isValidColumn.js'
-import { calculateDomain } from './utils/calculateDomain.js'
-import { getColumnType } from './utils/getDataType.js'
+import { calculateDomain, updateDomain } from './utils/calculateDomain.js'
+import { getColumnType, getDataType } from './utils/getDataType.js'
 import getDataLength from './utils/getDataLength.js'
 
 import { warn } from './utils/logging.js'
@@ -125,10 +125,14 @@ export default class DataContainer {
   // Adding and removing rows
   addRow (row) {
     ensureValidRow(row, this)
+    const self = this
 
     this._data = produce(this._data, draft => {
       for (const columnName in row) {
-        draft[columnName].push(row[columnName])
+        const value = row[columnName]
+        draft[columnName].push(value)
+
+        self._updateDomainIfNecessary(columnName, value)
       }
     })
 
@@ -144,6 +148,7 @@ export default class DataContainer {
   updateRow (key, row) {
     ensureRowExists(key, this)
     ensureValidRow(row, this)
+    const self = this
     const rowNumber = this._keyToRowNumber[key]
 
     this._data = produce(this._data, draft => {
@@ -155,18 +160,23 @@ export default class DataContainer {
 
         const value = row[columnName]
         draft[columnName][rowNumber] = value
+
+        self._resetDomainIfNecessary(columnName)
       }
     })
   }
 
   deleteRow (key) {
     ensureRowExists(key, this)
+    const self = this
     const rowNumber = this._keyToRowNumber[key]
     delete this._keyToRowNumber[key]
 
     this._data = produce(this._data, draft => {
       for (const columnName in draft) {
         draft[columnName].splice(rowNumber, 1)
+
+        self._resetDomainIfNecessary(columnName)
       }
     })
   }
@@ -187,6 +197,24 @@ export default class DataContainer {
     }
 
     return row
+  }
+
+  _updateDomainIfNecessary (columnName, value) {
+    const type = getDataType(value)
+
+    if (columnName in this._domains) {
+      this._domains[columnName] = updateDomain(
+        this._domains[columnName],
+        value,
+        type
+      )
+    }
+  }
+
+  _resetDomainIfNecessary (columnName) {
+    if (columnName in this._domains) {
+      delete this._domains[columnName]
+    }
   }
 }
 
