@@ -12,6 +12,24 @@ describe('modifying rows', () => {
     expect(dataContainer.row(4)).toEqual({ a: 5, b: 'c', $key: 4 })
   })
 
+  test('addRow with missing columns throws error', () => {
+    const dataContainer = new DataContainer({
+      a: [1, 2, 3, 4],
+      b: ['a', 'a', 'b', 'b']
+    })
+
+    expect(() => dataContainer.addRow({ a: 5 })).toThrow()
+  })
+
+  test('addRow with unknown columns throws error', () => {
+    const dataContainer = new DataContainer({
+      a: [1, 2, 3, 4],
+      b: ['a', 'a', 'b', 'b']
+    })
+
+    expect(() => dataContainer.addRow({ a: 5, b: 'c', c: 1 })).toThrow()
+  })
+
   test('updateRow works as expected', () => {
     const dataContainer = new DataContainer({
       a: [1, 2, 3, 4],
@@ -21,6 +39,26 @@ describe('modifying rows', () => {
     dataContainer.updateRow(2, { a: 5, b: 'c' })
 
     expect(dataContainer.column('b')).toEqual(['a', 'a', 'c', 'b'])
+  })
+
+  test('updateRow allows only updating the desired columns', () => {
+    const dataContainer = new DataContainer({
+      a: [1, 2, 3, 4],
+      b: ['a', 'a', 'b', 'b']
+    })
+
+    dataContainer.updateRow(2, { b: 'c' })
+
+    expect(dataContainer.column('b')).toEqual(['a', 'a', 'c', 'b'])
+  })
+
+  test('updateRow with unknown columns throws error', () => {
+    const dataContainer = new DataContainer({
+      a: [1, 2, 3, 4],
+      b: ['a', 'a', 'b', 'b']
+    })
+
+    expect(() => dataContainer.updateRow(2, { c: 'd' })).toThrow()
   })
 
   test('deleteRow works as expected', () => {

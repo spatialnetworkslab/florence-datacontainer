@@ -4,7 +4,7 @@ import dataLoadingMixin from './dataLoadingMixin.js'
 import transformationsMixin from './transformationsMixin.js'
 
 import { isColumnOriented, isRowOriented, isGeoJSON } from './utils/checkFormat.js'
-import { ensureValidRow, ensureRowExists } from './utils/ensureValidRow.js'
+import { ensureValidRow, ensureValidRowUpdate, ensureRowExists } from './utils/ensureValidRow.js'
 import { isValidColumn, ensureValidColumn, columnExists, ensureColumnExists } from './utils/isValidColumn.js'
 import { calculateDomain, updateDomain } from './utils/calculateDomain.js'
 import { getColumnType, getDataType } from './utils/getDataType.js'
@@ -147,7 +147,7 @@ export default class DataContainer {
 
   updateRow (key, row) {
     ensureRowExists(key, this)
-    ensureValidRow(row, this)
+    ensureValidRowUpdate(row, this)
     const self = this
     const rowNumber = this._keyToRowNumber[key]
 
