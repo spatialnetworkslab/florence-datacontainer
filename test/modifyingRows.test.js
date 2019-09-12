@@ -61,6 +61,17 @@ describe('modifying rows', () => {
     expect(() => dataContainer.updateRow(2, { c: 'd' })).toThrow()
   })
 
+  test('updateRow function syntax works as expected', () => {
+    const dataContainer = new DataContainer({
+      a: [1, 2, 3, 4],
+      b: ['a', 'a', 'b', 'b']
+    })
+
+    dataContainer.updateRow(2, row => ({ a: row.a + 5 }))
+
+    expect(dataContainer.column('a')).toEqual([1, 2, 8, 4])
+  })
+
   test('deleteRow works as expected', () => {
     const dataContainer = new DataContainer({
       a: [1, 2, 3, 4],

@@ -146,6 +146,16 @@ export default class DataContainer {
   }
 
   updateRow (key, row) {
+    if (row.constructor === Function) {
+      const result = row(this.row(key))
+
+      if (!(result && result.constructor === Object)) {
+        throw new Error('updateRow function must return Object')
+      }
+
+      this.updateRow(key, result)
+    }
+
     ensureRowExists(key, this)
     ensureValidRowUpdate(row, this)
     const self = this
