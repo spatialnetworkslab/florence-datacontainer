@@ -4,12 +4,22 @@ export default function (data, selection) {
   }
 
   if (selection.constructor === Array) {
-    for (const key in data) {
-      if (!selection.includes(key)) {
-        delete data[key]
+    validateSelectionInstructions(data, selection)
+
+    for (const columnName in data) {
+      if (!selection.includes(columnName)) {
+        delete data[columnName]
       }
     }
   } else {
     throw new Error('select can only be used with a string or array of strings')
+  }
+}
+
+function validateSelectionInstructions (data, selection) {
+  for (const columnName of selection) {
+    if (!(columnName in data)) {
+      throw new Error(`Column '${columnName}' not found`)
+    }
   }
 }
