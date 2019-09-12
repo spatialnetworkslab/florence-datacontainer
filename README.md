@@ -543,8 +543,17 @@ Updates an existing row.
 
 ```js
 const dataContainer = new DataContainer({ a: [1, 2, 3], b: ['a', 'b', 'c'] })
-dataContainer.updateRow(2, { a: 100, b: 'fff' })
+dataContainer.updateRow(2, { a: 100 })
 dataContainer.column('a') // [1, 2, 100]
+```
+
+Instead of using an `Object` as the second argument, it is also possible to use a `Function`. This function
+will receive the existing row as first argument, and must return an `Object`.
+
+```js
+const dataContainer = new DataContainer({ a: [1, 2, 3], b: ['a', 'b', 'c'] })
+dataContainer.updateRow(2, row => ({ a: row.a + 100 }))
+dataContainer.column('a') // [1, 2, 103]
 ```
 
 <a name="datacontainer_deleterow" href="#datacontainer_deleterow">#</a> <i>DataContainer</i>.<b>deleteRow</b>(key)
