@@ -13,6 +13,7 @@ A powerful yet light-weight interface to manage data. Designed to be used with [
 * [Checks](#checks)
 * [Transformations](#transformations)
 * [Adding and removing rows](#adding-and-removing-rows)
+* [Adding and removing columns](#adding-and-removing-columns)
 
 ### Loading data
 
@@ -558,10 +559,38 @@ dataContainer.column('a') // [1, 2, 103]
 
 <a name="datacontainer_deleterow" href="#datacontainer_deleterow">#</a> <i>DataContainer</i>.<b>deleteRow</b>(key)
 
-Deletes an existing row,
+Deletes an existing row.
 
 ```js
 const dataContainer = new DataContainer({ a: [1, 2, 3], b: ['a', 'b', 'c'] })
 dataContainer.deleteRow(2)
 dataContainer.column('a') // [1, 2]
+```
+
+### Adding and removing columns
+
+All of these functions work in-place.
+
+<a name="datacontainer_addcolumn" href="#datacontainer_addcolumn">#</a> <i>DataContainer</i>.<b>addColumn</b>(columnName, column)
+
+Adds a new column. `column` must be an `Array` of the same length as the rest of the data.
+
+```js
+const dataContainer = new DataContainer({ a: [1, 2, 3], b: ['a', 'b', 'c'] })
+dataContainer.addColumn('c', [4, 5, 6])
+dataContainer.column('c') // [4, 5, 6]
+```
+
+<a name="datacontainer_replacecolumn" href="#datacontainer_replacecolumn">#</a> <i>DataContainer</i>.<b>replaceColumn</b>(columnName, column)
+
+Equivalent to calling `.deleteColumn` followed by `addColumn`.
+
+<a name="datacontainer_deletecolumn" href="#datacontainer_deletecolumn">#</a> <i>DataContainer</i>.<b>deleteColumn</b>(columnName)
+
+Deletes an existing column.
+
+```js
+const dataContainer = new DataContainer({ a: [1, 2, 3], b: ['a', 'b', 'c'] })
+dataContainer.deleteColumn('b')
+dataContainer.data() // { $key: [0, 1, 2], a: [1, 2, 3] }
 ```
