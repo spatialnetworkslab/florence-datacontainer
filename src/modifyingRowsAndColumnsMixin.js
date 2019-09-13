@@ -6,7 +6,6 @@ import { ensureValidColumn, ensureColumnExists } from './utils/isValidColumn.js'
 import { updateDomain } from './utils/calculateDomain.js'
 import { getDataType } from './utils/getDataType.js'
 import getDataLength from './utils/getDataLength.js'
-import { warn } from './utils/logging.js'
 
 const methods = {
   // Rows
