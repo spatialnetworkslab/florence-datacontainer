@@ -508,11 +508,10 @@ const dataContainer = new DataContainer({ a: [1, 2, 3, 4] })
 dataContainer.cumsum({ cumsum_a: 'a' }).column('cumsum_a') // [1, 3, 6, 10]
 ```
 
-<a name="datacontainer_stack" href="#datacontainer_stack">#</a> <i>DataContainer</i>.<b>stack</b>(stackInstructions)
+<a name="datacontainer_rowCumsum" href="#datacontainer_rowCumsum">#</a> <i>DataContainer</i>.<b>rowCumsum</b>(cumsumInstructions)
 
-Calculates the cumulative sum over all rows for the selected columns. `stackInstructions` in a `Array` of column
-names that have to be stacked. Only quantitative columns can be used. The new columns will be called
-`stacked_` plus the original name.
+Calculates the cumulative sum over all rows for the selected columns. `cumsumInstructions` is an `Array` of column
+names that will be added together. Only quantitative columns can be used.
 
 ```js
 const dataContainer = new DataContainer({

@@ -67,10 +67,7 @@ const methods = {
 
     this._data = produce(this._data, draft => {
       for (const columnName in draft) {
-        throwErrorIfColumnIsKey(columnName)
-
         draft[columnName].splice(rowNumber, 1)
-
         self._resetDomainIfNecessary(columnName)
       }
     })

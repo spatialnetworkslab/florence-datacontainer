@@ -13,7 +13,7 @@ import dropNA from './dropNA.js'
 import reproject from './reproject.js'
 import transform from './transform.js'
 import cumsum from './cumsum.js'
-import stack from './stack.js'
+import rowCumsum from './rowCumsum.js'
 
 const transformations = {
   filter,
@@ -30,7 +30,7 @@ const transformations = {
   reproject,
   transform: produce(transform),
   cumsum: produce(cumsum),
-  stack: produce(stack)
+  rowCumsum: produce(rowCumsum)
 }
 
 export default transformations

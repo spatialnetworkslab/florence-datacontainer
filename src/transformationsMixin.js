@@ -62,13 +62,13 @@ const methods = {
     return new DataContainer(data, { validate: false })
   },
 
-  select (selection) {
-    const data = transformations.select(this._data, selection)
+  rowCumsum (cumsumInstructions) {
+    const data = transformations.rowCumsum(this._data, cumsumInstructions)
     return new DataContainer(data, { validate: false })
   },
 
-  stack (stackInstructions) {
-    const data = transformations.stack(this._data, stackInstructions)
+  select (selection) {
+    const data = transformations.select(this._data, selection)
     return new DataContainer(data, { validate: false })
   },
 
