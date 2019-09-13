@@ -510,17 +510,23 @@ dataContainer.cumsum({ cumsum_a: 'a' }).column('cumsum_a') // [1, 3, 6, 10]
 
 <a name="datacontainer_rowCumsum" href="#datacontainer_rowCumsum">#</a> <i>DataContainer</i>.<b>rowCumsum</b>(cumsumInstructions)
 
-Calculates the cumulative sum over all rows for the selected columns. `cumsumInstructions` is an `Array` of column
-names that will be added together. Only quantitative columns can be used.
+Calculates the cumulative sum over all rows for the selected columns. `cumsumInstructions` is an `Array` with either:
+1. column names (`String`s)
+2. `Object`s with only one key and one value, where the key is the new column name and the value the old.
+
+In the case of 1., the old columns will be overwritten.
 
 ```js
 const dataContainer = new DataContainer({
   a: [1, 2, 3, 4],
-  b: [1, 2, 3, 4]
-}).stack(['a', 'b'])
+  b: [1, 2, 3, 4],
+  c: [1, 2, 3, 4]
+}).rowCumsum(['a', 'b', { rowCumsum_c: 'c' }])
 
-dataContainer.column('stacked_a') // [1, 2, 3, 4]
-dataContainer.column('stacked_b') // [2, 4, 6, 8]
+dataContainer.column('a') // [1, 2, 3, 4]
+dataContainer.column('b') // [2, 4, 6, 8]
+dataContainer.column('rowCumsum_c') // [3, 6, 9, 12]
+dataContainer.column('c') // [1, 2, 3, 4]
 ```
 
 ### Adding and removing rows
