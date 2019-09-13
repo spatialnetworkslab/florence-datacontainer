@@ -497,7 +497,7 @@ const reprojectFunction = proj4('EPSG:4326', 'EPSG:3857').forward
 const dataContainer = new DataContainer(geojson).reproject(reprojectFunction)
 ```
 
-<a name="datacontainer_cumsum" href="#datacontainer_cumsum">#</a> <i>DataContainer</i>.<b>cumsum</b>(cumsumInstructions)
+<a name="datacontainer_cumsum" href="#datacontainer_cumsum">#</a> <i>DataContainer</i>.<b>cumsum</b>(cumsumInstructions, { asInterval: false })
 
 Calculates the cumulative sum of one or more columns. `cumsumInstructions` is an `Object` with new column 
 names as keys, and the columns on which the cumulative sum should be based as values. Only quantitative
@@ -508,7 +508,15 @@ const dataContainer = new DataContainer({ a: [1, 2, 3, 4] })
 dataContainer.cumsum({ cumsum_a: 'a' }).column('cumsum_a') // [1, 3, 6, 10]
 ```
 
-<a name="datacontainer_rowCumsum" href="#datacontainer_rowCumsum">#</a> <i>DataContainer</i>.<b>rowCumsum</b>(cumsumInstructions)
+If `asInterval` is set to `true`, intervals instead of integers will be returned (mimicking d3's 
+[stack](https://github.com/d3/d3-shape#stack)):
+
+```js
+const dataContainer = new DataContainer({ a: [1, 2, 3, 4] })
+dataContainer.cumsum({ cumsum_a: 'a' }).column('cumsum_a') // [[0, 1], [1, 3], [3, 6], [6, 10]]
+```
+
+<a name="datacontainer_rowCumsum" href="#datacontainer_rowCumsum">#</a> <i>DataContainer</i>.<b>rowCumsum</b>(cumsumInstructions, { asInterval: false })
 
 Calculates the cumulative sum over all rows for the selected columns. `cumsumInstructions` is an `Array` with either:
 1. column names (`String`s)
@@ -528,6 +536,8 @@ dataContainer.column('b') // [2, 4, 6, 8]
 dataContainer.column('rowCumsum_c') // [3, 6, 9, 12]
 dataContainer.column('c') // [1, 2, 3, 4]
 ```
+
+`rowCumsum`'s `asInterval` functionality works similar to `cumsum`'s.
 
 ### Adding and removing rows
 
