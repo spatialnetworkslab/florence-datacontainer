@@ -33,7 +33,7 @@ export default function (data, cumsumInstructions, options = { asInterval: false
       } else {
         newColumns[newColName].push(currentSum)
       }
-      
+
       previousSum = currentSum
     }
   }
