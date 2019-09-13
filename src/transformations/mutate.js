@@ -2,9 +2,10 @@ import getDataLength from '../utils/getDataLength.js'
 
 export function mutate (data, mutateInstructions) {
   const length = getDataLength(data)
+  const newData = {}
 
   for (const key in mutateInstructions) {
-    data[key] = new Array(length)
+    newData[key] = new Array(length)
   }
 
   for (let i = 0; i < length; i++) {
@@ -23,9 +24,11 @@ export function mutate (data, mutateInstructions) {
 
     for (const key in mutateInstructions) {
       const mutateFunction = mutateInstructions[key]
-      data[key][i] = mutateFunction(row, i, prevRow, nextRow)
+      newData[key][i] = mutateFunction(row, i, prevRow, nextRow)
     }
   }
+
+  Object.assign(data, newData)
 }
 
 export function transmute (data, mutateObj) {
