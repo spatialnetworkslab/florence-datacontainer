@@ -33,6 +33,22 @@ describe('rowCumsum transformation', () => {
     expect(data.column('c')).toEqual(expectedC)
   })
 
+  test('cumsum works with asInterval', () => {
+    const data = new DataContainer({
+      a: [1, 2, 3, 4],
+      b: [1, 2, 3, 4],
+      c: [1, 2, 3, 4]
+    }).rowCumsum(['a', 'b', 'c'], { asInterval: true })
+
+    const expectedA = [[0, 1], [0, 2], [0, 3], [0, 4]]
+    const expectedB = [[1, 2], [2, 4], [3, 6], [4, 8]]
+    const expectedC = [[2, 3], [4, 6], [6, 9], [8, 12]]
+
+    expect(data.column('a')).toEqual(expectedA)
+    expect(data.column('b')).toEqual(expectedB)
+    expect(data.column('c')).toEqual(expectedC)
+  })
+
   test('non-existing columns throw error', () => {
     const data = new DataContainer({
       a: [1, 2, 3, 4]

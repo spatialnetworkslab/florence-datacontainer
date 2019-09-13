@@ -1,7 +1,8 @@
 import { getColumnType } from '../utils/getDataType.js'
 import { checkRegularColumnName } from '../utils/checkFormat.js'
 
-export default function (data, _cumsumInstructions) {
+export default function (data, _cumsumInstructions, options = { asInterval: false }) {
+  const asInterval = options.asInterval
   const cumsumInstructions = parseCumsumInstructions(_cumsumInstructions)
   validateColumns(data, cumsumInstructions)
 
@@ -13,10 +14,25 @@ export default function (data, _cumsumInstructions) {
     const oldColumn = data[oldName]
 
     if (previousColumnName === undefined) {
-      rowCumsumColumns[newName] = oldColumn
+      if (asInterval) {
+        rowCumsumColumns[newName] = oldColumn.map(value => [0, value])
+      } else {
+        rowCumsumColumns[newName] = oldColumn
+      }
     } else {
       const previousColumn = rowCumsumColumns[previousColumnName]
-      const newColumn = oldColumn.map((value, i) => value + previousColumn[i])
+      let newColumn
+
+      if (asInterval) {
+        newColumn = oldColumn.map((value, i) => {
+          const previousValue = previousColumn[i][1]
+          const newValue = previousValue + value
+          return [previousValue, newValue]
+        })
+      } else {
+        newColumn = oldColumn.map((value, i) => value + previousColumn[i])
+      }
+
       rowCumsumColumns[newName] = newColumn
     }
 

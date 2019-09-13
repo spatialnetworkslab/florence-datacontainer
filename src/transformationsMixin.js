@@ -12,8 +12,8 @@ const methods = {
     return new DataContainer(data, { validate: false })
   },
 
-  cumsum (cumsumInstructions) {
-    const data = transformations.cumsum(this._data, cumsumInstructions)
+  cumsum (cumsumInstructions, options) {
+    const data = transformations.cumsum(this._data, cumsumInstructions, options)
     return new DataContainer(data, { validate: false })
   },
 
@@ -62,8 +62,8 @@ const methods = {
     return new DataContainer(data, { validate: false })
   },
 
-  rowCumsum (cumsumInstructions) {
-    const data = transformations.rowCumsum(this._data, cumsumInstructions)
+  rowCumsum (cumsumInstructions, options) {
+    const data = transformations.rowCumsum(this._data, cumsumInstructions, options)
     return new DataContainer(data, { validate: false })
   },
 
