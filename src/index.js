@@ -97,6 +97,10 @@ export default class DataContainer {
     return getColumnType(column, columnName)
   }
 
+  columnNames () {
+    return Object.keys(this._data)
+  }
+
   // Checks
   hasColumn (columnName) {
     return columnExists(columnName, this)

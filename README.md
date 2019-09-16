@@ -513,7 +513,8 @@ If `asInterval` is set to `true`, intervals instead of integers will be returned
 
 ```js
 const dataContainer = new DataContainer({ a: [1, 2, 3, 4] })
-dataContainer.cumsum({ cumsum_a: 'a' }).column('cumsum_a') // [[0, 1], [1, 3], [3, 6], [6, 10]]
+  .cumsum({ cumsum_a: 'a' }, { asInterval: true })
+dataContainer.column('cumsum_a') // [[0, 1], [1, 3], [3, 6], [6, 10]]
 ```
 
 <a name="datacontainer_rowCumsum" href="#datacontainer_rowCumsum">#</a> <i>DataContainer</i>.<b>rowCumsum</b>(cumsumInstructions, { asInterval: false })
