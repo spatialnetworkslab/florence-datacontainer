@@ -27,7 +27,10 @@ const methods = {
     keyDomain[1]++
     const key = keyDomain[1]
 
-    this._data.$key.push(key)
+    this._data = produce(this._data, draft => {
+      draft.$key.push(key)
+    })
+
     this._keyToRowNumber[key] = rowNumber
   },
 
