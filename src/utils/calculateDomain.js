@@ -156,7 +156,11 @@ function initDomain (type) {
   return domain
 }
 
-function updateDomain (domain, value, type) {
+export function updateDomain (domain, value, type) {
+  if (!['quantitative', 'categorical', 'temporal', 'interval'].includes(type)) {
+    throw new Error(`Cannot set domain for column of type '${type}'`)
+  }
+
   if (type === 'quantitative') {
     if (domain[0] >= value) { domain[0] = value }
     if (domain[1] <= value) { domain[1] = value }

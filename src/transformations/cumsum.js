@@ -3,7 +3,8 @@ import { getColumnType } from '../utils/getDataType.js'
 import { checkRegularColumnName } from '../utils/checkFormat.js'
 import { isInvalid } from '../utils/equals.js'
 
-export default function (data, cumsumInstructions) {
+export default function (data, cumsumInstructions, options = { asInterval: false }) {
+  const asInterval = options.asInterval
   const length = getDataLength(data)
   const newColumns = {}
 
@@ -13,9 +14,10 @@ export default function (data, cumsumInstructions) {
     const oldColName = cumsumInstructions[newColName]
 
     if (getColumnType(data[oldColName]) !== 'quantitative') {
-      throw new Error(`cumsum only works with quantitative data.`)
+      throw new Error('cumsum columns can only be of type \'quantitative\'')
     }
 
+    let previousSum = 0
     let currentSum = 0
     newColumns[newColName] = []
 
@@ -26,7 +28,13 @@ export default function (data, cumsumInstructions) {
         currentSum += value
       }
 
-      newColumns[newColName].push(currentSum)
+      if (asInterval) {
+        newColumns[newColName].push([previousSum, currentSum])
+      } else {
+        newColumns[newColName].push(currentSum)
+      }
+
+      previousSum = currentSum
     }
   }
 

@@ -1,17 +1,12 @@
-import produce from 'immer'
-
 import dataLoadingMixin from './dataLoadingMixin.js'
 import transformationsMixin from './transformationsMixin.js'
+import modifyingRowsAndColumnsMixin from './modifyingRowsAndColumnsMixin.js'
 
 import { isColumnOriented, isRowOriented, isGeoJSON } from './utils/checkFormat.js'
-import { ensureValidRow, ensureRowExists } from './utils/ensureValidRow.js'
 import { isValidColumn, ensureValidColumn, columnExists, ensureColumnExists } from './utils/isValidColumn.js'
 import { calculateDomain } from './utils/calculateDomain.js'
 import { getColumnType } from './utils/getDataType.js'
-import { getNewKey } from './utils/key.js'
 import getDataLength from './utils/getDataLength.js'
-
-import { warn } from './utils/logging.js'
 
 import { Group } from './transformations/groupBy.js'
 
@@ -19,6 +14,7 @@ export default class DataContainer {
   constructor (data, options = { validate: true }) {
     this._data = {}
     this._keyToRowNumber = {}
+    this._domains = {}
 
     if (isColumnOriented(data)) {
       this._setColumnData(data, options)
@@ -86,13 +82,23 @@ export default class DataContainer {
   }
 
   domain (columnName) {
+    if (columnName in this._domains) {
+      return this._domains[columnName]
+    }
+
     const column = this.column(columnName)
-    return calculateDomain(column, columnName)
+    const domain = calculateDomain(column, columnName)
+    this._domains[columnName] = domain
+    return domain
   }
 
   type (columnName) {
     const column = this.column(columnName)
     return getColumnType(column, columnName)
+  }
+
+  columnNames () {
+    return Object.keys(this._data)
   }
 
   // Checks
@@ -116,56 +122,6 @@ export default class DataContainer {
     }
   }
 
-  // Adding and removing rows
-  addRow (row) {
-    ensureValidRow(row, this)
-
-    this._data = produce(this._data, draft => {
-      for (const columnName in row) {
-        draft[columnName].push(row[columnName])
-      }
-    })
-
-    const rowNumber = getDataLength(this._data) - 1
-    const key = getNewKey(this._data.$key)
-
-    this._data = produce(this._data, draft => {
-      draft.$key.push(key)
-    })
-
-    this._keyToRowNumber[key] = rowNumber
-  }
-
-  updateRow (key, row) {
-    ensureRowExists(key, this)
-    ensureValidRow(row, this)
-    const rowNumber = this._keyToRowNumber[key]
-
-    this._data = produce(this._data, draft => {
-      for (const columnName in row) {
-        if (columnName === '$key') {
-          warn(`Cannot update '$key' of row`)
-          continue
-        }
-
-        const value = row[columnName]
-        draft[columnName][rowNumber] = value
-      }
-    })
-  }
-
-  deleteRow (key) {
-    ensureRowExists(key, this)
-    const rowNumber = this._keyToRowNumber[key]
-    delete this._keyToRowNumber[key]
-
-    this._data = produce(this._data, draft => {
-      for (const columnName in draft) {
-        draft[columnName].splice(rowNumber, 1)
-      }
-    })
-  }
-
   // Private methods
   _row (rowNumber) {
     const length = getDataLength(this._data)
@@ -187,5 +143,6 @@ export default class DataContainer {
 
 dataLoadingMixin(DataContainer)
 transformationsMixin(DataContainer)
+modifyingRowsAndColumnsMixin(DataContainer)
 
 const invalidDataError = new Error('Data passed to DataContainer is of unknown format')

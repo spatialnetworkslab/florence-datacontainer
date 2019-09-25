@@ -13,6 +13,7 @@ import dropNA from './dropNA.js'
 import reproject from './reproject.js'
 import transform from './transform.js'
 import cumsum from './cumsum.js'
+import rowCumsum from './rowCumsum.js'
 
 const transformations = {
   filter,
@@ -28,7 +29,8 @@ const transformations = {
   dropNA,
   reproject,
   transform: produce(transform),
-  cumsum: produce(cumsum)
+  cumsum: produce(cumsum),
+  rowCumsum: produce(rowCumsum)
 }
 
 export default transformations

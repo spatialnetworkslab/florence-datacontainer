@@ -1,10 +1,4 @@
-import { calculateDomain } from './calculateDomain.js'
 import { getDataType } from './getDataType.js'
-
-export function getNewKey (keyColumn) {
-  const domain = calculateDomain(keyColumn, '$key')
-  return domain[1] + 1
-}
 
 export function generateKeyColumn (length) {
   return new Array(length).fill(0).map((_, i) => i)

@@ -13,6 +13,7 @@ A powerful yet light-weight interface to manage data. Designed to be used with [
 * [Checks](#checks)
 * [Transformations](#transformations)
 * [Adding and removing rows](#adding-and-removing-rows)
+* [Adding and removing columns](#adding-and-removing-columns)
 
 ### Loading data
 
@@ -496,6 +497,49 @@ const reprojectFunction = proj4('EPSG:4326', 'EPSG:3857').forward
 const dataContainer = new DataContainer(geojson).reproject(reprojectFunction)
 ```
 
+<a name="datacontainer_cumsum" href="#datacontainer_cumsum">#</a> <i>DataContainer</i>.<b>cumsum</b>(cumsumInstructions, { asInterval: false })
+
+Calculates the cumulative sum of one or more columns. `cumsumInstructions` is an `Object` with new column 
+names as keys, and the columns on which the cumulative sum should be based as values. Only quantitative
+columns can be used.
+
+```js
+const dataContainer = new DataContainer({ a: [1, 2, 3, 4] })
+dataContainer.cumsum({ cumsum_a: 'a' }).column('cumsum_a') // [1, 3, 6, 10]
+```
+
+If `asInterval` is set to `true`, intervals instead of integers will be returned (mimicking d3's 
+[stack](https://github.com/d3/d3-shape#stack)):
+
+```js
+const dataContainer = new DataContainer({ a: [1, 2, 3, 4] })
+  .cumsum({ cumsum_a: 'a' }, { asInterval: true })
+dataContainer.column('cumsum_a') // [[0, 1], [1, 3], [3, 6], [6, 10]]
+```
+
+<a name="datacontainer_rowCumsum" href="#datacontainer_rowCumsum">#</a> <i>DataContainer</i>.<b>rowCumsum</b>(cumsumInstructions, { asInterval: false })
+
+Calculates the cumulative sum over all rows for the selected columns. `cumsumInstructions` is an `Array` with either:
+1. column names (`String`s)
+2. `Object`s with only one key and one value, where the key is the new column name and the value the old.
+
+In the case of 1., the old columns will be overwritten.
+
+```js
+const dataContainer = new DataContainer({
+  a: [1, 2, 3, 4],
+  b: [1, 2, 3, 4],
+  c: [1, 2, 3, 4]
+}).rowCumsum(['a', 'b', { rowCumsum_c: 'c' }])
+
+dataContainer.column('a') // [1, 2, 3, 4]
+dataContainer.column('b') // [2, 4, 6, 8]
+dataContainer.column('rowCumsum_c') // [3, 6, 9, 12]
+dataContainer.column('c') // [1, 2, 3, 4]
+```
+
+`rowCumsum`'s `asInterval` functionality works similar to `cumsum`'s.
+
 ### Adding and removing rows
 
 All of these functions work in-place.
@@ -516,16 +560,53 @@ Updates an existing row.
 
 ```js
 const dataContainer = new DataContainer({ a: [1, 2, 3], b: ['a', 'b', 'c'] })
-dataContainer.updateRow(2, { a: 100, b: 'fff' })
+dataContainer.updateRow(2, { a: 100 })
 dataContainer.column('a') // [1, 2, 100]
+```
+
+Instead of using an `Object` as the second argument, it is also possible to use a `Function`. This function
+will receive the existing row as first argument, and must return an `Object`.
+
+```js
+const dataContainer = new DataContainer({ a: [1, 2, 3], b: ['a', 'b', 'c'] })
+dataContainer.updateRow(2, row => ({ a: row.a + 100 }))
+dataContainer.column('a') // [1, 2, 103]
 ```
 
 <a name="datacontainer_deleterow" href="#datacontainer_deleterow">#</a> <i>DataContainer</i>.<b>deleteRow</b>(key)
 
-Deletes an existing row,
+Deletes an existing row.
 
 ```js
 const dataContainer = new DataContainer({ a: [1, 2, 3], b: ['a', 'b', 'c'] })
 dataContainer.deleteRow(2)
 dataContainer.column('a') // [1, 2]
+```
+
+### Adding and removing columns
+
+All of these functions work in-place.
+
+<a name="datacontainer_addcolumn" href="#datacontainer_addcolumn">#</a> <i>DataContainer</i>.<b>addColumn</b>(columnName, column)
+
+Adds a new column. `column` must be an `Array` of the same length as the rest of the data.
+
+```js
+const dataContainer = new DataContainer({ a: [1, 2, 3], b: ['a', 'b', 'c'] })
+dataContainer.addColumn('c', [4, 5, 6])
+dataContainer.column('c') // [4, 5, 6]
+```
+
+<a name="datacontainer_replacecolumn" href="#datacontainer_replacecolumn">#</a> <i>DataContainer</i>.<b>replaceColumn</b>(columnName, column)
+
+Equivalent to calling `.deleteColumn` followed by `addColumn`.
+
+<a name="datacontainer_deletecolumn" href="#datacontainer_deletecolumn">#</a> <i>DataContainer</i>.<b>deleteColumn</b>(columnName)
+
+Deletes an existing column.
+
+```js
+const dataContainer = new DataContainer({ a: [1, 2, 3], b: ['a', 'b', 'c'] })
+dataContainer.deleteColumn('b')
+dataContainer.data() // { $key: [0, 1, 2], a: [1, 2, 3] }
 ```
