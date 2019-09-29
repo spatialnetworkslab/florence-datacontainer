@@ -7,6 +7,7 @@ import { isValidColumn, ensureValidColumn, columnExists, ensureColumnExists } fr
 import { calculateDomain } from './utils/calculateDomain.js'
 import { getColumnType } from './utils/getDataType.js'
 import getDataLength from './utils/getDataLength.js'
+import { validateJoin, getJoinColumns } from './utils/join.js'
 
 import { Group } from './transformations/groupBy.js'
 
@@ -119,6 +120,16 @@ export default class DataContainer {
   validateAllColumns () {
     for (const columnName in this._data) {
       this.validateColumn(columnName)
+    }
+  }
+
+  // Join
+  join (dataContainer, { by = undefined } = {}) {
+    validateJoin(this, dataContainer, by)
+    const joinColumns = getJoinColumns(this, dataContainer, by)
+
+    for (const columnName in joinColumns) {
+      this.addColumn(columnName, joinColumns[columnName])
     }
   }
 
