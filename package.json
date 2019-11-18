@@ -7,7 +7,7 @@
   "repository": "https://github.com/spatialnetworkslab/florence-datacontainer.git",
   "license": "MIT",
   "dependencies": {
-    "d3-geo": "^1.11.6",
+    "d3-geo": "^1.11.9",
     "immer": "^4.0.0"
   },
   "devDependencies": {
