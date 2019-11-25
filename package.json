@@ -14,7 +14,7 @@
     "@babel/core": "^7.6.0",
     "@babel/preset-env": "^7.6.0",
     "babel-jest": "^24.9.0",
-    "eslint": "^6.4.0",
+    "eslint": "^6.7.1",
     "eslint-config-standard": "^14.1.0",
     "eslint-plugin-import": "^2.18.2",
     "eslint-plugin-node": "^10.0.0",
