@@ -8,7 +8,7 @@
   "license": "MIT",
   "dependencies": {
     "d3-geo": "^1.11.6",
-    "immer": "^4.0.0"
+    "immer": "^5.1.0"
   },
   "devDependencies": {
     "@babel/core": "^7.6.0",
