@@ -11,7 +11,7 @@
     "immer": "^4.0.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.6.0",
+    "@babel/core": "^7.8.4",
     "@babel/preset-env": "^7.6.0",
     "babel-jest": "^24.9.0",
     "eslint": "^6.4.0",
