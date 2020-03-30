@@ -30,14 +30,10 @@ const sortFuncs = {
     }
   },
   temporal: {
-    ascending: (c, d) => {
-      const a = c.getTime()
-      const b = c.getTime()
+    ascending: (a, b) => {
       return a < b ? -1 : a > b ? 1 : a >= b ? 0 : NaN
     },
-    descending: (c, d) => {
-      const a = c.getTime()
-      const b = c.getTime()
+    descending: (a, b) => {
       return b < a ? -1 : b > a ? 1 : b >= a ? 0 : NaN
     }
   }
