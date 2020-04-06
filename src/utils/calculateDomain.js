@@ -8,6 +8,10 @@ export function calculateDomain (column, columnName) {
     throw new Error(`Cannot calculate domain of column '${columnName}'.`)
   }
 
+  if (column.length === 0) {
+    return createEmptyDomain(columnName)
+  }
+
   const { firstValidValue, nValidValues } = findFirstValidValue(column)
 
   if (nValidValues === 0) {
@@ -25,6 +29,16 @@ export function calculateDomain (column, columnName) {
     if (columnName !== '$geometry') {
       return calculateNonGeometryColumnDomain(column, columnName, nValidValues, firstValidValue, type)
     }
+  }
+}
+
+function createEmptyDomain (columnName) {
+  if (columnName === '$geometry') {
+    return { x: [], y: [] }
+  }
+
+  if (columnName !== '$geometry') {
+    return []
   }
 }
 

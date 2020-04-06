@@ -23,15 +23,18 @@ export function isGeoJSON (data) {
 }
 
 export function checkFormatColumnData (data) {
-  checkFormat(data, checkRegularColumnName)
+  checkFormat(data, { internal: false })
 }
 
 export function checkFormatInternal (data) {
-  checkFormat(data, checkInternalDataColumnName)
+  checkFormat(data, { internal: true })
 }
 
-function checkFormat (data, columnNameChecker) {
+function checkFormat (data, { internal }) {
   let dataLength = null
+  const columnNameChecker = internal
+    ? checkInternalDataColumnName
+    : checkRegularColumnName
 
   for (const columnName in data) {
     columnNameChecker(columnName)
@@ -39,7 +42,7 @@ function checkFormat (data, columnNameChecker) {
 
     dataLength = dataLength || column.length
 
-    if (dataLength === 0) {
+    if (internal === false && dataLength === 0) {
       throw new Error('Invalid data: columns cannot be empty')
     }
 

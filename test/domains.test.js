@@ -117,7 +117,7 @@ describe('calculating domains', () => {
     expect(dataContainer.domain('b')).toEqual(['coconut', 'banana'])
   })
 
-  // // deleteRow
+  // deleteRow
   test('domain is correct after deleting row', () => {
     const dataContainer = new DataContainer({
       a: [1, 2, 3],
@@ -131,5 +131,16 @@ describe('calculating domains', () => {
 
     expect(dataContainer.domain('a')).toEqual([2, 3])
     expect(dataContainer.domain('b')).toEqual(['banana', 'coconut'])
+  })
+
+  // Empty
+  test('domain is empty Array for empty column', () => {
+    const dataContainer = new DataContainer({
+      a: [1, 2, 3],
+      b: ['apple', 'banana', 'coconut']
+    }).filter(row => row.a > 3)
+
+    expect(dataContainer.domain('a')).toEqual([])
+    expect(dataContainer.domain('b')).toEqual([])
   })
 })
