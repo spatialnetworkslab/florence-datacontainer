@@ -201,7 +201,7 @@ function createDomainForSingleValue (type, value) {
   }
 
   if (type === 'interval') {
-    domain = value.sort((a, b) => a > b)
+    domain = value.sort((a, b) => a - b)
   }
 
   return domain

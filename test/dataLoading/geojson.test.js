@@ -3,7 +3,7 @@ import {
   valid, missingType, missingFeatures, emptyFeatures,
   notSameProperties, validGeometries,
   propertiesWith$, propertiesWithSlash
-} from '../__data__/makeGeoJSON.js/'
+} from '../__data__/makeGeoJSON.js'
 
 describe('loading geojson data', () => {
   test('allowed geojson throws no error', () => {
