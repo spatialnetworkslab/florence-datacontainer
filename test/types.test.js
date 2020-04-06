@@ -95,4 +95,13 @@ describe('determining column types', () => {
 
     expect(groupedDataContainer.type('$grouped')).toBe('grouped')
   })
+
+  // Empty
+  test('an empty column has no type', () => {
+    const dataContainer = new DataContainer({
+      a: [1, 2, 3, 4]
+    }).filter(row => row.a > 4)
+
+    expect(dataContainer.type('a')).toBe(undefined)
+  })
 })
