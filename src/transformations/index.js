@@ -27,7 +27,7 @@ const transformations = {
   groupBy,
   bin,
   dropNA,
-  reproject,
+  reproject: produce(reproject),
   transform: produce(transform),
   cumsum: produce(cumsum),
   rowCumsum: produce(rowCumsum)
