@@ -22,7 +22,7 @@ describe('reproject transformation', () => {
         }
       ]
     }).reproject(projectionFunction)
-    expect(dataContainer.column('$geometry')).toBe([{ type: 'Point', coordinates: [5, 10] }])
+    expect(geojson.column('$geometry')).toEqual([{ type: 'Point', coordinates: [5, 10] }])
   })
 
   test('reproject throws error if geometry columns does not exist', () => {
