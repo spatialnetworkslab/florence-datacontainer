@@ -1,5 +1,3 @@
-import produce from 'immer'
-
 import { checkRegularColumnName } from './utils/checkFormat.js'
 import { ensureValidRow, ensureValidRowUpdate, ensureRowExists } from './utils/ensureValidRow.js'
 import { ensureValidColumn, ensureColumnExists } from './utils/isValidColumn.js'
@@ -11,26 +9,20 @@ const methods = {
   // Rows
   addRow (row) {
     ensureValidRow(row, this)
-    const self = this
 
-    this._data = produce(this._data, draft => {
-      for (const columnName in row) {
-        const value = row[columnName]
-        draft[columnName].push(value)
+    for (const columnName in row) {
+      const value = row[columnName]
+      this._data[columnName].push(value)
 
-        self._updateDomainIfNecessary(columnName, value)
-      }
-    })
+      this._updateDomainIfNecessary(columnName, value)
+    }
 
     const rowNumber = getDataLength(this._data) - 1
     const keyDomain = this.domain('$key')
     keyDomain[1]++
     const key = keyDomain[1]
 
-    this._data = produce(this._data, draft => {
-      draft.$key.push(key)
-    })
-
+    this._data.$key.push(key)
     this._keyToRowNumber[key] = rowNumber
   },
 
@@ -47,42 +39,35 @@ const methods = {
 
     ensureRowExists(key, this)
     ensureValidRowUpdate(row, this)
-    const self = this
+
     const rowNumber = this._keyToRowNumber[key]
 
-    this._data = produce(this._data, draft => {
-      for (const columnName in row) {
-        throwErrorIfColumnIsKey(columnName)
+    for (const columnName in row) {
+      throwErrorIfColumnIsKey(columnName)
 
-        const value = row[columnName]
-        draft[columnName][rowNumber] = value
+      const value = row[columnName]
+      this._data[columnName][rowNumber] = value
 
-        self._resetDomainIfNecessary(columnName)
-      }
-    })
+      this._resetDomainIfNecessary(columnName)
+    }
   },
 
   deleteRow (key) {
     ensureRowExists(key, this)
-    const self = this
+
     const rowNumber = this._keyToRowNumber[key]
     delete this._keyToRowNumber[key]
 
-    this._data = produce(this._data, draft => {
-      for (const columnName in draft) {
-        draft[columnName].splice(rowNumber, 1)
-        self._resetDomainIfNecessary(columnName)
-      }
-    })
+    for (const columnName in this._data) {
+      this._data[columnName].splice(rowNumber, 1)
+      this._resetDomainIfNecessary(columnName)
+    }
   },
 
   // Columns
   addColumn (columnName, column) {
     this._validateNewColumn(columnName, column)
-
-    this._data = produce(this._data, draft => {
-      draft[columnName] = column
-    })
+    this._data[columnName] = column
   },
 
   replaceColumn (columnName, column) {
@@ -98,9 +83,7 @@ const methods = {
       throw new Error('Cannot delete last column')
     }
 
-    this._data = produce(this._data, draft => {
-      delete draft[columnName]
-    })
+    delete this._data[columnName]
   },
 
   // Private methods
