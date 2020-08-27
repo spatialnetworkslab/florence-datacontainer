@@ -6,14 +6,19 @@ export default function (data, renameInstructions) {
     throw new Error('Rename only accepts an object')
   }
 
+  const newData = Object.assign({}, data)
+
   for (const oldName in renameInstructions) {
     if (oldName in data) {
       const newName = renameInstructions[oldName]
       checkRegularColumnName(newName)
-      data[newName] = data[oldName]
-      delete data[oldName]
+
+      newData[newName] = newData[oldName]
+      delete newData[oldName]
     } else {
       warn(`Rename: column '${oldName}' not found`)
     }
   }
+
+  return newData
 }

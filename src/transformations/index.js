@@ -1,5 +1,3 @@
-import produce from 'immer'
-
 import filter from './filter.js'
 import select from './select.js'
 import arrange from './arrange.js'
@@ -17,20 +15,20 @@ import rowCumsum from './rowCumsum.js'
 
 const transformations = {
   filter,
-  select: produce(select),
-  arrange: produce(arrange),
-  rename: produce(rename),
-  mutate: produce(mutate),
-  transmute: produce(transmute),
+  select,
+  arrange,
+  rename,
+  mutate,
+  transmute,
   summarise,
   mutarise,
   groupBy,
   bin,
   dropNA,
-  reproject: produce(reproject),
-  transform: produce(transform),
-  cumsum: produce(cumsum),
-  rowCumsum: produce(rowCumsum)
+  reproject,
+  transform,
+  cumsum,
+  rowCumsum
 }
 
 export default transformations

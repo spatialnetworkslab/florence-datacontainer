@@ -8,7 +8,9 @@ export default function (data, transformation) {
   }
 
   const transformedGeometries = transformGeometries(data.$geometry, transformation)
-  data.$geometry = transformedGeometries
 
-  return data
+  const newData = Object.assign({}, data)
+  newData.$geometry = transformedGeometries
+
+  return newData
 }

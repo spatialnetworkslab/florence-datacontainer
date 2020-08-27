@@ -2,12 +2,20 @@ import { getDataType, ensureValidDataType } from '../utils/getDataType.js'
 
 export default function (data, sortInstructions) {
   if (sortInstructions.constructor === Object) {
-    sort(data, sortInstructions)
+    return sort(data, sortInstructions)
   } else if (sortInstructions.constructor === Array) {
+    let newData
+
     for (let i = sortInstructions.length - 1; i >= 0; i--) {
       const instruction = sortInstructions[i]
-      sort(data, instruction)
+
+      newData = sort(
+        newData ? data : newData,
+        instruction
+      )
     }
+
+    return newData
   } else {
     throw new Error('arrange requires a key-value object or array of key-value objects')
   }
@@ -63,9 +71,13 @@ function sort (data, sortInstructions) {
   const indices = column.map((v, i) => i)
   const sortedIndices = indices.sort((a, b) => sortFunc(column[a], column[b]))
 
+  const newData = {}
+
   for (const colName in data) {
-    data[colName] = reorder(data[colName], sortedIndices)
+    newData[colName] = reorder(data[colName], sortedIndices)
   }
+
+  return newData
 }
 
 function reorder (column, indices) {
