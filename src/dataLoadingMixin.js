@@ -1,5 +1,3 @@
-import produce from 'immer'
-
 import { checkFormatColumnData, checkFormatInternal } from './utils/checkFormat.js'
 import { generateKeyColumn, validateKeyColumn } from './utils/key.js'
 
@@ -57,9 +55,7 @@ const methods = {
   },
 
   _setKeyColumn (keyColumn) {
-    this._data = produce(this._data, draft => {
-      draft.$key = keyColumn
-    })
+    this._data.$key = keyColumn
 
     this._syncKeyToRowNumber()
   },

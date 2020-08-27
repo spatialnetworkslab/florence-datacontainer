@@ -2,41 +2,48 @@ import getDataLength from '../utils/getDataLength.js'
 
 export function mutate (data, mutateInstructions) {
   const length = getDataLength(data)
-  const newData = {}
-
-  for (const key in mutateInstructions) {
-    newData[key] = new Array(length)
-  }
+  const newData = initNewData(data, mutateInstructions)
 
   for (let i = 0; i < length; i++) {
     const row = {}
-    let prevRow = {}
-    let nextRow = {}
 
-    for (const colName in data) {
-      row[colName] = data[colName][i]
-      prevRow[colName] = data[colName][i - 1]
-      nextRow[colName] = data[colName][i + 1]
+    for (const columnName in data) {
+      row[columnName] = data[columnName][i]
     }
 
-    if (i === 0) { prevRow = undefined }
-    if (i === length - 1) { nextRow = undefined }
-
-    for (const key in mutateInstructions) {
-      const mutateFunction = mutateInstructions[key]
-      newData[key][i] = mutateFunction(row, i, prevRow, nextRow)
+    for (const columnName in mutateInstructions) {
+      const mutateFunction = mutateInstructions[columnName]
+      newData[columnName][i] = mutateFunction(row, i)
     }
   }
 
-  Object.assign(data, newData)
+  return newData
 }
 
-export function transmute (data, mutateObj) {
-  data = mutate(data, mutateObj)
+export function transmute (data, transmuteInstructions) {
+  const newData = mutate(data, transmuteInstructions)
 
-  for (const key in data) {
-    if (!(key in mutateObj)) {
-      delete data[key]
+  for (const columnName in newData) {
+    if (!(columnName in transmuteInstructions)) {
+      delete newData[columnName]
     }
   }
+
+  return newData
+}
+
+function initNewData (data, mutateInstructions) {
+  const length = getDataLength(data)
+  const newData = Object.assign({}, data)
+
+  const dataColumns = new Set(Object.keys(data))
+  const mutateColumns = new Set(Object.keys(mutateInstructions))
+
+  for (const columnName of mutateColumns) {
+    if (!dataColumns.has(columnName)) {
+      newData[columnName] = new Array(length).fill(undefined)
+    }
+  }
+
+  return newData
 }

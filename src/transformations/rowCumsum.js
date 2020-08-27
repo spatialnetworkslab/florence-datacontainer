@@ -39,7 +39,10 @@ export default function (data, _cumsumInstructions, options = { asInterval: fals
     previousColumnName = newName
   }
 
-  Object.assign(data, rowCumsumColumns)
+  let newData = Object.assign({}, data)
+  newData = Object.assign(newData, rowCumsumColumns)
+
+  return newData
 }
 
 const invalidInstructionsError = new Error('Invalid rowCumsum instrutions')

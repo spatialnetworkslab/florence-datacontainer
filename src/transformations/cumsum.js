@@ -38,5 +38,8 @@ export default function (data, cumsumInstructions, options = { asInterval: false
     }
   }
 
-  Object.assign(data, newColumns)
+  let newData = Object.assign({}, data)
+  newData = Object.assign(newData, newColumns)
+
+  return newData
 }

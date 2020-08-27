@@ -273,8 +273,7 @@ Invalid here means that they contain mixed types, or only have invalid data like
 ### Transformations
 
 `DataContainer`'s transformations are heavily inspired by R's [dplyr](https://dplyr.tidyverse.org/) 
-(part of the [tidyverse](https://www.tidyverse.org/)). All transformations will return a new `DataContainer`. For transformations
-where it makes sense like `select`, [immer](https://github.com/immerjs/immer) is used to avoid unnecessary deep cloning while still allowing subsequent transformations without modifying the original data.
+(part of the [tidyverse](https://www.tidyverse.org/)). All transformations will return a new `DataContainer`.
 
 <a name="datacontainer_select" href="#datacontainer_select">#</a> <i>DataContainer</i>.<b>select</b>(selectInstructions)
 
@@ -475,12 +474,13 @@ mutarised.column('mean_a') // [2, 3, 2, 3]
 <a name="datacontainer_transform" href="#datacontainer_transform">#</a> <i>DataContainer</i>.<b>transform</b>(transformFunction)
 
 Used for arbitrary transformations on the data. `transformFunction` receives an `Object` with all the columns currently loaded, 
-which must be modified in-place (i.e. `transformFunction` must return void).
+and should return another object with columns.
 
 ```js
 const dataContainer = new DataContainer({ a: [1, 2, 3, 4] })
 const transformed = dataContainer.transform(columns => {
-  columns.b = columns.a.map(a => a ** 2)
+  const b = columns.a.map(a => a ** 2)
+  return { b }
 })
 
 transformed.column('b') // [1, 4, 9, 16]
