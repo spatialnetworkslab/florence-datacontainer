@@ -273,8 +273,7 @@ Invalid here means that they contain mixed types, or only have invalid data like
 ### Transformations
 
 `DataContainer`'s transformations are heavily inspired by R's [dplyr](https://dplyr.tidyverse.org/) 
-(part of the [tidyverse](https://www.tidyverse.org/)). All transformations will return a new `DataContainer`. For transformations
-where it makes sense like `select`, [immer](https://github.com/immerjs/immer) is used to avoid unnecessary deep cloning while still allowing subsequent transformations without modifying the original data.
+(part of the [tidyverse](https://www.tidyverse.org/)). All transformations will return a new `DataContainer`.
 
 <a name="datacontainer_select" href="#datacontainer_select">#</a> <i>DataContainer</i>.<b>select</b>(selectInstructions)
 
