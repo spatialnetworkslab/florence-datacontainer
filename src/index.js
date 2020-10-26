@@ -93,6 +93,10 @@ export default class DataContainer {
     return domain
   }
 
+  bbox () {
+    return this.domain('$geometry')
+  }
+
   type (columnName) {
     const column = this.column(columnName)
     return getColumnType(column, columnName)
