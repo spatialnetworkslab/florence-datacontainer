@@ -209,6 +209,10 @@ dataContainer.domain('dayOfSale') // [Date Fri May 03 2019 ..., Date Mon May 06 
 
 For geometry data, this will return the bounding box.
 
+<a name="datacontainer_bbox" href="#datacontainer_bbox">#</a> <i>DataContainer</i>.<b>bbox</b>()
+
+Equivalent to `.domain('$geometry')`
+
 <a name="datacontainer_type" href="#datacontainer_type">#</a> <i>DataContainer</i>.<b>type</b>(columnName)
 
 Returns the type of a column.
