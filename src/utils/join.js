@@ -1,6 +1,6 @@
 import { isDefined, isUndefined } from './equals.js'
 import getDataLength from './getDataLength.js'
-import DataContainer from '../index'
+import DataContainer from '../index.js'
 import { getColumnType } from './getDataType.js'
 
 export function getJoinColumns (left, right, by) {
