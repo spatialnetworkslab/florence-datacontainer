@@ -1,8 +1,5 @@
 'use strict';
 
-function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
-
-var produce = _interopDefault(require('immer'));
 var d3Geo = require('d3-geo');
 
 function isColumnOriented (data) {
@@ -30,15 +27,18 @@ function isGeoJSON (data) {
 }
 
 function checkFormatColumnData (data) {
-  checkFormat(data, checkRegularColumnName);
+  checkFormat(data, { internal: false });
 }
 
 function checkFormatInternal (data) {
-  checkFormat(data, checkInternalDataColumnName);
+  checkFormat(data, { internal: true });
 }
 
-function checkFormat (data, columnNameChecker) {
+function checkFormat (data, { internal }) {
   let dataLength = null;
+  const columnNameChecker = internal
+    ? checkInternalDataColumnName
+    : checkRegularColumnName;
 
   for (const columnName in data) {
     columnNameChecker(columnName);
@@ -46,7 +46,7 @@ function checkFormat (data, columnNameChecker) {
 
     dataLength = dataLength || column.length;
 
-    if (dataLength === 0) {
+    if (internal === false && dataLength === 0) {
       throw new Error('Invalid data: columns cannot be empty')
     }
 
@@ -78,6 +78,10 @@ function isInvalid (value) {
   }
 
   return false
+}
+
+function isDefined (value) {
+  return value !== undefined
 }
 
 function isUndefined (value) {
@@ -116,38 +120,6 @@ function updateBBox (bbox, geometry) {
   return bbox
 }
 
-function getColumnType (column) {
-  const { firstValidValue } = findFirstValidValue(column);
-  return getDataType(firstValidValue)
-}
-
-function getDataType (value) {
-  if (isInvalid(value)) return undefined
-
-  if (value.constructor === Number) return 'quantitative'
-  if (value.constructor === String) return 'categorical'
-  if (value.constructor === Date) return 'temporal'
-  if (isInterval(value)) return 'interval'
-  if (isGeometry(value)) return 'geometry'
-  if (value.constructor === DataContainer) return 'grouped'
-
-  return undefined
-}
-
-function ensureValidDataType (value) {
-  if (isInvalid(getDataType(value))) {
-    throw new Error('Invalid data')
-  }
-}
-
-function isGeometry (value) {
-  return value.constructor === Object && 'type' in value && 'coordinates' in value
-}
-
-function isInterval (value) {
-  return value.constructor === Array && value.length === 2 && value.every(entry => entry.constructor === Number)
-}
-
 function warn (message) {
   if (!process) console.warn(message);
 
@@ -159,6 +131,10 @@ function warn (message) {
 function calculateDomain (column, columnName) {
   if (columnName === '$grouped') {
     throw new Error(`Cannot calculate domain of column '${columnName}'.`)
+  }
+
+  if (column.length === 0) {
+    return createEmptyDomain(columnName)
   }
 
   const { firstValidValue, nValidValues } = findFirstValidValue(column);
@@ -178,6 +154,16 @@ function calculateDomain (column, columnName) {
     if (columnName !== '$geometry') {
       return calculateNonGeometryColumnDomain(column, columnName, nValidValues, firstValidValue, type)
     }
+  }
+}
+
+function createEmptyDomain (columnName) {
+  if (columnName === '$geometry') {
+    return { x: [], y: [] }
+  }
+
+  if (columnName !== '$geometry') {
+    return []
   }
 }
 
@@ -310,6 +296,10 @@ function initDomain (type) {
 }
 
 function updateDomain (domain, value, type) {
+  if (!['quantitative', 'categorical', 'temporal', 'interval'].includes(type)) {
+    throw new Error(`Cannot set domain for column of type '${type}'`)
+  }
+
   if (type === 'quantitative') {
     if (domain[0] >= value) { domain[0] = value; }
     if (domain[1] <= value) { domain[1] = value; }
@@ -350,7 +340,7 @@ function createDomainForSingleValue (type, value) {
   }
 
   if (type === 'interval') {
-    domain = value.sort((a, b) => a > b);
+    domain = value.sort((a, b) => a - b);
   }
 
   return domain
@@ -361,9 +351,36 @@ function getDay (date, days) {
   return new Date(dateCopy.setDate(dateCopy.getDate() + days))
 }
 
-function getNewKey (keyColumn) {
-  const domain = calculateDomain(keyColumn, '$key');
-  return domain[1] + 1
+function getColumnType (column) {
+  const { firstValidValue } = findFirstValidValue(column);
+  return getDataType(firstValidValue)
+}
+
+function getDataType (value) {
+  if (isInvalid(value)) return undefined
+
+  if (value.constructor === Number) return 'quantitative'
+  if (value.constructor === String) return 'categorical'
+  if (value.constructor === Date) return 'temporal'
+  if (isInterval(value)) return 'interval'
+  if (isGeometry(value)) return 'geometry'
+  if (value.constructor === DataContainer) return 'grouped'
+
+  return undefined
+}
+
+function ensureValidDataType (value) {
+  if (isInvalid(getDataType(value))) {
+    throw new Error('Invalid data')
+  }
+}
+
+function isGeometry (value) {
+  return value.constructor === Object && 'type' in value && 'coordinates' in value
+}
+
+function isInterval (value) {
+  return value.constructor === Array && value.length === 2 && value.every(entry => entry.constructor === Number)
 }
 
 function generateKeyColumn (length) {
@@ -401,8 +418,8 @@ function ensureUnique (keyColumn) {
 }
 
 function getDataLength (data) {
-  let firstKey = Object.keys(data)[0];
-  let firstColumn = data[firstKey];
+  const firstKey = Object.keys(data)[0];
+  const firstColumn = data[firstKey];
   return firstColumn.length
 }
 
@@ -516,9 +533,7 @@ const methods = {
   },
 
   _setKeyColumn (keyColumn) {
-    this._data = produce(this._data, draft => {
-      draft.$key = keyColumn;
-    });
+    this._data.$key = keyColumn;
 
     this._syncKeyToRowNumber();
   },
@@ -560,24 +575,44 @@ function select (data, selection) {
   }
 
   if (selection.constructor === Array) {
-    for (const key in data) {
-      if (!selection.includes(key)) {
-        delete data[key];
-      }
+    validateSelectionInstructions(data, selection);
+
+    const newData = {};
+
+    for (const columnName of selection) {
+      newData[columnName] = data[columnName];
     }
+
+    return newData
   } else {
     throw new Error('select can only be used with a string or array of strings')
   }
 }
 
+function validateSelectionInstructions (data, selection) {
+  for (const columnName of selection) {
+    if (!(columnName in data)) {
+      throw new Error(`Column '${columnName}' not found`)
+    }
+  }
+}
+
 function arrange (data, sortInstructions) {
   if (sortInstructions.constructor === Object) {
-    sort(data, sortInstructions);
+    return sort(data, sortInstructions)
   } else if (sortInstructions.constructor === Array) {
+    let newData;
+
     for (let i = sortInstructions.length - 1; i >= 0; i--) {
       const instruction = sortInstructions[i];
-      sort(data, instruction);
+
+      newData = sort(
+        newData ? data : newData,
+        instruction
+      );
     }
+
+    return newData
   } else {
     throw new Error('arrange requires a key-value object or array of key-value objects')
   }
@@ -600,14 +635,10 @@ const sortFuncs = {
     }
   },
   temporal: {
-    ascending: (c, d) => {
-      const a = c.getTime();
-      const b = c.getTime();
+    ascending: (a, b) => {
       return a < b ? -1 : a > b ? 1 : a >= b ? 0 : NaN
     },
-    descending: (c, d) => {
-      const a = c.getTime();
-      const b = c.getTime();
+    descending: (a, b) => {
       return b < a ? -1 : b > a ? 1 : b >= a ? 0 : NaN
     }
   }
@@ -637,9 +668,13 @@ function sort (data, sortInstructions) {
   const indices = column.map((v, i) => i);
   const sortedIndices = indices.sort((a, b) => sortFunc(column[a], column[b]));
 
+  const newData = {};
+
   for (const colName in data) {
-    data[colName] = reorder(data[colName], sortedIndices);
+    newData[colName] = reorder(data[colName], sortedIndices);
   }
+
+  return newData
 }
 
 function reorder (column, indices) {
@@ -651,54 +686,69 @@ function rename (data, renameInstructions) {
     throw new Error('Rename only accepts an object')
   }
 
+  const newData = Object.assign({}, data);
+
   for (const oldName in renameInstructions) {
     if (oldName in data) {
       const newName = renameInstructions[oldName];
       checkRegularColumnName(newName);
-      data[newName] = data[oldName];
-      delete data[oldName];
+
+      newData[newName] = newData[oldName];
+      delete newData[oldName];
     } else {
       warn(`Rename: column '${oldName}' not found`);
     }
   }
+
+  return newData
 }
 
 function mutate (data, mutateInstructions) {
   const length = getDataLength(data);
-
-  for (const key in mutateInstructions) {
-    data[key] = new Array(length);
-  }
+  const newData = initNewData(data, mutateInstructions);
 
   for (let i = 0; i < length; i++) {
     const row = {};
-    let prevRow = {};
-    let nextRow = {};
 
-    for (const colName in data) {
-      row[colName] = data[colName][i];
-      prevRow[colName] = data[colName][i - 1];
-      nextRow[colName] = data[colName][i + 1];
+    for (const columnName in data) {
+      row[columnName] = data[columnName][i];
     }
 
-    if (i === 0) { prevRow = undefined; }
-    if (i === length - 1) { nextRow = undefined; }
-
-    for (const key in mutateInstructions) {
-      const mutateFunction = mutateInstructions[key];
-      data[key][i] = mutateFunction(row, i, prevRow, nextRow);
+    for (const columnName in mutateInstructions) {
+      const mutateFunction = mutateInstructions[columnName];
+      newData[columnName][i] = mutateFunction(row, i);
     }
   }
+
+  return newData
 }
 
-function transmute (data, mutateObj) {
-  data = mutate(data, mutateObj);
+function transmute (data, transmuteInstructions) {
+  const newData = mutate(data, transmuteInstructions);
 
-  for (const key in data) {
-    if (!(key in mutateObj)) {
-      delete data[key];
+  for (const columnName in newData) {
+    if (!(columnName in transmuteInstructions)) {
+      delete newData[columnName];
     }
   }
+
+  return newData
+}
+
+function initNewData (data, mutateInstructions) {
+  const length = getDataLength(data);
+  const newData = Object.assign({}, data);
+
+  const dataColumns = new Set(Object.keys(data));
+  const mutateColumns = new Set(Object.keys(mutateInstructions));
+
+  for (const columnName of mutateColumns) {
+    if (!dataColumns.has(columnName)) {
+      newData[columnName] = new Array(length).fill(undefined);
+    }
+  }
+
+  return newData
 }
 
 var aggregations = {
@@ -803,7 +853,7 @@ function summarise (data, summariseInstructions) {
     throw new Error('summarise must be an object')
   }
 
-  let newData = initNewData(summariseInstructions, data);
+  let newData = initNewData$1(summariseInstructions, data);
 
   if ('$grouped' in data) {
     checkSummariseInstructions(summariseInstructions, data);
@@ -824,7 +874,7 @@ function summarise (data, summariseInstructions) {
   return newData
 }
 
-function initNewData (summariseInstructions, data) {
+function initNewData$1 (summariseInstructions, data) {
   const newData = {};
   for (const newCol in summariseInstructions) { newData[newCol] = []; }
   if (data && '$grouped' in data) {
@@ -880,13 +930,13 @@ function mutarise (data, mutariseInstructions) {
     throw new Error('mutarise must be an object')
   }
 
-  let newCols = initNewData(mutariseInstructions);
+  let newCols = initNewData$1(mutariseInstructions);
 
   if ('$grouped' in data) {
     checkSummariseInstructions(mutariseInstructions, data);
 
     for (const group of data.$grouped) {
-      let summarizedData = initNewData(mutariseInstructions);
+      let summarizedData = initNewData$1(mutariseInstructions);
       const dataInGroup = group.data();
       summarizedData = summariseGroup(dataInGroup, mutariseInstructions, summarizedData);
 
@@ -896,7 +946,7 @@ function mutarise (data, mutariseInstructions) {
 
     data = ungroup(data);
   } else {
-    let summarizedData = initNewData(mutariseInstructions);
+    let summarizedData = initNewData$1(mutariseInstructions);
     summarizedData = summariseGroup(data, mutariseInstructions, summarizedData);
 
     const length = getDataLength(data);
@@ -917,7 +967,7 @@ function addGroupSummaries (newCols, summarizedData, length) {
 }
 
 function ungroup (data) {
-  const newData = initNewData(data.$grouped[0].data());
+  const newData = initNewData$1(data.$grouped[0].data());
 
   for (const group of data.$grouped) {
     const groupData = group.data();
@@ -2483,20 +2533,23 @@ function reproject (data, transformation) {
   }
 
   const transformedGeometries = transformGeometries(data.$geometry, transformation);
-  data.$geometry = transformedGeometries;
 
-  return data
+  const newData = Object.assign({}, data);
+  newData.$geometry = transformedGeometries;
+
+  return newData
 }
 
 function transform (data, transformFunction) {
   if (transformFunction.constructor !== Function) {
-    throw new Error(`Invalid 'transform' transformation: must be a Function`)
+    throw new Error('Invalid \'transform\' transformation: must be a Function')
   }
 
-  transformFunction(data);
+  return transformFunction(data)
 }
 
-function cumsum (data, cumsumInstructions) {
+function cumsum (data, cumsumInstructions, options = { asInterval: false }) {
+  const asInterval = options.asInterval;
   const length = getDataLength(data);
   const newColumns = {};
 
@@ -2506,9 +2559,10 @@ function cumsum (data, cumsumInstructions) {
     const oldColName = cumsumInstructions[newColName];
 
     if (getColumnType(data[oldColName]) !== 'quantitative') {
-      throw new Error(`cumsum only works with quantitative data.`)
+      throw new Error('cumsum columns can only be of type \'quantitative\'')
     }
 
+    let previousSum = 0;
     let currentSum = 0;
     newColumns[newColName] = [];
 
@@ -2519,28 +2573,134 @@ function cumsum (data, cumsumInstructions) {
         currentSum += value;
       }
 
-      newColumns[newColName].push(currentSum);
+      if (asInterval) {
+        newColumns[newColName].push([previousSum, currentSum]);
+      } else {
+        newColumns[newColName].push(currentSum);
+      }
+
+      previousSum = currentSum;
     }
   }
 
-  Object.assign(data, newColumns);
+  let newData = Object.assign({}, data);
+  newData = Object.assign(newData, newColumns);
+
+  return newData
+}
+
+function rowCumsum (data, _cumsumInstructions, options = { asInterval: false }) {
+  const asInterval = options.asInterval;
+  const cumsumInstructions = parseCumsumInstructions(_cumsumInstructions);
+  validateColumns(data, cumsumInstructions);
+
+  const rowCumsumColumns = {};
+  let previousColumnName;
+
+  for (const [newName, oldName] of cumsumInstructions) {
+    checkRegularColumnName(newName);
+    const oldColumn = data[oldName];
+
+    if (previousColumnName === undefined) {
+      if (asInterval) {
+        rowCumsumColumns[newName] = oldColumn.map(value => [0, value]);
+      } else {
+        rowCumsumColumns[newName] = oldColumn;
+      }
+    } else {
+      const previousColumn = rowCumsumColumns[previousColumnName];
+      let newColumn;
+
+      if (asInterval) {
+        newColumn = oldColumn.map((value, i) => {
+          const previousValue = previousColumn[i][1];
+          const newValue = previousValue + value;
+          return [previousValue, newValue]
+        });
+      } else {
+        newColumn = oldColumn.map((value, i) => value + previousColumn[i]);
+      }
+
+      rowCumsumColumns[newName] = newColumn;
+    }
+
+    previousColumnName = newName;
+  }
+
+  let newData = Object.assign({}, data);
+  newData = Object.assign(newData, rowCumsumColumns);
+
+  return newData
+}
+
+const invalidInstructionsError = new Error('Invalid rowCumsum instrutions');
+
+function parseCumsumInstructions (cumsumInstructions) {
+  if (cumsumInstructions && cumsumInstructions.constructor === Array) {
+    const parsedInstructions = [];
+
+    for (const instruction of cumsumInstructions) {
+      validateInstruction(instruction);
+
+      if (instruction.constructor === String) {
+        parsedInstructions.push([instruction, instruction]);
+      }
+
+      if (instruction.constructor === Object) {
+        const newName = Object.keys(instruction)[0];
+        const oldName = instruction[newName];
+        parsedInstructions.push([newName, oldName]);
+      }
+    }
+
+    return parsedInstructions
+  }
+
+  throw invalidInstructionsError
+}
+
+function validateInstruction (instruction) {
+  if (instruction.constructor === String) return
+
+  if (instruction.constructor === Object) {
+    if (Object.keys(instruction).length === 1) return
+  }
+
+  throw invalidInstructionsError
+}
+
+function validateColumns (data, stackInstructions) {
+  for (const [, oldName] of stackInstructions) {
+    const column = data[oldName];
+
+    if (!column) {
+      throw new Error(`Column '${oldName}' does not exist`)
+    }
+
+    const columnType = getColumnType(column);
+
+    if (columnType !== 'quantitative') {
+      throw new Error('rowCumsum columns can only be of type \'quantitative\'')
+    }
+  }
 }
 
 const transformations = {
   filter,
-  select: produce(select),
-  arrange: produce(arrange),
-  rename: produce(rename),
-  mutate: produce(mutate),
-  transmute: produce(transmute),
+  select,
+  arrange,
+  rename,
+  mutate,
+  transmute,
   summarise,
   mutarise,
   groupBy,
   bin,
   dropNA,
   reproject,
-  transform: produce(transform),
-  cumsum: produce(cumsum)
+  transform,
+  cumsum,
+  rowCumsum
 };
 
 const methods$1 = {
@@ -2554,8 +2714,8 @@ const methods$1 = {
     return new DataContainer(data, { validate: false })
   },
 
-  cumsum (cumsumInstructions) {
-    const data = transformations.cumsum(this._data, cumsumInstructions);
+  cumsum (cumsumInstructions, options) {
+    const data = transformations.cumsum(this._data, cumsumInstructions, options);
     return new DataContainer(data, { validate: false })
   },
 
@@ -2604,6 +2764,11 @@ const methods$1 = {
     return new DataContainer(data, { validate: false })
   },
 
+  rowCumsum (cumsumInstructions, options) {
+    const data = transformations.rowCumsum(this._data, cumsumInstructions, options);
+    return new DataContainer(data, { validate: false })
+  },
+
   select (selection) {
     const data = transformations.select(this._data, selection);
     return new DataContainer(data, { validate: false })
@@ -2641,26 +2806,36 @@ function ensureValidRow (row, self) {
       if (!(columnName in row)) throw new Error(`Missing column '${columnName}'`)
 
       const value = row[columnName];
-
-      if (isInvalid(value)) {
-        continue
-      }
-
-      const columnType = getColumnType(self._data[columnName]);
-
-      ensureValidDataType(value);
-      const valueType = getDataType(value);
-
-      if (columnType !== valueType) {
-        throw new Error(`Column '${columnName}' is of type '${columnType}'. Received value of type '${valueType}'`)
-      }
+      ensureValueIsRightForColumn(value, columnName, self);
     }
+  }
+}
+
+function ensureValidRowUpdate (row, self) {
+  for (const columnName in row) {
+    if (!(columnName in self._data)) throw new Error(`Column '${columnName}' not found`)
+
+    const value = row[columnName];
+    ensureValueIsRightForColumn(value, columnName, self);
   }
 }
 
 function ensureRowExists (key, self) {
   if (isUndefined(self._keyToRowNumber[key])) {
     throw new Error(`Key '${key}' not found`)
+  }
+}
+
+function ensureValueIsRightForColumn (value, columnName, self) {
+  if (!isInvalid(value)) {
+    const columnType = getColumnType(self._data[columnName]);
+
+    ensureValidDataType(value);
+    const valueType = getDataType(value);
+
+    if (columnType !== valueType) {
+      throw new Error(`Column '${columnName}' is of type '${columnType}'. Received value of type '${valueType}'`)
+    }
   }
 }
 
@@ -2737,10 +2912,293 @@ function ensureColumnExists (columnName, self) {
   }
 }
 
+const methods$2 = {
+  // Rows
+  addRow (row) {
+    ensureValidRow(row, this);
+
+    for (const columnName in row) {
+      const value = row[columnName];
+      this._data[columnName].push(value);
+
+      this._updateDomainIfNecessary(columnName, value);
+    }
+
+    const rowNumber = getDataLength(this._data) - 1;
+    const keyDomain = this.domain('$key');
+    keyDomain[1]++;
+    const key = keyDomain[1];
+
+    this._data.$key.push(key);
+    this._keyToRowNumber[key] = rowNumber;
+  },
+
+  updateRow (key, row) {
+    if (row.constructor === Function) {
+      const result = row(this.row(key));
+
+      if (!(result && result.constructor === Object)) {
+        throw new Error('updateRow function must return Object')
+      }
+
+      this.updateRow(key, result);
+    }
+
+    ensureRowExists(key, this);
+    ensureValidRowUpdate(row, this);
+
+    const rowNumber = this._keyToRowNumber[key];
+
+    for (const columnName in row) {
+      throwErrorIfColumnIsKey(columnName);
+
+      const value = row[columnName];
+      this._data[columnName][rowNumber] = value;
+
+      this._resetDomainIfNecessary(columnName);
+    }
+  },
+
+  deleteRow (key) {
+    ensureRowExists(key, this);
+
+    const rowNumber = this._keyToRowNumber[key];
+    delete this._keyToRowNumber[key];
+
+    for (const columnName in this._data) {
+      this._data[columnName].splice(rowNumber, 1);
+      this._resetDomainIfNecessary(columnName);
+    }
+  },
+
+  // Columns
+  addColumn (columnName, column) {
+    this._validateNewColumn(columnName, column);
+    this._data[columnName] = column;
+  },
+
+  replaceColumn (columnName, column) {
+    this.deleteColumn(columnName);
+    this.addColumn(columnName, column);
+  },
+
+  deleteColumn (columnName) {
+    ensureColumnExists(columnName, this);
+    throwErrorIfColumnIsKey(columnName);
+
+    if (Object.keys(this._data).length === 2) {
+      throw new Error('Cannot delete last column')
+    }
+
+    delete this._data[columnName];
+  },
+
+  // Private methods
+  _updateDomainIfNecessary (columnName, value) {
+    const type = getDataType(value);
+
+    if (columnName in this._domains) {
+      this._domains[columnName] = updateDomain(
+        this._domains[columnName],
+        value,
+        type
+      );
+    }
+  },
+
+  _resetDomainIfNecessary (columnName) {
+    if (columnName in this._domains) {
+      delete this._domains[columnName];
+    }
+  },
+
+  _validateNewColumn (columnName, column) {
+    checkRegularColumnName(columnName);
+
+    if (columnName in this._data) {
+      throw new Error(`Column '${columnName}' already exists`)
+    }
+
+    const dataLength = getDataLength(this._data);
+    if (dataLength !== column.length) {
+      throw new Error('Column must be of same length as rest of data')
+    }
+
+    ensureValidColumn(column);
+  }
+};
+
+function modifyingRowsAndColumnsMixin (targetClass) {
+  Object.assign(targetClass.prototype, methods$2);
+}
+
+function throwErrorIfColumnIsKey (columnName) {
+  if (columnName === '$key') throw new Error('Cannot modify key column')
+}
+
+function getJoinColumns (left, right, by) {
+  const leftData = left.data();
+  const rightData = right.data();
+
+  if (isUndefined(by)) {
+    const leftDataLength = getDataLength(leftData);
+    const joinColumns = {};
+
+    for (const columnName in rightData) {
+      if (columnName !== '$key') {
+        const rightColumn = rightData[columnName];
+        joinColumns[columnName] = rightColumn.slice(0, leftDataLength);
+      }
+    }
+
+    return joinColumns
+  }
+
+  if (isDefined(by)) {
+    const joinColumns = initJoinColumns(rightData, by[1]);
+
+    const rightRowsByKey = generateRightRowsByKey(rightData, by[1]);
+    const leftByColumn = leftData[by[0]];
+
+    for (let i = 0; i < leftByColumn.length; i++) {
+      const leftKey = leftByColumn[i];
+      const row = rightRowsByKey[leftKey];
+
+      for (const columnName in row) {
+        joinColumns[columnName].push(row[columnName]);
+      }
+    }
+
+    return joinColumns
+  }
+}
+
+function initJoinColumns (right, byColumnName) {
+  const joinColumns = {};
+
+  for (const columnName in right) {
+    if (columnName !== '$key' && columnName !== byColumnName) {
+      joinColumns[columnName] = [];
+    }
+  }
+
+  return joinColumns
+}
+
+function generateRightRowsByKey (right, byColumnName) {
+  const rightRowsByKey = {};
+  const byColumn = right[byColumnName];
+
+  for (let i = 0; i < byColumn.length; i++) {
+    const key = byColumn[i];
+    const row = {};
+
+    for (const columnName in right) {
+      if (columnName !== '$key' && columnName !== byColumnName) {
+        row[columnName] = right[columnName][i];
+      }
+    }
+
+    rightRowsByKey[key] = row;
+  }
+
+  return rightRowsByKey
+}
+
+function validateJoin (left, right, by) {
+  const leftData = left.data();
+  const rightData = getRightData(right);
+
+  if (isUndefined(by)) {
+    const leftLength = getDataLength(leftData);
+    const rightLength = getDataLength(rightData);
+
+    if (rightLength < leftLength) {
+      throw new Error(
+        'Without \'by\', the right DataContainer must be the same length as or longer than left DataContainer'
+      )
+    }
+  }
+
+  if (isDefined(by)) {
+    validateByColumnsExist(leftData, rightData, by);
+    ensureColumnsAreCompatible(leftData, rightData, by);
+    ensureNoDuplicateColumnNames(leftData, rightData, by);
+  }
+}
+
+function getRightData (right) {
+  if (!(right instanceof DataContainer)) {
+    throw new Error('It is only possible to join another DataContainer')
+  }
+
+  return right.data()
+}
+
+function validateByColumnsExist (left, right, by) {
+  if (!(by.constructor === Array && by.length === 2 && by.every(c => c.constructor === String))) {
+    throw new Error('Invalid format of \'by\'. Must be Array of two column names.')
+  }
+
+  const [leftColumnName, rightColumnName] = by;
+
+  if (!(leftColumnName in left)) {
+    throw new Error(`Column '${leftColumnName}' not found`)
+  }
+
+  if (!(rightColumnName in right)) {
+    throw new Error(`Column '${rightColumnName}' not found`)
+  }
+}
+
+function ensureColumnsAreCompatible (left, right, by) {
+  const [leftColumnName, rightColumnName] = by;
+  const leftColumn = left[leftColumnName];
+  const rightColumn = right[rightColumnName];
+
+  const leftType = getColumnType(leftColumn);
+  const rightType = getColumnType(rightColumn);
+
+  if (leftType !== rightType) throw new Error('\'by\' columns must be of the same type')
+
+  ensureRightByColumnIsUnique(right[rightColumnName]);
+  ensureLeftColumnIsSubsetOfRightColumn(leftColumn, rightColumn);
+}
+
+function ensureRightByColumnIsUnique (column) {
+  if (column.length !== new Set(column).size) {
+    throw new Error('Right \'by\' column must contain only unique values')
+  }
+}
+
+function ensureLeftColumnIsSubsetOfRightColumn (leftColumn, rightColumn) {
+  const rightSet = new Set(rightColumn);
+
+  for (let i = 0; i < leftColumn.length; i++) {
+    const leftKey = leftColumn[i];
+    if (!rightSet.has(leftKey)) {
+      throw new Error('Left \'by\' column must be subset of right column')
+    }
+  }
+}
+
+function ensureNoDuplicateColumnNames (left, right, by) {
+  const rightColumnName = by[1];
+
+  for (const columnName in right) {
+    if (columnName !== '$key' && columnName in left) {
+      if (columnName !== rightColumnName) {
+        throw new Error(`Duplicate column name: '${columnName}'`)
+      }
+    }
+  }
+}
+
 class DataContainer {
   constructor (data, options = { validate: true }) {
     this._data = {};
     this._keyToRowNumber = {};
+    this._domains = {};
 
     if (isColumnOriented(data)) {
       this._setColumnData(data, options);
@@ -2808,13 +3266,27 @@ class DataContainer {
   }
 
   domain (columnName) {
+    if (columnName in this._domains) {
+      return this._domains[columnName]
+    }
+
     const column = this.column(columnName);
-    return calculateDomain(column, columnName)
+    const domain = calculateDomain(column, columnName);
+    this._domains[columnName] = domain;
+    return domain
+  }
+
+  bbox () {
+    return this.domain('$geometry')
   }
 
   type (columnName) {
     const column = this.column(columnName);
     return getColumnType(column)
+  }
+
+  columnNames () {
+    return Object.keys(this._data)
   }
 
   // Checks
@@ -2838,51 +3310,14 @@ class DataContainer {
     }
   }
 
-  // Adding and removing rows
-  addRow (row) {
-    ensureValidRow(row, this);
+  // Join
+  join (dataContainer, { by = undefined } = {}) {
+    validateJoin(this, dataContainer, by);
+    const joinColumns = getJoinColumns(this, dataContainer, by);
 
-    this._data = produce(this._data, draft => {
-      for (const columnName in row) {
-        draft[columnName].push(row[columnName]);
-      }
-    });
-
-    const rowNumber = getDataLength(this._data) - 1;
-    const key = getNewKey(this._data.$key);
-
-    this._data.$key.push(key);
-    this._keyToRowNumber[key] = rowNumber;
-  }
-
-  updateRow (key, row) {
-    ensureRowExists(key, this);
-    ensureValidRow(row, this);
-    const rowNumber = this._keyToRowNumber[key];
-
-    this._data = produce(this._data, draft => {
-      for (const columnName in row) {
-        if (columnName === '$key') {
-          warn(`Cannot update '$key' of row`);
-          continue
-        }
-
-        const value = row[columnName];
-        draft[columnName][rowNumber] = value;
-      }
-    });
-  }
-
-  deleteRow (key) {
-    ensureRowExists(key, this);
-    const rowNumber = this._keyToRowNumber[key];
-    delete this._keyToRowNumber[key];
-
-    this._data = produce(this._data, draft => {
-      for (const columnName in draft) {
-        draft[columnName].splice(rowNumber, 1);
-      }
-    });
+    for (const columnName in joinColumns) {
+      this.addColumn(columnName, joinColumns[columnName]);
+    }
   }
 
   // Private methods
@@ -2906,6 +3341,7 @@ class DataContainer {
 
 dataLoadingMixin(DataContainer);
 transformationsMixin(DataContainer);
+modifyingRowsAndColumnsMixin(DataContainer);
 
 const invalidDataError = new Error('Data passed to DataContainer is of unknown format');
 
