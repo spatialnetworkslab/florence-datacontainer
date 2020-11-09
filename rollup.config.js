@@ -26,5 +26,19 @@ export default [
     plugins: [
       resolve()
     ]
+  },
+  // minified built for REPL
+  {
+    input: 'src/index.js',
+    output: [
+      {
+        file: 'dist/florence-datacontainer.mjs',
+        format: 'es'
+      }
+    ],
+    plugins: [
+      resolve(),
+      commonjs()
+    ]
   }
 ]
