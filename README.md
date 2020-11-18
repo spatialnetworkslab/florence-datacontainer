@@ -14,6 +14,7 @@ A powerful yet light-weight interface to manage data. Designed to be used with [
 * [Transformations](#transformations)
 * [Adding and removing rows](#adding-and-removing-rows)
 * [Adding and removing columns](#adding-and-removing-columns)
+* [Classification](#classification)
 
 ### Loading data
 
@@ -620,4 +621,33 @@ Deletes an existing column.
 const dataContainer = new DataContainer({ a: [1, 2, 3], b: ['a', 'b', 'c'] })
 dataContainer.deleteColumn('b')
 dataContainer.data() // { $key: [0, 1, 2], a: [1, 2, 3] }
+```
+
+### Classification
+
+<a name="datacontainer_bounds" href="#datacontainer_bounds">#</a> <i>DataContainer</i>.<b>bounds</b>(binInstructions)
+
+Returns an array containing the boundaries of the classes found by the classification/binning algorithm. See [bin](#datacontainer_bin) for the structure of `binInstructions`.
+
+```js
+const dataContainer = new DataContainer({ a: [1, 2, 3, 4, 5, 6, 7] })
+dataContainer.bounds(
+  { column: 'a', method: 'EqualInterval', numClasses: 3 }
+) // [3, 5]
+```
+
+<a name="datacontainer_classify" href="#datacontainer_classify">#</a> <i>DataContainer</i>.<b>classify</b>(binInstructions, range)
+
+Returns a [threshold](https://github.com/d3/d3-scale#threshold-scales) scale based on the bounds determined by classification/binning algorithm, and a range of choice. `range` must be an array with the same length as `numClasses` in the `binInstructions`.
+
+```js
+const dataContainer = new DataContainer({ a: [1, 2, 3, 4, 5, 6, 7] })
+const scale = dataContainer.classify(
+  { column: 'a', method: 'EqualInterval', numClasses: 3 },
+  ['red', 'blue', 'green']
+)
+
+scale(2) // 'red'
+scale(4) // 'blue'
+scale(6) // 'green'
 ```
