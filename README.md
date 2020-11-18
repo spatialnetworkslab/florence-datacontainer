@@ -403,15 +403,15 @@ binned.row(1).$grouped.rows() // [{ a: 3, b: 10, $key: 2 }, { a: 4, b: 11, $key:
 Besides `'EqualInterval'`, other methods of classification are supported. Different methods might require different additional
 keys to be passed to `binInstructions`. See the table below for an overview.
 
-|       Class. method       |   option name   | default for option |
-| ------------------------- | --------------- | ------------------ |
-| `'EqualInterval'`         | `numClasses`    | `5`                |
-| `'StandardDeviation'`     | `numClasses`    | `5`                |
-| `'Quantile'`              | `numClasses`    | `5`                |
-| `'Jenks'`                 | `numClasses`    | `5`                |
-| `'CKMeans'`               | `numClasses`    | `5`                |
-| `'IntervalSize'`          | `binSize`       | `1`                |
-| `'Manual'`                | `manualClasses` | `undefined`        |
+|       Class. method       |   option name   |
+| ------------------------- | --------------- |
+| `'EqualInterval'`         | `numClasses`    |
+| `'StandardDeviation'`     | `numClasses`    |
+| `'Quantile'`              | `numClasses`    |
+| `'Jenks'`                 | `numClasses`    |
+| `'CKMeans'`               | `numClasses`    |
+| `'IntervalSize'`          | `binSize`       |
+| `'Manual'`                | `manualClasses` |
 
 For `'Manual'`, `manualClasses` is required and must be an Array of `interval`s, which will become the bins.
 The classification is performed internally by [classify-series](https://github.com/Fischerfredl/classify-series).

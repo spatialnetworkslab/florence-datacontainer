@@ -1,6 +1,7 @@
 import dataLoadingMixin from './dataLoadingMixin.js'
 import transformationsMixin from './transformationsMixin.js'
 import modifyingRowsAndColumnsMixin from './modifyingRowsAndColumnsMixin.js'
+import classificationMixin from './classificationMixin.js'
 
 import { isColumnOriented, isRowOriented, isGeoJSON } from './utils/checkFormat.js'
 import { isValidColumn, ensureValidColumn, columnExists, ensureColumnExists } from './utils/isValidColumn.js'
@@ -159,5 +160,6 @@ export default class DataContainer {
 dataLoadingMixin(DataContainer)
 transformationsMixin(DataContainer)
 modifyingRowsAndColumnsMixin(DataContainer)
+classificationMixin(DataContainer)
 
 const invalidDataError = new Error('Data passed to DataContainer is of unknown format')
