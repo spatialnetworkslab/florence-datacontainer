@@ -4,7 +4,7 @@ import { schemeBlues } from 'd3-scale-chromatic'
 
 const methods = {
   bounds (binInstructions) {
-    if (this.type(binInstructions.groupBy) !== 'quantitative') {
+    if (this.type(binInstructions.column) !== 'quantitative') {
       throw new Error('Column should be of type \'quantitative\'')
     }
 

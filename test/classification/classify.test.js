@@ -6,7 +6,7 @@ describe('classify', () => {
       { a: [1, 2, 3, 4, 5, 6, 7], b: [8, 9, 10, 11, 12, 13, 14] }
     )
 
-    const scale = dataContainer.classify({ groupBy: 'a', method: 'EqualInterval', numClasses: 3 })
+    const scale = dataContainer.classify({ column: 'a', method: 'EqualInterval', numClasses: 3 })
 
     expect(scale.range().length).toBe(3)
     expect(scale(2)).toBe('#deebf7')
@@ -20,7 +20,7 @@ describe('classify', () => {
     )
 
     const scale = dataContainer.classify(
-      { groupBy: 'a', method: 'EqualInterval', numClasses: 3 },
+      { column: 'a', method: 'EqualInterval', numClasses: 3 },
       ['red', 'blue', 'green']
     )
 

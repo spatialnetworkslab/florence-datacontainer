@@ -6,7 +6,7 @@ describe('bin transformation', () => {
       { a: [1, 2, 3, 4, 5, 6, 7], b: [8, 9, 10, 11, 12, 13, 14] }
     )
 
-    const binned = dataContainer.bin({ groupBy: 'a', method: 'EqualInterval', numClasses: 3 })
+    const binned = dataContainer.bin({ column: 'a', method: 'EqualInterval', numClasses: 3 })
 
     expect(binned.column('bins')).toEqual([[1, 3], [3, 5], [5, 7]])
     expect(binned.type('bins')).toBe('interval')
@@ -18,7 +18,7 @@ describe('bin transformation', () => {
       { a: [1, 2, 3, 4, 5, 6, 7], b: [8, 9, 10, 11, 12, 13, 14] }
     )
 
-    const binned = dataContainer.bin({ groupBy: 'a', method: 'IntervalSize', binSize: 2 })
+    const binned = dataContainer.bin({ column: 'a', method: 'IntervalSize', binSize: 2 })
 
     expect(binned.column('bins')).toEqual([[1, 3], [3, 5], [5, 7]])
   })
@@ -28,7 +28,7 @@ describe('bin transformation', () => {
       { a: [1, 2, 5, 6, 7], b: [8, 9, 12, 13, 14] }
     )
 
-    const binned = dataContainer.bin({ groupBy: 'a', method: 'IntervalSize', binSize: 2 })
+    const binned = dataContainer.bin({ column: 'a', method: 'IntervalSize', binSize: 2 })
 
     expect(binned.column('bins')).toEqual([[1, 3], [5, 7]])
   })
@@ -38,7 +38,7 @@ describe('bin transformation', () => {
       a: [1, 2, 3, 4, 5]
     })
 
-    const binned = dataContainer.bin({ groupBy: 'a', method: 'IntervalSize', binSize: 2 })
+    const binned = dataContainer.bin({ column: 'a', method: 'IntervalSize', binSize: 2 })
 
     expect(binned.column('bins')).toEqual([[1, 3], [3, 5]])
   })
@@ -51,8 +51,8 @@ describe('bin transformation', () => {
     })
 
     const binned = dataContainer.bin([
-      { groupBy: 'a', method: 'IntervalSize', binSize: 5 },
-      { groupBy: 'b', method: 'IntervalSize', binSize: 5 }
+      { column: 'a', method: 'IntervalSize', binSize: 5 },
+      { column: 'b', method: 'IntervalSize', binSize: 5 }
     ])
 
     expect(binned.column('bins_a')).toEqual([[0, 5], [5, 10], [10, 19]])
@@ -68,8 +68,8 @@ describe('bin transformation', () => {
     })
 
     const binned = dataContainer.bin([
-      { groupBy: 'a', method: 'IntervalSize', binSize: 2 },
-      { groupBy: 'b', method: 'IntervalSize', binSize: 2 }
+      { column: 'a', method: 'IntervalSize', binSize: 2 },
+      { column: 'b', method: 'IntervalSize', binSize: 2 }
     ])
 
     expect(binned.column('bins_a')).toEqual([[1, 3], [1, 3], [3, 5], [3, 5]])

@@ -9,7 +9,6 @@ import {
 import DataContainer from '../index.js'
 import getDataLength from '../utils/getDataLength.js'
 import { calculateDomain } from '../utils/calculateDomain.js'
-import { warn } from '../utils/logging.js'
 
 const methodMap = {
   EqualInterval: classifyEqInterval,
@@ -24,24 +23,24 @@ export default function (data, binInstructions) {
     const intervalBounds = getIntervalBounds(data, binInstructions)
     const ranges = pairRanges(intervalBounds)
 
-    return bin1d(data, binInstructions.groupBy, ranges)
+    return bin1d(data, binInstructions.column, ranges)
   }
 
   if (binInstructions.constructor === Array) {
     const intervalBoundsPerVariable = binInstructions.map(instructions => getIntervalBounds(data, instructions))
     const rangesPerVariable = intervalBoundsPerVariable.map(bounds => pairRanges(bounds))
-    const variables = binInstructions.map(instructions => instructions.groupBy)
+    const variables = binInstructions.map(instructions => instructions.column)
 
     return binKd(data, variables, rangesPerVariable)
   }
 }
 
 export function getIntervalBounds (data, binInstructions) {
-  const { groupBy, method, numClasses } = parseBinInstructions(binInstructions)
+  const { column, method, numClasses } = parseBinInstructions(binInstructions)
 
-  const variableData = data[groupBy]
+  const variableData = data[column]
   if (!variableData) {
-    throw new Error(`groupBy column '${groupBy}' does not exist`)
+    throw new Error(`Column '${column}' does not exist`)
   }
 
   if (method === 'IntervalSize') {
@@ -60,28 +59,12 @@ function parseBinInstructions (binInstructions) {
     throw new Error('Bin only accepts an Object')
   }
 
-  const groupBy = binInstructions.groupBy
-  if (groupBy.constructor !== String) {
-    throw new Error('groupBy only accepts a String variable name')
+  const column = binInstructions.column
+  if (column.constructor !== String) {
+    throw new Error('column only accepts a String variable name')
   }
 
-  let method = binInstructions.method
-  if (!method) {
-    warn('No binning method specified, defaulting to EqualInterval')
-    method = 'EqualInterval'
-  }
-  if (method.constructor !== String) {
-    warn('Binning method not recognized, defaulting to EqualInterval')
-    method = 'EqualInterval'
-  }
-
-  let numClasses = binInstructions.numClasses
-  if (!numClasses) {
-    warn('numClasses not specified, defaulting to 5')
-    numClasses = 5
-  }
-
-  return { groupBy, method, numClasses }
+  return binInstructions
 }
 
 function createRangesFromBinSize (variableData, binSize) {

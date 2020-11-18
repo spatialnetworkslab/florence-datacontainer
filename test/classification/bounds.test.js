@@ -6,7 +6,7 @@ describe('bounds', () => {
       { a: [1, 2, 3, 4, 5, 6, 7], b: [8, 9, 10, 11, 12, 13, 14] }
     )
 
-    const bounds = dataContainer.bounds({ groupBy: 'a', method: 'EqualInterval', numClasses: 3 })
+    const bounds = dataContainer.bounds({ column: 'a', method: 'EqualInterval', numClasses: 3 })
 
     expect(bounds).toEqual([3, 5])
   })
@@ -17,7 +17,7 @@ describe('bounds', () => {
     )
 
     expect(
-      () => dataContainer.bounds({ groupBy: 'b', method: 'EqualInterval', numClasses: 3 })
+      () => dataContainer.bounds({ column: 'b', method: 'EqualInterval', numClasses: 3 })
     ).toThrow()
   })
 })
