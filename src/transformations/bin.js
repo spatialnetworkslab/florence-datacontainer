@@ -1,8 +1,23 @@
+import {
+  classifyEqInterval,
+  classifyJenks,
+  classifyQuantile,
+  classifyStdDeviation,
+  classifyCkmeans
+} from 'classify-series'
+
 import DataContainer from '../index.js'
 import getDataLength from '../utils/getDataLength.js'
-import Geostats from '../utils/geoStats.js'
 import { calculateDomain } from '../utils/calculateDomain.js'
 import { warn } from '../utils/logging.js'
+
+const methodMap = {
+  EqualInterval: classifyEqInterval,
+  StandardDeviation: classifyStdDeviation,
+  Quantile: classifyQuantile,
+  Jenks: classifyJenks,
+  CKMeans: classifyCkmeans
+}
 
 export default function (data, binInstructions) {
   if (binInstructions.constructor === Object) {
@@ -37,8 +52,7 @@ export function getIntervalBounds (data, binInstructions) {
     return binInstructions.manualClasses
   }
 
-  const geoStat = new Geostats(variableData)
-  return geoStat[methodMap[method]](numClasses)
+  return methodMap[method](variableData, numClasses)
 }
 
 function parseBinInstructions (binInstructions) {
@@ -91,15 +105,6 @@ function createRangesFromBinSize (variableData, binSize) {
   ranges.push(domain[1])
 
   return ranges
-}
-
-const methodMap = {
-  EqualInterval: 'getClassEqInterval',
-  StandardDeviation: 'getClassStdDeviation',
-  ArithmeticProgression: 'getClassArithmeticProgression',
-  GeometricProgression: 'getClassGeometricProgression',
-  Quantile: 'getClassQuantile',
-  Jenks: 'getClassJenks'
 }
 
 function pairRanges (ranges) {
