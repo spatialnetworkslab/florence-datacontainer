@@ -207,7 +207,15 @@ dataContainer.domain('quantity') // [1, 4]
 dataContainer.domain('dayOfSale') // [Date Fri May 03 2019 ..., Date Mon May 06 2019 ...]
 ```
 
-For geometry data, this will return the bounding box.
+For geometry data (`.domain('$geometry')`), this will return the bounding box.
+
+<a name="datacontainer_min" href="#datacontainer_min">#</a> <i>DataContainer</i>.<b>min</b>(columnName)
+
+Equivalent to `domain(columnName)[0]`. Only works for quantitative columns.
+
+<a name="datacontainer_max" href="#datacontainer_max">#</a> <i>DataContainer</i>.<b>max</b>(columnName)
+
+Equivalent to `domain(columnName)[1]`. Only works for quantitative columns.
 
 <a name="datacontainer_bbox" href="#datacontainer_bbox">#</a> <i>DataContainer</i>.<b>bbox</b>()
 
