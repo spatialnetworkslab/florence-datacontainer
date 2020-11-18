@@ -414,7 +414,7 @@ keys to be passed to `binInstructions`. See the table below for an overview.
 | `'Manual'`                | `manualClasses` | `undefined`        |
 
 For `'Manual'`, `manualClasses` is required and must be an Array of `interval`s, which will become the bins.
-The classification is performed internally by [geostats](https://github.com/simogeo/geostats).
+The classification is performed internally by [classify-series](https://github.com/Fischerfredl/classify-series).
 
 It is also possible to bin over multiple dimensions by providing an `Array` of `binInstructions`.
 Instead of a single `bins` column, this will create multiple columns called `bins_<original column name>`:
