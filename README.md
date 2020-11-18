@@ -638,7 +638,7 @@ dataContainer.bounds(
 
 <a name="datacontainer_classify" href="#datacontainer_classify">#</a> <i>DataContainer</i>.<b>classify</b>(binInstructions, range)
 
-Returns a [threshold](https://github.com/d3/d3-scale#threshold-scales) scale based on the bounds determined by classification/binning algorithm, and a range of choice. `range` must be an array with the same length as `numClasses` in the `binInstructions`.
+Returns a [threshold](https://github.com/d3/d3-scale#threshold-scales) scale based on the bounds determined by classification/binning algorithm, with any type of `range`. `range` must be an array with the same length as `numClasses` in the `binInstructions`.
 
 ```js
 const dataContainer = new DataContainer({ a: [1, 2, 3, 4, 5, 6, 7] })
