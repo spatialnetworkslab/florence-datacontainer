@@ -394,7 +394,7 @@ const dataContainer = new DataContainer(
   { a: [1, 2, 3, 4, 5, 6, 7], b: [8, 9, 10, 11, 12, 13, 14] }
 )
 
-const binned = dataContainer.bin({ groupBy: 'a', method: 'EqualInterval', numClasses: 3 })
+const binned = dataContainer.bin({ column: 'a', method: 'EqualInterval', numClasses: 3 })
 binned.column('bins') // [[1, 3], [3, 5], [5, 7]]
 binned.type('bins') // 'interval'
 binned.row(1).$grouped.rows() // [{ a: 3, b: 10, $key: 2 }, { a: 4, b: 11, $key: 3 }]
@@ -403,19 +403,18 @@ binned.row(1).$grouped.rows() // [{ a: 3, b: 10, $key: 2 }, { a: 4, b: 11, $key:
 Besides `'EqualInterval'`, other methods of classification are supported. Different methods might require different additional
 keys to be passed to `binInstructions`. See the table below for an overview.
 
-|       Class. method       |   option name   | default for option |
-| ------------------------- | --------------- | ------------------ |
-| `'EqualInterval'`         | `numClasses`    | `5`                |
-| `'StandardDeviation'`     | `numClasses`    | `5`                |
-| `'ArithmeticProgression'` | `numClasses`    | `5`                |
-| `'GeometricProgression'`  | `numClasses`    | `5`                |
-| `'Quantile'`              | `numClasses`    | `5`                |
-| `'Jenks'`                 | `numClasses`    | `5`                |
-| `'IntervalSize'`          | `binSize`       | `1`                |
-| `'Manual'`                | `manualClasses` | `undefined`        |
+|       Class. method       |   option name   |
+| ------------------------- | --------------- |
+| `'EqualInterval'`         | `numClasses`    |
+| `'StandardDeviation'`     | `numClasses`    |
+| `'Quantile'`              | `numClasses`    |
+| `'Jenks'`                 | `numClasses`    |
+| `'CKMeans'`               | `numClasses`    |
+| `'IntervalSize'`          | `binSize`       |
+| `'Manual'`                | `manualClasses` |
 
 For `'Manual'`, `manualClasses` is required and must be an Array of `interval`s, which will become the bins.
-The classification is performed internally by [geostats](https://github.com/simogeo/geostats).
+The classification is performed internally by [classify-series](https://github.com/Fischerfredl/classify-series).
 
 It is also possible to bin over multiple dimensions by providing an `Array` of `binInstructions`.
 Instead of a single `bins` column, this will create multiple columns called `bins_<original column name>`:
@@ -427,8 +426,8 @@ const dataContainer = new DataContainer({
 })
 
 const binned = dataContainer.bin([
-  { groupBy: 'a', method: 'IntervalSize', binSize: 2 },
-  { groupBy: 'b', method: 'IntervalSize', binSize: 2 }
+  { column: 'a', method: 'IntervalSize', binSize: 2 },
+  { column: 'b', method: 'IntervalSize', binSize: 2 }
 ])
 
 console.log(binned.column('bins_a')) // [[1, 3], [1, 3], [3, 5], [3, 5]]
