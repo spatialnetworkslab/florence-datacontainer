@@ -14,6 +14,7 @@ A powerful yet light-weight interface to manage data. Designed to be used with [
 * [Transformations](#transformations)
 * [Adding and removing rows](#adding-and-removing-rows)
 * [Adding and removing columns](#adding-and-removing-columns)
+* [Classification](#classification)
 
 ### Loading data
 
@@ -207,7 +208,15 @@ dataContainer.domain('quantity') // [1, 4]
 dataContainer.domain('dayOfSale') // [Date Fri May 03 2019 ..., Date Mon May 06 2019 ...]
 ```
 
-For geometry data, this will return the bounding box.
+For geometry data (`.domain('$geometry')`), this will return the bounding box.
+
+<a name="datacontainer_min" href="#datacontainer_min">#</a> <i>DataContainer</i>.<b>min</b>(columnName)
+
+Equivalent to `domain(columnName)[0]`. Only works for quantitative columns.
+
+<a name="datacontainer_max" href="#datacontainer_max">#</a> <i>DataContainer</i>.<b>max</b>(columnName)
+
+Equivalent to `domain(columnName)[1]`. Only works for quantitative columns.
 
 <a name="datacontainer_bbox" href="#datacontainer_bbox">#</a> <i>DataContainer</i>.<b>bbox</b>()
 
@@ -612,4 +621,33 @@ Deletes an existing column.
 const dataContainer = new DataContainer({ a: [1, 2, 3], b: ['a', 'b', 'c'] })
 dataContainer.deleteColumn('b')
 dataContainer.data() // { $key: [0, 1, 2], a: [1, 2, 3] }
+```
+
+### Classification
+
+<a name="datacontainer_bounds" href="#datacontainer_bounds">#</a> <i>DataContainer</i>.<b>bounds</b>(binInstructions)
+
+Returns an array containing the boundaries of the classes found by the classification/binning algorithm. See [bin](#datacontainer_bin) for the structure of `binInstructions`.
+
+```js
+const dataContainer = new DataContainer({ a: [1, 2, 3, 4, 5, 6, 7] })
+dataContainer.bounds(
+  { column: 'a', method: 'EqualInterval', numClasses: 3 }
+) // [3, 5]
+```
+
+<a name="datacontainer_classify" href="#datacontainer_classify">#</a> <i>DataContainer</i>.<b>classify</b>(binInstructions, range)
+
+Returns a [threshold](https://github.com/d3/d3-scale#threshold-scales) scale based on the bounds determined by classification/binning algorithm, and a range of choice. `range` must be an array with the same length as `numClasses` in the `binInstructions`.
+
+```js
+const dataContainer = new DataContainer({ a: [1, 2, 3, 4, 5, 6, 7] })
+const scale = dataContainer.classify(
+  { column: 'a', method: 'EqualInterval', numClasses: 3 },
+  ['red', 'blue', 'green']
+)
+
+scale(2) // 'red'
+scale(4) // 'blue'
+scale(6) // 'green'
 ```
