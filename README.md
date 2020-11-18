@@ -407,10 +407,9 @@ keys to be passed to `binInstructions`. See the table below for an overview.
 | ------------------------- | --------------- | ------------------ |
 | `'EqualInterval'`         | `numClasses`    | `5`                |
 | `'StandardDeviation'`     | `numClasses`    | `5`                |
-| `'ArithmeticProgression'` | `numClasses`    | `5`                |
-| `'GeometricProgression'`  | `numClasses`    | `5`                |
 | `'Quantile'`              | `numClasses`    | `5`                |
 | `'Jenks'`                 | `numClasses`    | `5`                |
+| `'CKMeans'`               | `numClasses`    | `5`                |
 | `'IntervalSize'`          | `binSize`       | `1`                |
 | `'Manual'`                | `manualClasses` | `undefined`        |
 
