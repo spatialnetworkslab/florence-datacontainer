@@ -98,6 +98,22 @@ export default class DataContainer {
     return this.domain('$geometry')
   }
 
+  min (columnName) {
+    if (this.type(columnName) !== 'quantitative') {
+      throw new Error('Column must be quantitative')
+    }
+
+    return this.domain(columnName)[0]
+  }
+
+  max (columnName) {
+    if (this.type(columnName) !== 'quantitative') {
+      throw new Error('Column must be quantitative')
+    }
+
+    return this.domain(columnName)[1]
+  }
+
   type (columnName) {
     const column = this.column(columnName)
     return getColumnType(column, columnName)
