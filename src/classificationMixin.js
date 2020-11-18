@@ -1,9 +1,13 @@
 import { getIntervalBounds } from './transformations/bin.js'
-import { scaleTreshold } from 'd3-scale'
+import { scaleThreshold } from 'd3-scale'
 import { schemeBlues } from 'd3-scale-chromatic'
 
 const methods = {
   bounds (binInstructions) {
+    if (this.type(binInstructions.groupBy) !== 'quantitative') {
+      throw new Error('Column should be of type \'quantitative\'')
+    }
+
     const bounds = getIntervalBounds(
       this._data,
       binInstructions
@@ -12,12 +16,12 @@ const methods = {
     return bounds.slice(1, bounds.length - 1)
   },
 
-  classify (binInstructions, colorScheme = schemeBlues) {
+  classify (binInstructions, colorScheme) {
     const bounds = this.bounds(binInstructions)
 
-    return scaleTreshold()
+    return scaleThreshold()
       .domain(bounds)
-      .range(colorScheme[bounds.length + 1])
+      .range(colorScheme || schemeBlues[binInstructions.numClasses])
   }
 }
 
