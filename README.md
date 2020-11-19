@@ -144,19 +144,6 @@ const dataContainer = new DataContainer({ fruit: ['apple', 'banana'], amount: [1
 dataContainer.row(0) // { fruit: 'apple', amount: 1, $key: 0 }
 ```
 
-<a name="datacontainer_prevrow" href="#datacontainer_prevrow">#</a> <i>DataContainer</i>.<b>prevRow</b>(key)
-
-Returns the previous row.
-
-```js
-const dataContainer = new DataContainer({ fruit: ['apple', 'banana'], amount: [1, 2] })
-dataContainer.prevRow(1) // { fruit: 'apple', amount: 1, $key: 0 }
-```
-
-<a name="datacontainer_nextrow" href="#datacontainer_nextrow">#</a> <i>DataContainer</i>.<b>nextRow</b>(key)
-
-Returns the next row.
-
 ```js
 const dataContainer = new DataContainer({ fruit: ['apple', 'banana'], amount: [1, 2] })
 dataContainer.nextRow(0) // { fruit: 'banana', amount: 2, $key: 1 }
