@@ -10,6 +10,7 @@ import { calculateDomain } from './utils/calculateDomain.js'
 import { getColumnType } from './utils/getDataType.js'
 import getDataLength from './utils/getDataLength.js'
 import { validateJoin, getJoinColumns } from './utils/join.js'
+import validateAccessorObject from './utils/validateAccessorObject.js'
 
 import { Group } from './transformations/groupBy.js'
 
@@ -47,9 +48,14 @@ export default class DataContainer {
     return this._data
   }
 
-  row (key) {
-    const rowNumber = this._keyToRowNumber[key]
-    return this._row(rowNumber)
+  row (accessorObject) {
+    validateAccessorObject(accessorObject)
+
+    const rowIndex = 'key' in accessorObject
+      ? this._keyToRowNumber[accessorObject.key]
+      : accessorObject.index
+
+    return this._row(rowIndex)
   }
 
   rows () {
@@ -144,17 +150,17 @@ export default class DataContainer {
   }
 
   // Private methods
-  _row (rowNumber) {
+  _row (rowIndex) {
     const length = getDataLength(this._data)
 
-    if (rowNumber < 0 || rowNumber >= length) {
+    if (rowIndex < 0 || rowIndex >= length) {
       return undefined
     }
 
     const row = {}
 
     for (const columnName in this._data) {
-      const value = this._data[columnName][rowNumber]
+      const value = this._data[columnName][rowIndex]
       row[columnName] = value
     }
 

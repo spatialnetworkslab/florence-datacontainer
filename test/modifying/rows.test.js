@@ -9,7 +9,7 @@ describe('modifying rows', () => {
 
     dataContainer.addRow({ a: 5, b: 'c' })
 
-    expect(dataContainer.row(4)).toEqual({ a: 5, b: 'c', $key: 4 })
+    expect(dataContainer.row({ index: 4 })).toEqual({ a: 5, b: 'c', $key: 4 })
   })
 
   test('addRow with missing columns throws error', () => {
@@ -30,13 +30,24 @@ describe('modifying rows', () => {
     expect(() => dataContainer.addRow({ a: 5, b: 'c', c: 1 })).toThrow()
   })
 
-  test('updateRow works as expected', () => {
+  test('updateRow works with index', () => {
     const dataContainer = new DataContainer({
       a: [1, 2, 3, 4],
       b: ['a', 'a', 'b', 'b']
     })
 
-    dataContainer.updateRow(2, { a: 5, b: 'c' })
+    dataContainer.updateRow({ index: 2 }, { a: 5, b: 'c' })
+
+    expect(dataContainer.column('b')).toEqual(['a', 'a', 'c', 'b'])
+  })
+
+  test('updateRow works with key', () => {
+    const dataContainer = new DataContainer({
+      a: [1, 2, 3, 4],
+      b: ['a', 'a', 'b', 'b']
+    })
+
+    dataContainer.updateRow({ key: 2 }, { a: 5, b: 'c' })
 
     expect(dataContainer.column('b')).toEqual(['a', 'a', 'c', 'b'])
   })
@@ -47,7 +58,7 @@ describe('modifying rows', () => {
       b: ['a', 'a', 'b', 'b']
     })
 
-    dataContainer.updateRow(2, { b: 'c' })
+    dataContainer.updateRow({ index: 2 }, { b: 'c' })
 
     expect(dataContainer.column('b')).toEqual(['a', 'a', 'c', 'b'])
   })
@@ -58,7 +69,7 @@ describe('modifying rows', () => {
       b: ['a', 'a', 'b', 'b']
     })
 
-    expect(() => dataContainer.updateRow(2, { c: 'd' })).toThrow()
+    expect(() => dataContainer.updateRow({ index: 2 }, { c: 'd' })).toThrow()
   })
 
   test('updateRow function syntax works as expected', () => {
@@ -67,18 +78,29 @@ describe('modifying rows', () => {
       b: ['a', 'a', 'b', 'b']
     })
 
-    dataContainer.updateRow(2, row => ({ a: row.a + 5 }))
+    dataContainer.updateRow({ index: 2 }, row => ({ a: row.a + 5 }))
 
     expect(dataContainer.column('a')).toEqual([1, 2, 8, 4])
   })
 
-  test('deleteRow works as expected', () => {
+  test('deleteRow works with index', () => {
     const dataContainer = new DataContainer({
       a: [1, 2, 3, 4],
       b: ['a', 'a', 'b', 'b']
     })
 
-    dataContainer.deleteRow(2)
+    dataContainer.deleteRow({ index: 2 })
+
+    expect(dataContainer.column('b')).toEqual(['a', 'a', 'b'])
+  })
+
+  test('deleteRow works with key', () => {
+    const dataContainer = new DataContainer({
+      a: [1, 2, 3, 4],
+      b: ['a', 'a', 'b', 'b']
+    })
+
+    dataContainer.deleteRow({ key: 2 })
 
     expect(dataContainer.column('b')).toEqual(['a', 'a', 'b'])
   })

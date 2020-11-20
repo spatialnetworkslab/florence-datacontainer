@@ -25,12 +25,12 @@ describe('accessing rows', () => {
   })
 
   test('row works with index', () => {
-    expect(dataContainer.row({ index: 2 })).toEqual({ a: 3, b: 'c' })
-    expect(filtered.row({ index: 2 })).toEqual({ a: 5, b: 'e' })
+    expect(dataContainer.row({ index: 2 })).toEqual({ a: 3, b: 'c', $key: 2 })
+    expect(filtered.row({ index: 2 })).toEqual({ a: 5, b: 'e', $key: 4 })
   })
 
   test('row works with key', () => {
-    expect(dataContainer.row({ key: 2 })).toEqual({ a: 3, b: 'c' })
-    expect(filtered.row({ key: 2 })).toEqual({ a: 3, b: 'c' })
+    expect(dataContainer.row({ key: 2 })).toEqual({ a: 3, b: 'c', $key: 2 })
+    expect(filtered.row({ key: 2 })).toEqual({ a: 3, b: 'c', $key: 2 })
   })
 })
