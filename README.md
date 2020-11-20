@@ -123,7 +123,7 @@ More options might be added in the future.
 
 ### Keying
 
-The `DataContainer` automatically generates a key for each row when data is loaded. These keys are preserved during transformations like [arrange](#datacontainer_arrange) and [filter](@datacontainer_filter) to keep track of which row is which:
+The `DataContainer` automatically generates a key for each row when data is loaded. These keys are preserved during transformations like [arrange](#datacontainer_arrange) and [filter](#datacontainer_filter) to keep track of which row is which:
 
 ```js
 const dataContainer = new DataContainer({ a: [2, 4, 6, 8, 10, 12, 14] })
