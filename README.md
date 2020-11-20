@@ -8,6 +8,7 @@ A powerful yet light-weight interface to manage data. Designed to be used with [
 
 * [Loading data](#loading-data)
 * [Options](#options)
+* [Keying](#keying)
 * [Accessing data](#accessing-data)
 * [Domains and types](#domains-and-types)
 * [Checks](#checks)
@@ -119,6 +120,69 @@ Setting the `validate` option to `false` will disable column validation. This ca
 when you are certain your data is completely valid (i.e. all columns have only one data type and contain
 at least one valid that is not `NaN`, `undefined`, `null`, or `Infinity`) or don't care if it is.
 More options might be added in the future.
+
+### Keying
+
+The `DataContainer` automatically generates a key for each row when data is loaded. These keys are preserved during transformations like [arrange](#datacontainer_arrange) and [filter](@datacontainer_filter) to keep track of which row is which:
+
+```js
+const dataContainer = new DataContainer({ a: [2, 4, 6, 8, 10, 12, 14] })
+dataContainer.keys() // [0, 1, 2, 3, 4, 5, 6]
+const transformed = dataContainer.filter(row => row.a > 10)
+transformed.keys() // [5, 6]
+```
+
+Furthermore, retrieving, updating or deleting rows (see [accessing data](#accessing-data)) can be done either by index or by key:
+
+```js
+const dataContainer = new DataContainer({ a: [2, 4, 6, 8, 10, 12, 14] })
+const transformed = dataContainer.filter(row => row.a > 10)
+transformed.row({ index: 0 }) // { a: 12, $key: 5 }
+transformed.row({ key: 5 }) // { a: 12, $key: 5 }
+```
+
+Automatically generated keys are always integers. Besides using automatically generated keys, it is also possible to use a column present in the data as custom key (see [setKey](#datacontainer_setkey)). When using a custom key, it is recommended to use a column with primitive values, like `quantitative` or `categorical` columns, containing respectively `Number`s and `String`s. Other types and objects like dates are possible too, since the key functionality internally uses a [Map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map). Beware, however, that a reference to the exact same (and not an equivalent) object must be used in this case to retrieve, update or delete rows.
+
+<a name="datacontainer_keys" href="#datacontainer_keys">#</a> <i>DataContainer</i>.<b>keys</b>()
+
+Returns an array of keys:
+
+```js
+const dataContainer = new DataContainer({ a: [100, 200, 300], b: ['a', 'b', 'c'] })
+dataContainer.keys() // [0, 1, 2]
+```
+
+<a name="datacontainer_setkey" href="#datacontainer_setkey">#</a> <i>DataContainer</i>.<b>setKey</b>(columnName)
+
+Sets a column as key:
+
+```js
+const dataContainer = new DataContainer({ a: [100, 200, 300], b: ['a', 'b', 'c'] })
+dataContainer.setKey('b')
+dataContainer.keys() // ['a', 'b', 'c']
+```
+
+<a name="datacontainer_resetkey" href="#datacontainer_resetkey">#</a> <i>DataContainer</i>.<b>resetKey</b>()
+
+Resets the current keys:
+
+```js
+const dataContainer = new DataContainer({ a: [100, 200, 300], b: ['a', 'b', 'c'] })
+dataContainer.setKey('b')
+dataContainer.keys() // ['a', 'b', 'c']
+dataContainer.resetKeys()
+dataContainer.keys() [0, 1, 2]
+```
+
+Also works to reset keys after a transformation:
+
+```js
+const dataContainer = new DataContainer({ a: [2, 4, 6, 8, 10, 12, 14] })
+const transformed = dataContainer.filter(row => row.a > 10)
+transformed.keys() // [5, 6]
+transformed.resetKey()
+transformed.keys() // [0, 1]
+```
 
 ### Accessing data
 

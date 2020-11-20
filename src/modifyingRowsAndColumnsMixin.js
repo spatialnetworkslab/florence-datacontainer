@@ -86,8 +86,6 @@ const methods = {
     const rowIndex = this._rowIndex(accessorObject)
     const key = this._row(rowIndex).$key
 
-    console.log()
-
     this._keyToRowIndex.delete(key)
 
     for (const columnName in this._data) {
