@@ -18,6 +18,7 @@ export default class DataContainer {
   constructor (data, options = { validate: true }) {
     this._data = {}
     this._keyToRowIndex = new Map()
+    this._keyColumn = null
     this._domains = {}
 
     if (isColumnOriented(data)) {

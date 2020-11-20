@@ -7,15 +7,21 @@ const methods = {
   },
 
   setKey (columnName) {
+    this._keyColumn = columnName
+    this._keyToRowIndex.clear()
+
     const column = this.column(columnName)
-    const length = getDataLength(this._data) 
+    const length = getDataLength(this._data)
     validateKeyColumn(column, length)
 
     this._setKeyColumn(column)
   },
 
   resetKey () {
+    this._keyToRowIndex.clear()
+    this._keyColumn = null
     delete this._data.$key
+
     this._setupKeyColumn()
   },
 

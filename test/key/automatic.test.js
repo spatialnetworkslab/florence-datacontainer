@@ -31,7 +31,7 @@ describe('automatic key generation', () => {
   test('resetting keys works', () => {
     const dataContainer = new DataContainer({ a: [2, 4, 6, 8, 10, 12, 14] })
     const transformed = dataContainer.filter(row => row.a > 10)
-    transformed.resetKeys()
+    transformed.resetKey()
 
     expect(transformed.keys()).toEqual([0, 1])
   })
