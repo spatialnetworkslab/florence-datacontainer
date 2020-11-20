@@ -1,6 +1,5 @@
 import { getIntervalBounds } from './transformations/bin.js'
 import { scaleThreshold } from 'd3-scale'
-import { schemeBlues } from 'd3-scale-chromatic'
 
 const methods = {
   bounds (binInstructions) {
@@ -16,12 +15,12 @@ const methods = {
     return bounds.slice(1, bounds.length - 1)
   },
 
-  classify (binInstructions, colorScheme) {
+  classify (binInstructions, range) {
     const bounds = this.bounds(binInstructions)
 
     return scaleThreshold()
       .domain(bounds)
-      .range(colorScheme || schemeBlues[binInstructions.numClasses])
+      .range(range)
   }
 }
 
