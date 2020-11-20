@@ -27,9 +27,9 @@ export function ensureValidRowUpdate (row, self) {
   }
 }
 
-export function ensureRowExists (key, self) {
-  if (isUndefined(self._keyToRowNumber[key])) {
-    throw new Error(`Key '${key}' not found`)
+export function ensureRowExists (accessorObject, self) {
+  if (isUndefined(self._rowIndex(accessorObject))) {
+    throw new Error(`Invalid accessor object: '${accessorObject.toString()}'`)
   }
 }
 

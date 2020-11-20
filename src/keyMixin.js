@@ -7,7 +7,7 @@ const methods = {
 
     if ('$key' in this._data) {
       validateKeyColumn(this._data.$key, length)
-      this._syncKeyToRowNumber()
+      this._syncKeyToRowIndex()
     } else {
       const keyColumn = generateKeyColumn(length)
       this._setKeyColumn(keyColumn)
@@ -17,15 +17,15 @@ const methods = {
   _setKeyColumn (keyColumn) {
     this._data.$key = keyColumn
 
-    this._syncKeyToRowNumber()
+    this._syncKeyToRowIndex()
   },
 
-  _syncKeyToRowNumber () {
+  _syncKeyToRowIndex () {
     const length = getDataLength(this._data)
 
     for (let i = 0; i < length; i++) {
       const key = this._data.$key[i]
-      this._keyToRowNumber[key] = i
+      this._keyToRowIndex[key] = i
     }
   }
 }

@@ -17,7 +17,7 @@ import { Group } from './transformations/groupBy.js'
 export default class DataContainer {
   constructor (data, options = { validate: true }) {
     this._data = {}
-    this._keyToRowNumber = {}
+    this._keyToRowIndex = {}
     this._domains = {}
 
     if (isColumnOriented(data)) {
@@ -49,12 +49,7 @@ export default class DataContainer {
   }
 
   row (accessorObject) {
-    validateAccessorObject(accessorObject)
-
-    const rowIndex = 'key' in accessorObject
-      ? this._keyToRowNumber[accessorObject.key]
-      : accessorObject.index
-
+    const rowIndex = this._rowIndex(accessorObject)
     return this._row(rowIndex)
   }
 
@@ -150,6 +145,16 @@ export default class DataContainer {
   }
 
   // Private methods
+  _rowIndex (accessorObject) {
+    validateAccessorObject(accessorObject)
+
+    const rowIndex = 'key' in accessorObject
+      ? this._keyToRowIndex[accessorObject.key]
+      : accessorObject.index
+
+    return rowIndex
+  }
+
   _row (rowIndex) {
     const length = getDataLength(this._data)
 
