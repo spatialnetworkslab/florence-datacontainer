@@ -8,6 +8,7 @@ A powerful yet light-weight interface to manage data. Designed to be used with [
 
 * [Loading data](#loading-data)
 * [Options](#options)
+* [Keying](#keying)
 * [Accessing data](#accessing-data)
 * [Domains and types](#domains-and-types)
 * [Checks](#checks)
@@ -120,6 +121,69 @@ when you are certain your data is completely valid (i.e. all columns have only o
 at least one valid that is not `NaN`, `undefined`, `null`, or `Infinity`) or don't care if it is.
 More options might be added in the future.
 
+### Keying
+
+The `DataContainer` automatically generates a key for each row when data is loaded. These keys are preserved during transformations like [arrange](#datacontainer_arrange) and [filter](#datacontainer_filter) to keep track of which row is which:
+
+```js
+const dataContainer = new DataContainer({ a: [2, 4, 6, 8, 10, 12, 14] })
+dataContainer.keys() // [0, 1, 2, 3, 4, 5, 6]
+const transformed = dataContainer.filter(row => row.a > 10)
+transformed.keys() // [5, 6]
+```
+
+Furthermore, retrieving, updating or deleting rows (see [accessing data](#accessing-data)) can be done either by index or by key:
+
+```js
+const dataContainer = new DataContainer({ a: [2, 4, 6, 8, 10, 12, 14] })
+const transformed = dataContainer.filter(row => row.a > 10)
+transformed.row({ index: 0 }) // { a: 12, $key: 5 }
+transformed.row({ key: 5 }) // { a: 12, $key: 5 }
+```
+
+Automatically generated keys are always integers. Besides using automatically generated keys, it is also possible to use a column present in the data as custom key (see [setKey](#datacontainer_setkey)). When using a custom key, it is recommended to use a column with primitive values, like `quantitative` or `categorical` columns, containing respectively `Number`s and `String`s. Other types and objects like dates are possible too, since the key functionality internally uses a [Map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map). Beware, however, that a reference to the exact same (and not an equivalent) object must be used in this case to retrieve, update or delete rows.
+
+<a name="datacontainer_keys" href="#datacontainer_keys">#</a> <i>DataContainer</i>.<b>keys</b>()
+
+Returns an array of keys:
+
+```js
+const dataContainer = new DataContainer({ a: [100, 200, 300], b: ['a', 'b', 'c'] })
+dataContainer.keys() // [0, 1, 2]
+```
+
+<a name="datacontainer_setkey" href="#datacontainer_setkey">#</a> <i>DataContainer</i>.<b>setKey</b>(columnName)
+
+Sets a column as key:
+
+```js
+const dataContainer = new DataContainer({ a: [100, 200, 300], b: ['a', 'b', 'c'] })
+dataContainer.setKey('b')
+dataContainer.keys() // ['a', 'b', 'c']
+```
+
+<a name="datacontainer_resetkey" href="#datacontainer_resetkey">#</a> <i>DataContainer</i>.<b>resetKey</b>()
+
+Resets the current keys:
+
+```js
+const dataContainer = new DataContainer({ a: [100, 200, 300], b: ['a', 'b', 'c'] })
+dataContainer.setKey('b')
+dataContainer.keys() // ['a', 'b', 'c']
+dataContainer.resetKeys()
+dataContainer.keys() [0, 1, 2]
+```
+
+Also works to reset keys after a transformation:
+
+```js
+const dataContainer = new DataContainer({ a: [2, 4, 6, 8, 10, 12, 14] })
+const transformed = dataContainer.filter(row => row.a > 10)
+transformed.keys() // [5, 6]
+transformed.resetKey()
+transformed.keys() // [0, 1]
+```
+
 ### Accessing data
 
 <a name="datacontainer_data" href="#datacontainer_data">#</a> <i>DataContainer</i>.<b>data</b>()
@@ -135,31 +199,13 @@ const dataContainer = new DataContainer([
 dataContainer.data() // { fruit: ['apple', 'banana'], amount: [1, 2], $key: [0, 1] }
 ```
 
-<a name="datacontainer_row" href="#datacontainer_row">#</a> <i>DataContainer</i>.<b>row</b>(key)
+<a name="datacontainer_row" href="#datacontainer_row">#</a> <i>DataContainer</i>.<b>row</b>(accessorObject)
 
-Returns an object representing a row.
-
-```js
-const dataContainer = new DataContainer({ fruit: ['apple', 'banana'], amount: [1, 2] })
-dataContainer.row(0) // { fruit: 'apple', amount: 1, $key: 0 }
-```
-
-<a name="datacontainer_prevrow" href="#datacontainer_prevrow">#</a> <i>DataContainer</i>.<b>prevRow</b>(key)
-
-Returns the previous row.
+Returns an object representing a row. `accessorObject` is either `{ index: <Number> }` or `{ key: <key value> }`.
 
 ```js
 const dataContainer = new DataContainer({ fruit: ['apple', 'banana'], amount: [1, 2] })
-dataContainer.prevRow(1) // { fruit: 'apple', amount: 1, $key: 0 }
-```
-
-<a name="datacontainer_nextrow" href="#datacontainer_nextrow">#</a> <i>DataContainer</i>.<b>nextRow</b>(key)
-
-Returns the next row.
-
-```js
-const dataContainer = new DataContainer({ fruit: ['apple', 'banana'], amount: [1, 2] })
-dataContainer.nextRow(0) // { fruit: 'banana', amount: 2, $key: 1 }
+dataContainer.row({ index: 0 }) // { fruit: 'apple', amount: 1, $key: 0 }
 ```
 
 <a name="datacontainer_rows" href="#datacontainer_rows">#</a> <i>DataContainer</i>.<b>rows</b>()
@@ -566,13 +612,13 @@ dataContainer.addRow({ a: 4, b: 'd' })
 dataContainer.column('b') // ['a', 'b', 'c', 'd']
 ```
 
-<a name="datacontainer_updaterow" href="#datacontainer_updaterow">#</a> <i>DataContainer</i>.<b>updateRow</b>(key, row)
+<a name="datacontainer_updaterow" href="#datacontainer_updaterow">#</a> <i>DataContainer</i>.<b>updateRow</b>(accessorObject, row)
 
-Updates an existing row.
+Updates an existing row. `accessorObject` is either `{ index: <Number> }` or `{ key: <key value> }`.
 
 ```js
 const dataContainer = new DataContainer({ a: [1, 2, 3], b: ['a', 'b', 'c'] })
-dataContainer.updateRow(2, { a: 100 })
+dataContainer.updateRow({ index: 2 }, { a: 100 })
 dataContainer.column('a') // [1, 2, 100]
 ```
 
@@ -581,17 +627,17 @@ will receive the existing row as first argument, and must return an `Object`.
 
 ```js
 const dataContainer = new DataContainer({ a: [1, 2, 3], b: ['a', 'b', 'c'] })
-dataContainer.updateRow(2, row => ({ a: row.a + 100 }))
+dataContainer.updateRow({ index: 2 }, row => ({ a: row.a + 100 }))
 dataContainer.column('a') // [1, 2, 103]
 ```
 
-<a name="datacontainer_deleterow" href="#datacontainer_deleterow">#</a> <i>DataContainer</i>.<b>deleteRow</b>(key)
+<a name="datacontainer_deleterow" href="#datacontainer_deleterow">#</a> <i>DataContainer</i>.<b>deleteRow</b>(accessorObject)
 
 Deletes an existing row.
 
 ```js
 const dataContainer = new DataContainer({ a: [1, 2, 3], b: ['a', 'b', 'c'] })
-dataContainer.deleteRow(2)
+dataContainer.deleteRow({ index: 2 })
 dataContainer.column('a') // [1, 2]
 ```
 
@@ -634,6 +680,28 @@ const dataContainer = new DataContainer({ a: [1, 2, 3, 4, 5, 6, 7] })
 dataContainer.bounds(
   { column: 'a', method: 'EqualInterval', numClasses: 3 }
 ) // [3, 5]
+```
+
+<a name="datacontainer_fullbounds" href="#datacontainer_fullbounds">#</a> <i>DataContainer</i>.<b>fullBounds</b>(binInstructions)
+
+Similar to [.bounds](#datacontainer_bounds), but returns the minimum and maximum value as well:
+
+```js
+const dataContainer = new DataContainer({ a: [1, 2, 3, 4, 5, 6, 7] })
+dataContainer.fullBounds(
+  { column: 'a', method: 'EqualInterval', numClasses: 3 }
+) // [1, 3, 5, 7]
+```
+
+<a name="datacontainer_boundranges" href="#datacontainer_boundranges">#</a> <i>DataContainer</i>.<b>boundRanges</b>(binInstructions)
+
+Similar to [.fullBounds](#datacontainer_fullbounds), but different format:
+
+```js
+const dataContainer = new DataContainer({ a: [1, 2, 3, 4, 5, 6, 7] })
+dataContainer.boundRanges(
+  { column: 'a', method: 'EqualInterval', numClasses: 3 }
+) // [[1, 3], [3, 5], [5, 7]]
 ```
 
 <a name="datacontainer_classify" href="#datacontainer_classify">#</a> <i>DataContainer</i>.<b>classify</b>(binInstructions, range)

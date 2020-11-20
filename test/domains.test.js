@@ -111,7 +111,7 @@ describe('calculating domains', () => {
     dataContainer.domain('a')
     dataContainer.domain('b')
 
-    dataContainer.updateRow(0, { a: 3, b: 'coconut' })
+    dataContainer.updateRow({ index: 0 }, { a: 3, b: 'coconut' })
 
     expect(dataContainer.domain('a')).toEqual([2, 3])
     expect(dataContainer.domain('b')).toEqual(['coconut', 'banana'])
@@ -127,7 +127,7 @@ describe('calculating domains', () => {
     dataContainer.domain('a')
     dataContainer.domain('b')
 
-    dataContainer.deleteRow(0)
+    dataContainer.deleteRow({ index: 0 })
 
     expect(dataContainer.domain('a')).toEqual([2, 3])
     expect(dataContainer.domain('b')).toEqual(['banana', 'coconut'])

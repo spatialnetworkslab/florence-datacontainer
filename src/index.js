@@ -1,4 +1,5 @@
 import dataLoadingMixin from './dataLoadingMixin.js'
+import keyMixin from './keyMixin.js'
 import transformationsMixin from './transformationsMixin.js'
 import modifyingRowsAndColumnsMixin from './modifyingRowsAndColumnsMixin.js'
 import classificationMixin from './classificationMixin.js'
@@ -9,13 +10,15 @@ import { calculateDomain } from './utils/calculateDomain.js'
 import { getColumnType } from './utils/getDataType.js'
 import getDataLength from './utils/getDataLength.js'
 import { validateJoin, getJoinColumns } from './utils/join.js'
+import validateAccessorObject from './utils/validateAccessorObject.js'
 
 import { Group } from './transformations/groupBy.js'
 
 export default class DataContainer {
   constructor (data, options = { validate: true }) {
     this._data = {}
-    this._keyToRowNumber = {}
+    this._keyToRowIndex = new Map()
+    this._keyColumn = null
     this._domains = {}
 
     if (isColumnOriented(data)) {
@@ -46,21 +49,9 @@ export default class DataContainer {
     return this._data
   }
 
-  row (key) {
-    const rowNumber = this._keyToRowNumber[key]
-    return this._row(rowNumber)
-  }
-
-  prevRow (key) {
-    const rowNumber = this._keyToRowNumber[key]
-    const previousRowNumber = rowNumber - 1
-    return this._row(previousRowNumber)
-  }
-
-  nextRow (key) {
-    const rowNumber = this._keyToRowNumber[key]
-    const nextRowNumber = rowNumber + 1
-    return this._row(nextRowNumber)
+  row (accessorObject) {
+    const rowIndex = this._rowIndex(accessorObject)
+    return this._row(rowIndex)
   }
 
   rows () {
@@ -155,17 +146,27 @@ export default class DataContainer {
   }
 
   // Private methods
-  _row (rowNumber) {
+  _rowIndex (accessorObject) {
+    validateAccessorObject(accessorObject)
+
+    const rowIndex = 'key' in accessorObject
+      ? this._keyToRowIndex.get(accessorObject.key)
+      : accessorObject.index
+
+    return rowIndex
+  }
+
+  _row (rowIndex) {
     const length = getDataLength(this._data)
 
-    if (rowNumber < 0 || rowNumber >= length) {
+    if (rowIndex < 0 || rowIndex >= length) {
       return undefined
     }
 
     const row = {}
 
     for (const columnName in this._data) {
-      const value = this._data[columnName][rowNumber]
+      const value = this._data[columnName][rowIndex]
       row[columnName] = value
     }
 
@@ -174,6 +175,7 @@ export default class DataContainer {
 }
 
 dataLoadingMixin(DataContainer)
+keyMixin(DataContainer)
 transformationsMixin(DataContainer)
 modifyingRowsAndColumnsMixin(DataContainer)
 classificationMixin(DataContainer)

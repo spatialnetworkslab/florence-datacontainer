@@ -17,50 +17,82 @@ const methods = {
       this._updateDomainIfNecessary(columnName, value)
     }
 
-    const rowNumber = getDataLength(this._data) - 1
-    const keyDomain = this.domain('$key')
-    keyDomain[1]++
-    const key = keyDomain[1]
+    const rowIndex = getDataLength(this._data) - 1
 
-    this._data.$key.push(key)
-    this._keyToRowNumber[key] = rowNumber
+    if (!this._keyColumn) {
+      const keyDomain = this.domain('$key')
+      keyDomain[1]++
+      const key = keyDomain[1]
+
+      this._data.$key.push(key)
+      this._keyToRowIndex.set(key, rowIndex)
+    }
+
+    if (this._keyColumn) {
+      const key = row[this._keyColumn]
+
+      if (this._keyToRowIndex.has(key)) {
+        throw new Error(`Duplicate key '${key}'`)
+      }
+
+      this._keyToRowIndex.set(key, rowIndex)
+    }
   },
 
-  updateRow (key, row) {
+  updateRow (accessorObject, row) {
     if (row.constructor === Function) {
-      const result = row(this.row(key))
+      const result = row(this.row(accessorObject))
 
       if (!(result && result.constructor === Object)) {
         throw new Error('updateRow function must return Object')
       }
 
-      this.updateRow(key, result)
+      this.updateRow(accessorObject, result)
     }
 
-    ensureRowExists(key, this)
+    ensureRowExists(accessorObject, this)
     ensureValidRowUpdate(row, this)
 
-    const rowNumber = this._keyToRowNumber[key]
+    const rowIndex = this._rowIndex(accessorObject)
+
+    if (this._keyColumn && this._keyColumn in row) {
+      const oldKey = this._row(rowIndex).$key
+      const newKey = row[this._keyColumn]
+
+      if (
+        newKey !== oldKey &&
+        this._keyToRowIndex.has(newKey)
+      ) {
+        throw new Error(`Duplicate key '${newKey}'`)
+      }
+
+      this._keyToRowIndex.delete(oldKey)
+      this._keyToRowIndex.set(newKey, rowIndex)
+    }
 
     for (const columnName in row) {
       throwErrorIfColumnIsKey(columnName)
 
       const value = row[columnName]
-      this._data[columnName][rowNumber] = value
+      this._data[columnName][rowIndex] = value
 
       this._resetDomainIfNecessary(columnName)
     }
   },
 
-  deleteRow (key) {
-    ensureRowExists(key, this)
+  deleteRow (accessorObject) {
+    ensureRowExists(accessorObject, this)
 
-    const rowNumber = this._keyToRowNumber[key]
-    delete this._keyToRowNumber[key]
+    const rowIndex = this._rowIndex(accessorObject)
+    const key = this._row(rowIndex).$key
+
+    this._keyToRowIndex.delete(key)
 
     for (const columnName in this._data) {
-      this._data[columnName].splice(rowNumber, 1)
-      this._resetDomainIfNecessary(columnName)
+      if (!(this._keyColumn && columnName === '$key')) {
+        this._data[columnName].splice(rowIndex, 1)
+        this._resetDomainIfNecessary(columnName)
+      }
     }
   },
 

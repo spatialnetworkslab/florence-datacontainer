@@ -7,7 +7,7 @@ export default function (obj, allowedKeys) {
   const key = keys[0]
 
   if (!allowedKeys.includes(key)) {
-    throw new Error(`Unknown transformation ${key}`)
+    throw new Error(`Unknown column ${key}`)
   }
 
   return key

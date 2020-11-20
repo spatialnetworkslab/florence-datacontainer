@@ -1,4 +1,4 @@
-import DataContainer from '../src/index.js'
+import DataContainer from '../../src/index.js'
 
 describe('modifying columns', () => {
   test('addColumn works as expected', () => {
