@@ -9,7 +9,7 @@ describe('custom key functionality', () => {
 
     dataContainer.setKey('b')
 
-    expect(dataContainer.column('$key')).toEqual(['a', 'b', 'c', 'd', 'e', 'f'])
+    expect(dataContainer.keys()).toEqual(['a', 'b', 'c', 'd', 'e', 'f'])
   })
 
   test('resetting key works', () => {
@@ -21,7 +21,7 @@ describe('custom key functionality', () => {
     dataContainer.setKey('b')
     dataContainer.resetKey()
 
-    expect(dataContainer.column('$key')).toEqual([0, 1, 2, 3, 4, 5])
+    expect(dataContainer.keys()).toEqual([0, 1, 2, 3, 4, 5])
   })
 
   test('accessing row with custom key works', () => {
@@ -44,7 +44,7 @@ describe('custom key functionality', () => {
     dataContainer.setKey('b')
     dataContainer.addRow({ a: 7, b: 'g' })
 
-    expect(dataContainer.column('$key')).toEqual(['a', 'b', 'c', 'd', 'e', 'f', 'g'])
+    expect(dataContainer.keys()).toEqual(['a', 'b', 'c', 'd', 'e', 'f', 'g'])
   })
 
   test('adding row throws if key already exists', () => {
@@ -81,7 +81,7 @@ describe('custom key functionality', () => {
     dataContainer.setKey('b')
     dataContainer.updateRow({ key: 'c' }, { a: 300, b: 'ccc' })
 
-    expect(dataContainer.column('$key')).toEqual()
+    expect(dataContainer.keys()).toEqual()
   })
 
   test('updating row throws if key already exists', () => {

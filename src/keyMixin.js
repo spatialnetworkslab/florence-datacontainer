@@ -2,6 +2,10 @@ import { generateKeyColumn, validateKeyColumn } from './utils/key.js'
 import getDataLength from './utils/getDataLength.js'
 
 const methods = {
+  keys () {
+    return this.column('$key')
+  },
+
   _setupKeyColumn () {
     const length = getDataLength(this._data)
 
