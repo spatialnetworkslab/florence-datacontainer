@@ -682,6 +682,28 @@ dataContainer.bounds(
 ) // [3, 5]
 ```
 
+<a name="datacontainer_fullbounds" href="#datacontainer_fullbounds">#</a> <i>DataContainer</i>.<b>fullBounds</b>(binInstructions)
+
+Similar to [.bounds](#datacontainer_bounds), but returns the minimum and maximum value as well:
+
+```js
+const dataContainer = new DataContainer({ a: [1, 2, 3, 4, 5, 6, 7] })
+dataContainer.fullBounds(
+  { column: 'a', method: 'EqualInterval', numClasses: 3 }
+) // [1, 3, 5, 7]
+```
+
+<a name="datacontainer_boundranges" href="#datacontainer_boundranges">#</a> <i>DataContainer</i>.<b>boundRanges</b>(binInstructions)
+
+Similar to [.fullBounds](#datacontainer_fullbounds), but different format:
+
+```js
+const dataContainer = new DataContainer({ a: [1, 2, 3, 4, 5, 6, 7] })
+dataContainer.boundRanges(
+  { column: 'a', method: 'EqualInterval', numClasses: 3 }
+) // [[1, 3], [3, 5], [5, 7]]
+```
+
 <a name="datacontainer_classify" href="#datacontainer_classify">#</a> <i>DataContainer</i>.<b>classify</b>(binInstructions, range)
 
 Returns a [threshold](https://github.com/d3/d3-scale#threshold-scales) scale based on the bounds determined by classification/binning algorithm, with any type of `range`. `range` must be an array with the same length as `numClasses` in the `binInstructions`.
