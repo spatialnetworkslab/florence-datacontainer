@@ -1,4 +1,4 @@
-import DataContainer from '../src/index.js'
+import DataContainer from '../../src/index.js'
 
 describe('modifying rows', () => {
   test('addRow works as expected', () => {
