@@ -1,4 +1,5 @@
 import dataLoadingMixin from './dataLoadingMixin.js'
+import keyMixin from './keyMixin.js'
 import transformationsMixin from './transformationsMixin.js'
 import modifyingRowsAndColumnsMixin from './modifyingRowsAndColumnsMixin.js'
 import classificationMixin from './classificationMixin.js'
@@ -162,6 +163,7 @@ export default class DataContainer {
 }
 
 dataLoadingMixin(DataContainer)
+keyMixin(DataContainer)
 transformationsMixin(DataContainer)
 modifyingRowsAndColumnsMixin(DataContainer)
 classificationMixin(DataContainer)
