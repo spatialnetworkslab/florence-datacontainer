@@ -135,18 +135,13 @@ const dataContainer = new DataContainer([
 dataContainer.data() // { fruit: ['apple', 'banana'], amount: [1, 2], $key: [0, 1] }
 ```
 
-<a name="datacontainer_row" href="#datacontainer_row">#</a> <i>DataContainer</i>.<b>row</b>(key)
+<a name="datacontainer_row" href="#datacontainer_row">#</a> <i>DataContainer</i>.<b>row</b>(accessorObject)
 
-Returns an object representing a row.
-
-```js
-const dataContainer = new DataContainer({ fruit: ['apple', 'banana'], amount: [1, 2] })
-dataContainer.row(0) // { fruit: 'apple', amount: 1, $key: 0 }
-```
+Returns an object representing a row. `accessorObject` is either `{ index: <Number> }` or `{ key: <key value> }`.
 
 ```js
 const dataContainer = new DataContainer({ fruit: ['apple', 'banana'], amount: [1, 2] })
-dataContainer.nextRow(0) // { fruit: 'banana', amount: 2, $key: 1 }
+dataContainer.row({ index: 0 }) // { fruit: 'apple', amount: 1, $key: 0 }
 ```
 
 <a name="datacontainer_rows" href="#datacontainer_rows">#</a> <i>DataContainer</i>.<b>rows</b>()
@@ -553,13 +548,13 @@ dataContainer.addRow({ a: 4, b: 'd' })
 dataContainer.column('b') // ['a', 'b', 'c', 'd']
 ```
 
-<a name="datacontainer_updaterow" href="#datacontainer_updaterow">#</a> <i>DataContainer</i>.<b>updateRow</b>(key, row)
+<a name="datacontainer_updaterow" href="#datacontainer_updaterow">#</a> <i>DataContainer</i>.<b>updateRow</b>(accessorObject, row)
 
-Updates an existing row.
+Updates an existing row. `accessorObject` is either `{ index: <Number> }` or `{ key: <key value> }`.
 
 ```js
 const dataContainer = new DataContainer({ a: [1, 2, 3], b: ['a', 'b', 'c'] })
-dataContainer.updateRow(2, { a: 100 })
+dataContainer.updateRow({ index: 2 }, { a: 100 })
 dataContainer.column('a') // [1, 2, 100]
 ```
 
@@ -568,17 +563,17 @@ will receive the existing row as first argument, and must return an `Object`.
 
 ```js
 const dataContainer = new DataContainer({ a: [1, 2, 3], b: ['a', 'b', 'c'] })
-dataContainer.updateRow(2, row => ({ a: row.a + 100 }))
+dataContainer.updateRow({ index: 2 }, row => ({ a: row.a + 100 }))
 dataContainer.column('a') // [1, 2, 103]
 ```
 
-<a name="datacontainer_deleterow" href="#datacontainer_deleterow">#</a> <i>DataContainer</i>.<b>deleteRow</b>(key)
+<a name="datacontainer_deleterow" href="#datacontainer_deleterow">#</a> <i>DataContainer</i>.<b>deleteRow</b>(accessorObject)
 
 Deletes an existing row.
 
 ```js
 const dataContainer = new DataContainer({ a: [1, 2, 3], b: ['a', 'b', 'c'] })
-dataContainer.deleteRow(2)
+dataContainer.deleteRow({ index: 2 })
 dataContainer.column('a') // [1, 2]
 ```
 
