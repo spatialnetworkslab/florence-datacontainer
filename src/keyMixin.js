@@ -6,12 +6,25 @@ const methods = {
     return this.column('$key')
   },
 
+  setKey (columnName) {
+    const column = this.column(columnName)
+    const length = getDataLength(this._data) 
+    validateKeyColumn(column, length)
+
+    this._setKeyColumn(column)
+  },
+
+  resetKey () {
+    delete this._data.$key
+    this._setupKeyColumn()
+  },
+
   _setupKeyColumn () {
     const length = getDataLength(this._data)
 
     if ('$key' in this._data) {
       validateKeyColumn(this._data.$key, length)
-      this._syncKeyToRowIndex()
+      this._constructKeyToRowIndex()
     } else {
       const keyColumn = generateKeyColumn(length)
       this._setKeyColumn(keyColumn)
@@ -20,16 +33,15 @@ const methods = {
 
   _setKeyColumn (keyColumn) {
     this._data.$key = keyColumn
-
-    this._syncKeyToRowIndex()
+    this._constructKeyToRowIndex()
   },
 
-  _syncKeyToRowIndex () {
+  _constructKeyToRowIndex () {
     const length = getDataLength(this._data)
 
     for (let i = 0; i < length; i++) {
       const key = this._data.$key[i]
-      this._keyToRowIndex[key] = i
+      this._keyToRowIndex.set(key, i)
     }
   }
 }

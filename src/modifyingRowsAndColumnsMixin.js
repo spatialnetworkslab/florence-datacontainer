@@ -23,7 +23,7 @@ const methods = {
     const key = keyDomain[1]
 
     this._data.$key.push(key)
-    this._keyToRowIndex[key] = rowIndex
+    this._keyToRowIndex.set(key, rowIndex)
   },
 
   updateRow (accessorObject, row) {
@@ -58,7 +58,7 @@ const methods = {
     const rowIndex = this._rowIndex(accessorObject)
     const key = this.row(accessorObject).$key
 
-    delete this._keyToRowIndex[key]
+    this._keyToRowIndex.delete(key)
 
     for (const columnName in this._data) {
       this._data[columnName].splice(rowIndex, 1)

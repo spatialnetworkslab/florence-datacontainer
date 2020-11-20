@@ -17,7 +17,7 @@ import { Group } from './transformations/groupBy.js'
 export default class DataContainer {
   constructor (data, options = { validate: true }) {
     this._data = {}
-    this._keyToRowIndex = {}
+    this._keyToRowIndex = new Map()
     this._domains = {}
 
     if (isColumnOriented(data)) {
@@ -149,7 +149,7 @@ export default class DataContainer {
     validateAccessorObject(accessorObject)
 
     const rowIndex = 'key' in accessorObject
-      ? this._keyToRowIndex[accessorObject.key]
+      ? this._keyToRowIndex.get(accessorObject.key)
       : accessorObject.index
 
     return rowIndex
