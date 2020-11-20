@@ -54,7 +54,7 @@ function checkFormat (data, { internal }) {
 
 export function checkRegularColumnName (columnName) {
   if (columnName.match(forbiddenChars)) {
-    throw new Error(`Invalid column name '${columnName}': '$' and '/' are not allowed'`)
+    throw new Error(`Invalid column name '${columnName}': '$' is not allowed in column names`)
   }
 }
 

@@ -18,4 +18,13 @@ describe('automatic key generation', () => {
     expect(transformed.column('$key')).toEqual([6, 5, 4, 3, 2, 1, 0])
     expect(dataContainer.row({ key: 5 })).toEqual({ a: 12, $key: 5 })
   })
+
+  test('user cannot provide \'$key\' column', () => {
+    expect(
+      () => new DataContainer({
+        a: [2, 4, 6, 8, 10, 12, 14],
+        $key: [1, 2, 3, 4, 5, 6, 7]
+      })
+    ).toThrow()
+  })
 })
