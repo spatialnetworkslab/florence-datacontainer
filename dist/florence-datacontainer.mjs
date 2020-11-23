@@ -54,7 +54,7 @@ function checkFormat (data, { internal }) {
 
 function checkRegularColumnName (columnName) {
   if (columnName.match(forbiddenChars)) {
-    throw new Error(`Invalid column name '${columnName}': '$' and '/' are not allowed'`)
+    throw new Error(`Invalid column name '${columnName}': '$' is not allowed in column names`)
   }
 }
 
@@ -66,489 +66,378 @@ function checkInternalDataColumnName (columnName) {
   }
 }
 
-// https://github.com/python/cpython/blob/a74eea238f5baba15797e2e8b570d153bc8690a7/Modules/mathmodule.c#L1423
-class Adder {
-  constructor() {
-    this._partials = new Float64Array(32);
-    this._n = 0;
-  }
-  add(x) {
-    const p = this._partials;
-    let i = 0;
-    for (let j = 0; j < this._n && j < 32; j++) {
-      const y = p[j],
-        hi = x + y,
-        lo = Math.abs(x) < Math.abs(y) ? x - (hi - y) : y - (hi - x);
-      if (lo) p[i++] = lo;
-      x = hi;
+function convertRowToColumnData (data) {
+  checkIfDataIsEmpty(data);
+  let columnData = initColumnData(data);
+
+  for (let row of data) {
+    for (let key in row) {
+      columnData[key].push(row[key]);
     }
-    p[i] = x;
-    this._n = i + 1;
-    return this;
   }
-  valueOf() {
-    const p = this._partials;
-    let n = this._n, x, y, lo, hi = 0;
-    if (n > 0) {
-      hi = p[--n];
-      while (n > 0) {
-        x = hi;
-        y = p[--n];
-        hi = x + y;
-        lo = y - (hi - x);
-        if (lo) break;
-      }
-      if (n > 0 && ((lo < 0 && p[n - 1] < 0) || (lo > 0 && p[n - 1] > 0))) {
-        y = lo * 2;
-        x = hi + y;
-        if (y == x - hi) hi = x;
-      }
+
+  return columnData
+}
+
+function initColumnData (data) {
+  let firstRow = data[0];
+  let columnKeys = Object.keys(firstRow);
+  let columnData = {};
+
+  for (let key of columnKeys) {
+    columnData[key] = [];
+  }
+
+  return columnData
+}
+
+function checkIfDataIsEmpty (data) {
+  if (data.length === 0) {
+    throw new Error('Received empty Array while trying to load row-oriented data. This is not allowed.')
+  }
+}
+
+function parseGeoJSON (geojsonData) {
+  const geometryData = [];
+  const data = {};
+
+  const features = geojsonData.features;
+  const firstFeature = features[0];
+
+  if ('properties' in firstFeature) {
+    for (const columnName in firstFeature.properties) {
+      data[columnName] = [];
     }
-    return hi;
   }
-}
 
-var pi = Math.PI;
-var tau = pi * 2;
+  for (let i = 0; i < features.length; i++) {
+    const { geometry, properties } = features[i];
+    geometryData.push(geometry);
 
-var abs = Math.abs;
-var sqrt = Math.sqrt;
-
-function noop() {}
-
-function streamGeometry(geometry, stream) {
-  if (geometry && streamGeometryType.hasOwnProperty(geometry.type)) {
-    streamGeometryType[geometry.type](geometry, stream);
-  }
-}
-
-var streamObjectType = {
-  Feature: function(object, stream) {
-    streamGeometry(object.geometry, stream);
-  },
-  FeatureCollection: function(object, stream) {
-    var features = object.features, i = -1, n = features.length;
-    while (++i < n) streamGeometry(features[i].geometry, stream);
-  }
-};
-
-var streamGeometryType = {
-  Sphere: function(object, stream) {
-    stream.sphere();
-  },
-  Point: function(object, stream) {
-    object = object.coordinates;
-    stream.point(object[0], object[1], object[2]);
-  },
-  MultiPoint: function(object, stream) {
-    var coordinates = object.coordinates, i = -1, n = coordinates.length;
-    while (++i < n) object = coordinates[i], stream.point(object[0], object[1], object[2]);
-  },
-  LineString: function(object, stream) {
-    streamLine(object.coordinates, stream, 0);
-  },
-  MultiLineString: function(object, stream) {
-    var coordinates = object.coordinates, i = -1, n = coordinates.length;
-    while (++i < n) streamLine(coordinates[i], stream, 0);
-  },
-  Polygon: function(object, stream) {
-    streamPolygon(object.coordinates, stream);
-  },
-  MultiPolygon: function(object, stream) {
-    var coordinates = object.coordinates, i = -1, n = coordinates.length;
-    while (++i < n) streamPolygon(coordinates[i], stream);
-  },
-  GeometryCollection: function(object, stream) {
-    var geometries = object.geometries, i = -1, n = geometries.length;
-    while (++i < n) streamGeometry(geometries[i], stream);
-  }
-};
-
-function streamLine(coordinates, stream, closed) {
-  var i = -1, n = coordinates.length - closed, coordinate;
-  stream.lineStart();
-  while (++i < n) coordinate = coordinates[i], stream.point(coordinate[0], coordinate[1], coordinate[2]);
-  stream.lineEnd();
-}
-
-function streamPolygon(coordinates, stream) {
-  var i = -1, n = coordinates.length;
-  stream.polygonStart();
-  while (++i < n) streamLine(coordinates[i], stream, 1);
-  stream.polygonEnd();
-}
-
-function geoStream(object, stream) {
-  if (object && streamObjectType.hasOwnProperty(object.type)) {
-    streamObjectType[object.type](object, stream);
-  } else {
-    streamGeometry(object, stream);
-  }
-}
-
-var identity = x => x;
-
-var areaSum = new Adder(),
-    areaRingSum = new Adder(),
-    x00,
-    y00,
-    x0,
-    y0;
-
-var areaStream = {
-  point: noop,
-  lineStart: noop,
-  lineEnd: noop,
-  polygonStart: function() {
-    areaStream.lineStart = areaRingStart;
-    areaStream.lineEnd = areaRingEnd;
-  },
-  polygonEnd: function() {
-    areaStream.lineStart = areaStream.lineEnd = areaStream.point = noop;
-    areaSum.add(abs(areaRingSum));
-    areaRingSum = new Adder();
-  },
-  result: function() {
-    var area = areaSum / 2;
-    areaSum = new Adder();
-    return area;
-  }
-};
-
-function areaRingStart() {
-  areaStream.point = areaPointFirst;
-}
-
-function areaPointFirst(x, y) {
-  areaStream.point = areaPoint;
-  x00 = x0 = x, y00 = y0 = y;
-}
-
-function areaPoint(x, y) {
-  areaRingSum.add(y0 * x - x0 * y);
-  x0 = x, y0 = y;
-}
-
-function areaRingEnd() {
-  areaPoint(x00, y00);
-}
-
-var x0$1 = Infinity,
-    y0$1 = x0$1,
-    x1 = -x0$1,
-    y1 = x1;
-
-var boundsStream = {
-  point: boundsPoint,
-  lineStart: noop,
-  lineEnd: noop,
-  polygonStart: noop,
-  polygonEnd: noop,
-  result: function() {
-    var bounds = [[x0$1, y0$1], [x1, y1]];
-    x1 = y1 = -(y0$1 = x0$1 = Infinity);
-    return bounds;
-  }
-};
-
-function boundsPoint(x, y) {
-  if (x < x0$1) x0$1 = x;
-  if (x > x1) x1 = x;
-  if (y < y0$1) y0$1 = y;
-  if (y > y1) y1 = y;
-}
-
-// TODO Enforce positive area for exterior, negative area for interior?
-
-var X0 = 0,
-    Y0 = 0,
-    Z0 = 0,
-    X1 = 0,
-    Y1 = 0,
-    Z1 = 0,
-    X2 = 0,
-    Y2 = 0,
-    Z2 = 0,
-    x00$1,
-    y00$1,
-    x0$2,
-    y0$2;
-
-var centroidStream = {
-  point: centroidPoint,
-  lineStart: centroidLineStart,
-  lineEnd: centroidLineEnd,
-  polygonStart: function() {
-    centroidStream.lineStart = centroidRingStart;
-    centroidStream.lineEnd = centroidRingEnd;
-  },
-  polygonEnd: function() {
-    centroidStream.point = centroidPoint;
-    centroidStream.lineStart = centroidLineStart;
-    centroidStream.lineEnd = centroidLineEnd;
-  },
-  result: function() {
-    var centroid = Z2 ? [X2 / Z2, Y2 / Z2]
-        : Z1 ? [X1 / Z1, Y1 / Z1]
-        : Z0 ? [X0 / Z0, Y0 / Z0]
-        : [NaN, NaN];
-    X0 = Y0 = Z0 =
-    X1 = Y1 = Z1 =
-    X2 = Y2 = Z2 = 0;
-    return centroid;
-  }
-};
-
-function centroidPoint(x, y) {
-  X0 += x;
-  Y0 += y;
-  ++Z0;
-}
-
-function centroidLineStart() {
-  centroidStream.point = centroidPointFirstLine;
-}
-
-function centroidPointFirstLine(x, y) {
-  centroidStream.point = centroidPointLine;
-  centroidPoint(x0$2 = x, y0$2 = y);
-}
-
-function centroidPointLine(x, y) {
-  var dx = x - x0$2, dy = y - y0$2, z = sqrt(dx * dx + dy * dy);
-  X1 += z * (x0$2 + x) / 2;
-  Y1 += z * (y0$2 + y) / 2;
-  Z1 += z;
-  centroidPoint(x0$2 = x, y0$2 = y);
-}
-
-function centroidLineEnd() {
-  centroidStream.point = centroidPoint;
-}
-
-function centroidRingStart() {
-  centroidStream.point = centroidPointFirstRing;
-}
-
-function centroidRingEnd() {
-  centroidPointRing(x00$1, y00$1);
-}
-
-function centroidPointFirstRing(x, y) {
-  centroidStream.point = centroidPointRing;
-  centroidPoint(x00$1 = x0$2 = x, y00$1 = y0$2 = y);
-}
-
-function centroidPointRing(x, y) {
-  var dx = x - x0$2,
-      dy = y - y0$2,
-      z = sqrt(dx * dx + dy * dy);
-
-  X1 += z * (x0$2 + x) / 2;
-  Y1 += z * (y0$2 + y) / 2;
-  Z1 += z;
-
-  z = y0$2 * x - x0$2 * y;
-  X2 += z * (x0$2 + x);
-  Y2 += z * (y0$2 + y);
-  Z2 += z * 3;
-  centroidPoint(x0$2 = x, y0$2 = y);
-}
-
-function PathContext(context) {
-  this._context = context;
-}
-
-PathContext.prototype = {
-  _radius: 4.5,
-  pointRadius: function(_) {
-    return this._radius = _, this;
-  },
-  polygonStart: function() {
-    this._line = 0;
-  },
-  polygonEnd: function() {
-    this._line = NaN;
-  },
-  lineStart: function() {
-    this._point = 0;
-  },
-  lineEnd: function() {
-    if (this._line === 0) this._context.closePath();
-    this._point = NaN;
-  },
-  point: function(x, y) {
-    switch (this._point) {
-      case 0: {
-        this._context.moveTo(x, y);
-        this._point = 1;
-        break;
-      }
-      case 1: {
-        this._context.lineTo(x, y);
-        break;
-      }
-      default: {
-        this._context.moveTo(x + this._radius, y);
-        this._context.arc(x, y, this._radius, 0, tau);
-        break;
-      }
+    for (const columnName in properties) {
+      data[columnName].push(properties[columnName]);
     }
-  },
-  result: noop
-};
-
-var lengthSum = new Adder(),
-    lengthRing,
-    x00$2,
-    y00$2,
-    x0$3,
-    y0$3;
-
-var lengthStream = {
-  point: noop,
-  lineStart: function() {
-    lengthStream.point = lengthPointFirst;
-  },
-  lineEnd: function() {
-    if (lengthRing) lengthPoint(x00$2, y00$2);
-    lengthStream.point = noop;
-  },
-  polygonStart: function() {
-    lengthRing = true;
-  },
-  polygonEnd: function() {
-    lengthRing = null;
-  },
-  result: function() {
-    var length = +lengthSum;
-    lengthSum = new Adder();
-    return length;
   }
-};
 
-function lengthPointFirst(x, y) {
-  lengthStream.point = lengthPoint;
-  x00$2 = x0$3 = x, y00$2 = y0$3 = y;
+  checkFormatColumnData(data);
+
+  data.$geometry = geometryData;
+
+  return data
 }
 
-function lengthPoint(x, y) {
-  x0$3 -= x, y0$3 -= y;
-  lengthSum.add(sqrt(x0$3 * x0$3 + y0$3 * y0$3));
-  x0$3 = x, y0$3 = y;
-}
-
-function PathString() {
-  this._string = [];
-}
-
-PathString.prototype = {
-  _radius: 4.5,
-  _circle: circle(4.5),
-  pointRadius: function(_) {
-    if ((_ = +_) !== this._radius) this._radius = _, this._circle = null;
-    return this;
-  },
-  polygonStart: function() {
-    this._line = 0;
-  },
-  polygonEnd: function() {
-    this._line = NaN;
-  },
-  lineStart: function() {
-    this._point = 0;
-  },
-  lineEnd: function() {
-    if (this._line === 0) this._string.push("Z");
-    this._point = NaN;
-  },
-  point: function(x, y) {
-    switch (this._point) {
-      case 0: {
-        this._string.push("M", x, ",", y);
-        this._point = 1;
-        break;
-      }
-      case 1: {
-        this._string.push("L", x, ",", y);
-        break;
-      }
-      default: {
-        if (this._circle == null) this._circle = circle(this._radius);
-        this._string.push("M", x, ",", y, this._circle);
-        break;
-      }
-    }
-  },
-  result: function() {
-    if (this._string.length) {
-      var result = this._string.join("");
-      this._string = [];
-      return result;
+const methods = {
+  _setColumnData (data, options) {
+    if (options.validate === false) {
+      checkFormatInternal(data);
     } else {
-      return null;
+      checkFormatColumnData(data);
+    }
+
+    this._storeData(data, options);
+  },
+
+  _setRowData (rowData, options) {
+    const columnData = convertRowToColumnData(rowData);
+    this._setColumnData(columnData, options);
+  },
+
+  _setGeoJSON (geojsonData, options) {
+    const data = parseGeoJSON(geojsonData);
+    this._storeData(data, options);
+  },
+
+  _setGroup (group, options) {
+    const data = group.data;
+    checkFormatInternal(data);
+    this._storeData(data, options);
+  },
+
+  _storeData (data, options) {
+    this._data = data;
+
+    this._setupKeyColumn();
+
+    if (options.validate === true) {
+      this.validateAllColumns();
     }
   }
 };
 
-function circle(radius) {
-  return "m0," + radius
-      + "a" + radius + "," + radius + " 0 1,1 0," + -2 * radius
-      + "a" + radius + "," + radius + " 0 1,1 0," + 2 * radius
-      + "z";
+function dataLoadingMixin (targetClass) {
+  Object.assign(targetClass.prototype, methods);
 }
 
-function geoPath(projection, context) {
-  var pointRadius = 4.5,
-      projectionStream,
-      contextStream;
+function generateKeyColumn (length) {
+  return new Array(length).fill(0).map((_, i) => i)
+}
 
-  function path(object) {
-    if (object) {
-      if (typeof pointRadius === "function") contextStream.pointRadius(+pointRadius.apply(this, arguments));
-      geoStream(object, projectionStream(contextStream));
-    }
-    return contextStream.result();
+function validateKeyColumn (keyColumn, requiredLength) {
+  if (keyColumn.length !== requiredLength) {
+    throw new Error('Key column must be of same length as rest of the data')
   }
 
-  path.area = function(object) {
-    geoStream(object, projectionStream(areaStream));
-    return areaStream.result();
-  };
+  ensureUnique(keyColumn);
+}
 
-  path.measure = function(object) {
-    geoStream(object, projectionStream(lengthStream));
-    return lengthStream.result();
-  };
+function ensureUnique (keyColumn) {
+  if (keyColumn.length !== new Set(keyColumn).size) {
+    throw new Error('Keys must be unique')
+  }
+}
 
-  path.bounds = function(object) {
-    geoStream(object, projectionStream(boundsStream));
-    return boundsStream.result();
-  };
+function getDataLength (data) {
+  const keys = Object.keys(data);
 
-  path.centroid = function(object) {
-    geoStream(object, projectionStream(centroidStream));
-    return centroidStream.result();
-  };
+  const firstKey = keys[0] === '$key'
+    ? keys[1]
+    : keys[0];
 
-  path.projection = function(_) {
-    return arguments.length ? (projectionStream = _ == null ? (projection = null, identity) : (projection = _).stream, path) : projection;
-  };
+  const firstColumn = data[firstKey];
+  return firstColumn.length
+}
 
-  path.context = function(_) {
-    if (!arguments.length) return context;
-    contextStream = _ == null ? (context = null, new PathString) : new PathContext(context = _);
-    if (typeof pointRadius !== "function") contextStream.pointRadius(pointRadius);
-    return path;
-  };
+const methods$1 = {
+  keys () {
+    return this.column('$key')
+  },
 
-  path.pointRadius = function(_) {
-    if (!arguments.length) return pointRadius;
-    pointRadius = typeof _ === "function" ? _ : (contextStream.pointRadius(+_), +_);
-    return path;
-  };
+  setKey (columnName) {
+    this._keyColumn = columnName;
+    this._keyToRowIndex.clear();
 
-  return path.projection(projection).context(context);
+    const column = this.column(columnName);
+    const length = getDataLength(this._data);
+    validateKeyColumn(column, length);
+
+    this._setKeyColumn(column);
+  },
+
+  resetKey () {
+    this._keyToRowIndex.clear();
+    this._keyColumn = null;
+    delete this._data.$key;
+
+    this._setupKeyColumn();
+  },
+
+  _setupKeyColumn () {
+    const length = getDataLength(this._data);
+
+    if ('$key' in this._data) {
+      validateKeyColumn(this._data.$key, length);
+      this._constructKeyToRowIndex();
+    } else {
+      const keyColumn = generateKeyColumn(length);
+      this._setKeyColumn(keyColumn);
+    }
+  },
+
+  _setKeyColumn (keyColumn) {
+    this._data.$key = keyColumn;
+    this._constructKeyToRowIndex();
+  },
+
+  _constructKeyToRowIndex () {
+    const length = getDataLength(this._data);
+
+    for (let i = 0; i < length; i++) {
+      const key = this._data.$key[i];
+      this._keyToRowIndex.set(key, i);
+    }
+  }
+};
+
+function keyMixin (targetClass) {
+  Object.assign(targetClass.prototype, methods$1);
+}
+
+function filter (data, filterFunction) {
+  const length = getDataLength(data);
+  const newData = {};
+  for (const colName in data) { newData[colName] = []; }
+
+  for (let i = 0; i < length; i++) {
+    const row = {};
+    for (const colName in data) { row[colName] = data[colName][i]; }
+
+    if (filterFunction(row, i) === true) {
+      for (const colName in row) { newData[colName].push(row[colName]); }
+    }
+  }
+
+  return newData
+}
+
+function select (data, selection) {
+  if (selection.constructor === String) {
+    selection = [selection];
+  }
+
+  if (selection.constructor === Array) {
+    validateSelectionInstructions(data, selection);
+
+    const newData = {};
+
+    for (const columnName of selection) {
+      newData[columnName] = data[columnName];
+    }
+
+    return newData
+  } else {
+    throw new Error('select can only be used with a string or array of strings')
+  }
+}
+
+function validateSelectionInstructions (data, selection) {
+  for (const columnName of selection) {
+    if (!(columnName in data)) {
+      throw new Error(`Column '${columnName}' not found`)
+    }
+  }
+}
+
+// This function comes from Turf's wonderful geospatial lib
+// We only need this single function and importing it from @turf/meta
+// doesn't work well for in-browser compilation
+// https://github.com/Turfjs/turf
+
+// The MIT License (MIT)
+
+// Copyright (c) 2019 Morgan Herlocker
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy of
+// this software and associated documentation files (the "Software"), to deal in
+// the Software without restriction, including without limitation the rights to
+// use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+// the Software, and to permit persons to whom the Software is furnished to do so,
+// subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+function coordEach (geojson, callback, excludeWrapCoord) {
+  // Handles null Geometry -- Skips this GeoJSON
+  if (geojson === null) return
+  var j; var k; var l; var geometry; var stopG; var coords;
+  var geometryMaybeCollection;
+  var wrapShrink = 0;
+  var coordIndex = 0;
+  var isGeometryCollection;
+  var type = geojson.type;
+  var isFeatureCollection = type === 'FeatureCollection';
+  var isFeature = type === 'Feature';
+  var stop = isFeatureCollection ? geojson.features.length : 1;
+
+  // This logic may look a little weird. The reason why it is that way
+  // is because it's trying to be fast. GeoJSON supports multiple kinds
+  // of objects at its root: FeatureCollection, Features, Geometries.
+  // This function has the responsibility of handling all of them, and that
+  // means that some of the `for` loops you see below actually just don't apply
+  // to certain inputs. For instance, if you give this just a
+  // Point geometry, then both loops are short-circuited and all we do
+  // is gradually rename the input until it's called 'geometry'.
+  //
+  // This also aims to allocate as few resources as possible: just a
+  // few numbers and booleans, rather than any temporary arrays as would
+  // be required with the normalization approach.
+  for (var featureIndex = 0; featureIndex < stop; featureIndex++) {
+    geometryMaybeCollection = (isFeatureCollection ? geojson.features[featureIndex].geometry
+      : (isFeature ? geojson.geometry : geojson));
+    isGeometryCollection = (geometryMaybeCollection) ? geometryMaybeCollection.type === 'GeometryCollection' : false;
+    stopG = isGeometryCollection ? geometryMaybeCollection.geometries.length : 1;
+
+    for (var geomIndex = 0; geomIndex < stopG; geomIndex++) {
+      var multiFeatureIndex = 0;
+      var geometryIndex = 0;
+      geometry = isGeometryCollection
+        ? geometryMaybeCollection.geometries[geomIndex] : geometryMaybeCollection;
+
+      // Handles null Geometry -- Skips this geometry
+      if (geometry === null) continue
+      coords = geometry.coordinates;
+      var geomType = geometry.type;
+
+      wrapShrink = (excludeWrapCoord && (geomType === 'Polygon' || geomType === 'MultiPolygon')) ? 1 : 0;
+
+      switch (geomType) {
+        case null:
+          break
+        case 'Point':
+          if (callback(coords, coordIndex, featureIndex, multiFeatureIndex, geometryIndex) === false) return false
+          coordIndex++;
+          multiFeatureIndex++;
+          break
+        case 'LineString':
+        case 'MultiPoint':
+          for (j = 0; j < coords.length; j++) {
+            if (callback(coords[j], coordIndex, featureIndex, multiFeatureIndex, geometryIndex) === false) return false
+            coordIndex++;
+            if (geomType === 'MultiPoint') multiFeatureIndex++;
+          }
+          if (geomType === 'LineString') multiFeatureIndex++;
+          break
+        case 'Polygon':
+        case 'MultiLineString':
+          for (j = 0; j < coords.length; j++) {
+            for (k = 0; k < coords[j].length - wrapShrink; k++) {
+              if (callback(coords[j][k], coordIndex, featureIndex, multiFeatureIndex, geometryIndex) === false) return false
+              coordIndex++;
+            }
+            if (geomType === 'MultiLineString') multiFeatureIndex++;
+            if (geomType === 'Polygon') geometryIndex++;
+          }
+          if (geomType === 'Polygon') multiFeatureIndex++;
+          break
+        case 'MultiPolygon':
+          for (j = 0; j < coords.length; j++) {
+            geometryIndex = 0;
+            for (k = 0; k < coords[j].length; k++) {
+              for (l = 0; l < coords[j][k].length - wrapShrink; l++) {
+                if (callback(coords[j][k][l], coordIndex, featureIndex, multiFeatureIndex, geometryIndex) === false) return false
+                coordIndex++;
+              }
+              geometryIndex++;
+            }
+            multiFeatureIndex++;
+          }
+          break
+        case 'GeometryCollection':
+          for (j = 0; j < geometry.geometries.length; j++) { if (coordEach(geometry.geometries[j], callback, excludeWrapCoord) === false) return false }
+          break
+        default:
+          throw new Error('Unknown Geometry Type')
+      }
+    }
+  }
+}
+
+function calculateBBoxGeometries (geometries) {
+  let bbox = { x: [Infinity, -Infinity], y: [Infinity, -Infinity] };
+
+  for (let i = 0; i < geometries.length; i++) {
+    bbox = updateBBox(bbox, geometries[i]);
+  }
+
+  return bbox
+}
+
+function updateBBox ({ x, y }, geometry) {
+  coordEach(geometry, coord => {
+    x[0] = Math.min(coord[0], x[0]);
+    x[1] = Math.max(coord[0], x[1]);
+    y[0] = Math.min(coord[1], y[0]);
+    y[1] = Math.max(coord[1], y[1]);
+  });
+
+  return { x, y }
 }
 
 function isInvalid (value) {
@@ -567,38 +456,6 @@ function isDefined (value) {
 
 function isUndefined (value) {
   return value === undefined
-}
-
-function calculateBBoxGeometries (geometries) {
-  let bbox = [[Infinity, Infinity], [-Infinity, -Infinity]];
-
-  for (let i = 0; i < geometries.length; i++) {
-    const geometry = geometries[i];
-
-    if (!isInvalid(geometry)) {
-      bbox = updateBBox(bbox, geometry);
-    }
-  }
-
-  const bboxObj = {
-    x: [bbox[0][0], bbox[1][0]],
-    y: [bbox[0][1], bbox[1][1]]
-  };
-
-  return bboxObj
-}
-
-const path = geoPath();
-
-function updateBBox (bbox, geometry) {
-  const newBBox = path.bounds(geometry);
-
-  bbox[0][0] = bbox[0][0] < newBBox[0][0] ? bbox[0][0] : newBBox[0][0];
-  bbox[0][1] = bbox[0][1] < newBBox[0][1] ? bbox[0][1] : newBBox[0][1];
-  bbox[1][0] = bbox[1][0] > newBBox[1][0] ? bbox[1][0] : newBBox[1][0];
-  bbox[1][1] = bbox[1][1] > newBBox[1][1] ? bbox[1][1] : newBBox[1][1];
-
-  return bbox
 }
 
 function warn (message) {
@@ -864,220 +721,6 @@ function isInterval (value) {
   return value.constructor === Array && value.length === 2 && value.every(entry => entry.constructor === Number)
 }
 
-function generateKeyColumn (length) {
-  return new Array(length).fill(0).map((_, i) => i)
-}
-
-function validateKeyColumn (keyColumn, requiredLength) {
-  if (keyColumn.length !== requiredLength) {
-    throw new Error('Key column must be of same length as rest of the data')
-  }
-
-  ensureAllSameType(keyColumn);
-  ensureUnique(keyColumn);
-}
-
-function ensureAllSameType (keyColumn) {
-  for (let i = 0; i < keyColumn.length; i++) {
-    const key = keyColumn[i];
-    validateKey(key);
-  }
-}
-
-function validateKey (key) {
-  const type = getDataType(key);
-
-  if (type !== 'quantitative' || !Number.isInteger(key)) {
-    throw new Error('Key column can contain only integers')
-  }
-}
-
-function ensureUnique (keyColumn) {
-  if (keyColumn.length !== new Set(keyColumn).size) {
-    throw new Error('Keys must be unique')
-  }
-}
-
-function getDataLength (data) {
-  const firstKey = Object.keys(data)[0];
-  const firstColumn = data[firstKey];
-  return firstColumn.length
-}
-
-function convertRowToColumnData (data) {
-  checkIfDataIsEmpty(data);
-  let columnData = initColumnData(data);
-
-  for (let row of data) {
-    for (let key in row) {
-      columnData[key].push(row[key]);
-    }
-  }
-
-  return columnData
-}
-
-function initColumnData (data) {
-  let firstRow = data[0];
-  let columnKeys = Object.keys(firstRow);
-  let columnData = {};
-
-  for (let key of columnKeys) {
-    columnData[key] = [];
-  }
-
-  return columnData
-}
-
-function checkIfDataIsEmpty (data) {
-  if (data.length === 0) {
-    throw new Error('Received empty Array while trying to load row-oriented data. This is not allowed.')
-  }
-}
-
-function parseGeoJSON (geojsonData) {
-  const geometryData = [];
-  const data = {};
-
-  const features = geojsonData.features;
-  const firstFeature = features[0];
-
-  if ('properties' in firstFeature) {
-    for (const columnName in firstFeature.properties) {
-      data[columnName] = [];
-    }
-  }
-
-  for (let i = 0; i < features.length; i++) {
-    const { geometry, properties } = features[i];
-    geometryData.push(geometry);
-
-    for (const columnName in properties) {
-      data[columnName].push(properties[columnName]);
-    }
-  }
-
-  checkFormatColumnData(data);
-
-  data.$geometry = geometryData;
-
-  return data
-}
-
-const methods = {
-  _setColumnData (data, options) {
-    if (options.validate === false) {
-      checkFormatInternal(data);
-    } else {
-      checkFormatColumnData(data);
-    }
-
-    this._storeData(data, options);
-  },
-
-  _setRowData (rowData, options) {
-    const columnData = convertRowToColumnData(rowData);
-    this._setColumnData(columnData, options);
-  },
-
-  _setGeoJSON (geojsonData, options) {
-    const data = parseGeoJSON(geojsonData);
-    this._storeData(data, options);
-  },
-
-  _setGroup (group, options) {
-    const data = group.data;
-    checkFormatInternal(data);
-    this._storeData(data, options);
-  },
-
-  _storeData (data, options) {
-    this._data = data;
-
-    this._setupKeyColumn();
-
-    if (options.validate === true) {
-      this.validateAllColumns();
-    }
-  },
-
-  _setupKeyColumn () {
-    const length = getDataLength(this._data);
-
-    if ('$key' in this._data) {
-      validateKeyColumn(this._data.$key, length);
-      this._syncKeyToRowNumber();
-    } else {
-      const keyColumn = generateKeyColumn(length);
-      this._setKeyColumn(keyColumn);
-    }
-  },
-
-  _setKeyColumn (keyColumn) {
-    this._data.$key = keyColumn;
-
-    this._syncKeyToRowNumber();
-  },
-
-  _syncKeyToRowNumber () {
-    const length = getDataLength(this._data);
-
-    for (let i = 0; i < length; i++) {
-      const key = this._data.$key[i];
-      this._keyToRowNumber[key] = i;
-    }
-  }
-};
-
-function dataLoadingMixin (targetClass) {
-  Object.assign(targetClass.prototype, methods);
-}
-
-function filter (data, filterFunction) {
-  const length = getDataLength(data);
-  const newData = {};
-  for (const colName in data) { newData[colName] = []; }
-
-  for (let i = 0; i < length; i++) {
-    const row = {};
-    for (const colName in data) { row[colName] = data[colName][i]; }
-
-    if (filterFunction(row, i) === true) {
-      for (const colName in row) { newData[colName].push(row[colName]); }
-    }
-  }
-
-  return newData
-}
-
-function select (data, selection) {
-  if (selection.constructor === String) {
-    selection = [selection];
-  }
-
-  if (selection.constructor === Array) {
-    validateSelectionInstructions(data, selection);
-
-    const newData = {};
-
-    for (const columnName of selection) {
-      newData[columnName] = data[columnName];
-    }
-
-    return newData
-  } else {
-    throw new Error('select can only be used with a string or array of strings')
-  }
-}
-
-function validateSelectionInstructions (data, selection) {
-  for (const columnName of selection) {
-    if (!(columnName in data)) {
-      throw new Error(`Column '${columnName}' not found`)
-    }
-  }
-}
-
 function arrange (data, sortInstructions) {
   if (sortInstructions.constructor === Object) {
     return sort(data, sortInstructions)
@@ -1323,7 +966,7 @@ function checkKeyValuePair (obj, allowedKeys) {
   const key = keys[0];
 
   if (!allowedKeys.includes(key)) {
-    throw new Error(`Unknown transformation ${key}`)
+    throw new Error(`Unknown column ${key}`)
   }
 
   return key
@@ -1563,949 +1206,529 @@ class Group {
 }
 
 /**
-* geostats() is a tiny and standalone javascript library for classification
-* Project page - https://github.com/simogeo/geostats
-* Copyright (c) 2011 Simon Georget, http://www.intermezzo-coop.eu
-* Licensed under the MIT license
-*/
+ * Classify the series in equal intervals from minimum to maximum value.
+ * @param {array} serie
+ * @param {number} nbClass
+ * @param {number} forceMin
+ * @param {number} forceMax
+ */
+const classifyEqInterval = (serie, nbClass, forceMin, forceMax) => {
+  if (serie.length === 0) {
+    return []
+  }
 
-var _t = function (str) {
-  return str
+  const tmpMin = typeof forceMin === 'undefined' ? Math.min(...serie) : forceMin;
+  const tmpMax = typeof forceMax === 'undefined' ? Math.max(...serie) : forceMax;
+
+  const bounds = [];
+  const interval = (tmpMax - tmpMin) / nbClass;
+  let val = tmpMin;
+
+  for (let i = 0; i <= nbClass; i++) {
+    bounds.push(val);
+    val += interval;
+  }
+
+  bounds[nbClass] = tmpMax;
+
+  return bounds
 };
 
-// taking from http://stackoverflow.com/questions/18082/validate-decimal-numbers-in-javascript-isnumeric
-var isNumber = function (n) {
-  return !isNaN(parseFloat(n)) && isFinite(n)
-};
-
-function Geostats (a) {
-  this.objectID = '';
-  this.separator = ' - ';
-  this.legendSeparator = this.separator;
-  this.method = '';
-  this.precision = 0;
-  this.precisionflag = 'auto';
-  this.roundlength = 2; // Number of decimals, round values
-  this.is_uniqueValues = false;
-  this.debug = false;
-  this.silent = false;
-
-  this.bounds = [];
-  this.ranges = [];
-  this.inner_ranges = null;
-  this.colors = [];
-  this.counter = [];
-
-  // statistics information
-  this.stat_sorted = null;
-  this.stat_mean = null;
-  this.stat_median = null;
-  this.stat_sum = null;
-  this.stat_max = null;
-  this.stat_min = null;
-  this.stat_pop = null;
-  this.stat_variance = null;
-  this.stat_stddev = null;
-  this.stat_cov = null;
-
-  /**
- * logging method
+/**
+ * Based on jenks implementation of geostats
+ * https://github.com/simogeo/geostats
+ * https://raw.githubusercontent.com/simogeo/geostats/a5b2b89a7bef3c412468bb1062e3cf00ffdae0ea/lib/geostats.js
  */
-  this.log = function (msg, force) {
-    if (this.debug === true || force != null) {
-      console.log(this.objectID + '(object id) :: ' + msg);
+const classifyJenks = (serie, nbClass) => {
+  if (serie.length === 0) {
+    return []
+  }
+
+  serie.sort((a, b) => a - b);
+
+  // define two matrices mat1, mat2
+  const height = serie.length + 1;
+  const width = nbClass + 1;
+  const mat1 = Array(height)
+    .fill()
+    .map(() => Array(width).fill(0));
+  const mat2 = Array(height)
+    .fill()
+    .map(() => Array(width).fill(0));
+
+  // initialize mat1, mat2
+  for (let y = 1; y < nbClass + 1; y++) {
+    mat1[0][y] = 1;
+    mat2[0][y] = 0;
+    for (let t = 1; t < serie.length + 1; t++) {
+      mat2[t][y] = Infinity;
     }
-  };
-
-  /**
- * Set bounds
- */
-  this.setBounds = function (a) {
-    this.log('Setting bounds (' + a.length + ') : ' + a.join());
-
-    this.bounds = []; // init empty array to prevent bug when calling classification after another with less items (sample getQuantile(6) and getQuantile(4))
-
-    this.bounds = a;
-    // this.bounds = this.decimalFormat(a);
-  };
-
-  /**
- * Set a new serie
- */
-  this.setSerie = function (a) {
-    this.log('Setting serie (' + a.length + ') : ' + a.join());
-
-    this.serie = []; // init empty array to prevent bug when calling classification after another with less items (sample getQuantile(6) and getQuantile(4))
-    this.serie = a;
-
-    // reset statistics after changing serie
-    this.resetStatistics();
-
-    this.setPrecision();
-  };
-
-  /**
- * Set colors
- */
-  this.setColors = function (colors) {
-    this.log('Setting color ramp (' + colors.length + ') : ' + colors.join());
-
-    this.colors = colors;
-  };
-
-  /**
-   * Get feature count
-   * With bounds array(0, 0.75, 1.5, 2.25, 3);
-   * should populate this.counter with 5 keys
-   * and increment counters for each key
-   */
-  this.doCount = function () {
-    if (this._nodata()) { return }
-
-    var tmp = this.sorted();
-
-    this.counter = [];
-
-    // we init counter with 0 value
-    for (let i = 0; i < this.bounds.length - 1; i++) {
-      this.counter[i] = 0;
-    }
-
-    for (let j = 0; j < tmp.length; j++) {
-      // get current class for value to increment the counter
-      var cclass = this.getClass(tmp[j]);
-      this.counter[cclass]++;
-    }
-  };
-
-  /**
-   * Set decimal precision according to user input
-   * or automatcally determined according
-   * to the given serie.
-   */
-  this.setPrecision = function (decimals) {
-    // only when called from user
-    if (typeof decimals !== 'undefined') {
-      this.precisionflag = 'manual';
-      this.precision = decimals;
-    }
-
-    // we calculate the maximal decimal length on given serie
-    if (this.precisionflag === 'auto') {
-      for (var i = 0; i < this.serie.length; i++) {
-        // check if the given value is a number and a float
-        var precision;
-        if (!isNaN((this.serie[i] + '')) && (this.serie[i] + '').toString().indexOf('.') !== -1) {
-          precision = (this.serie[i] + '').split('.')[1].length;
-        } else {
-          precision = 0;
-        }
-
-        if (precision > this.precision) {
-          this.precision = precision;
-        }
-      }
-    }
-    if (this.precision > 20) {
-      // prevent "Uncaught RangeError: toFixed() digits argument must be between 0 and 20" bug. See https://github.com/simogeo/geostats/issues/34
-      this.log('this.precision value (' + this.precision + ') is greater than max value. Automatic set-up to 20 to prevent "Uncaught RangeError: toFixed()" when calling decimalFormat() method.');
-      this.precision = 20;
-    }
-
-    this.log('Calling setPrecision(). Mode : ' + this.precisionflag + ' - Decimals : ' + this.precision);
-
-    this.serie = this.decimalFormat(this.serie);
-  };
-
-  /**
-   * Format array numbers regarding to precision
-   */
-  this.decimalFormat = function (a) {
-    var b = [];
-
-    for (var i = 0; i < a.length; i++) {
-      // check if the given value is a number
-      if (isNumber(a[i])) {
-        b[i] = parseFloat(parseFloat(a[i]).toFixed(this.precision));
-      } else {
-        b[i] = a[i];
-      }
-    }
-
-    return b
-  };
-
-  /**
-   * Transform a bounds array to a range array the following array : array(0,
-   * 0.75, 1.5, 2.25, 3); becomes : array('0-0.75', '0.75-1.5', '1.5-2.25',
-   * '2.25-3');
-   */
-  this.setRanges = function () {
-    this.ranges = []; // init empty array to prevent bug when calling classification after another with less items (sample getQuantile(6) and getQuantile(4))
-
-    for (let i = 0; i < (this.bounds.length - 1); i++) {
-      this.ranges[i] = this.bounds[i] + this.separator + this.bounds[i + 1];
-    }
-  };
-
-  /** return min value */
-  this.min = function () {
-    if (this._nodata()) { return }
-
-    this.stat_min = this.serie[0];
-
-    for (let i = 0; i < this.pop(); i++) {
-      if (this.serie[i] < this.stat_min) {
-        this.stat_min = this.serie[i];
-      }
-    }
-
-    return this.stat_min
-  };
-
-  /** return max value */
-  this.max = function () {
-    if (this._nodata()) { return }
-
-    this.stat_max = this.serie[0];
-    for (let i = 0; i < this.pop(); i++) {
-      if (this.serie[i] > this.stat_max) {
-        this.stat_max = this.serie[i];
-      }
-    }
-
-    return this.stat_max
-  };
-
-  /** return sum value */
-  this.sum = function () {
-    if (this._nodata()) { return }
-
-    if (this.stat_sum === null) {
-      this.stat_sum = 0;
-      for (let i = 0; i < this.pop(); i++) {
-        this.stat_sum += parseFloat(this.serie[i]);
-      }
-    }
-
-    return this.stat_sum
-  };
-
-  /** return population number */
-  this.pop = function () {
-    if (this._nodata()) { return }
-
-    if (this.stat_pop === null) {
-      this.stat_pop = this.serie.length;
-    }
-
-    return this.stat_pop
-  };
-
-  /** return mean value */
-  this.mean = function () {
-    if (this._nodata()) { return }
-
-    if (this.stat_mean === null) {
-      this.stat_mean = parseFloat(this.sum() / this.pop());
-    }
-
-    return this.stat_mean
-  };
-
-  /** return median value */
-  this.median = function () {
-    if (this._nodata()) { return }
-
-    if (this.stat_median === null) {
-      this.stat_median = 0;
-      var tmp = this.sorted();
-
-      // serie pop is odd
-      if (tmp.length % 2) {
-        this.stat_median = parseFloat(tmp[(Math.ceil(tmp.length / 2) - 1)]);
-
-      // serie pop is even
-      } else {
-        this.stat_median = (parseFloat(tmp[((tmp.length / 2) - 1)]) + parseFloat(tmp[(tmp.length / 2)])) / 2;
-      }
-    }
-
-    return this.stat_median
-  };
-
-  /** return variance value */
-  this.variance = function (round) {
-    round = (typeof round === 'undefined');
-
-    if (this._nodata()) { return }
-
-    if (this.stat_variance === null) {
-      var tmp = 0;
-      var serieMean = this.mean();
-      for (var i = 0; i < this.pop(); i++) {
-        tmp += Math.pow((this.serie[i] - serieMean), 2);
-      }
-
-      this.stat_variance = tmp / this.pop();
-
-      if (round === true) {
-        this.stat_variance = Math.round(this.stat_variance * Math.pow(10, this.roundlength)) / Math.pow(10, this.roundlength);
-      }
-    }
-
-    return this.stat_variance
-  };
-
-  /** return standard deviation value */
-  this.stddev = function (round) {
-    round = (typeof round === 'undefined');
-
-    if (this._nodata()) { return }
-
-    if (this.stat_stddev === null) {
-      this.stat_stddev = Math.sqrt(this.variance());
-
-      if (round === true) {
-        this.stat_stddev = Math.round(this.stat_stddev * Math.pow(10, this.roundlength)) / Math.pow(10, this.roundlength);
-      }
-    }
-
-    return this.stat_stddev
-  };
-
-  /** coefficient of variation - measure of dispersion */
-  this.cov = function (round) {
-    round = (typeof round === 'undefined');
-
-    if (this._nodata()) { return }
-
-    if (this.stat_cov === null) {
-      this.stat_cov = this.stddev() / this.mean();
-
-      if (round === true) {
-        this.stat_cov = Math.round(this.stat_cov * Math.pow(10, this.roundlength)) / Math.pow(10, this.roundlength);
-      }
-    }
-
-    return this.stat_cov
-  };
-
-  /** reset all attributes after setting a new serie */
-  this.resetStatistics = function () {
-    this.stat_sorted = null;
-    this.stat_mean = null;
-    this.stat_median = null;
-    this.stat_sum = null;
-    this.stat_max = null;
-    this.stat_min = null;
-    this.stat_pop = null;
-    this.stat_variance = null;
-    this.stat_stddev = null;
-    this.stat_cov = null;
-  };
-
-  /** data test */
-  this._nodata = function () {
-    if (this.serie.length === 0) {
-      if (this.silent) this.log('[silent mode] Error. You should first enter a serie!', true);
-      else throw new TypeError('Error. You should first enter a serie!')
-      return 1
-    } else { return 0 }
-  };
-
-  /** ensure nbClass is an integer */
-  this._nbClassInt = function (nbClass) {
-    var nbclassTmp = parseInt(nbClass, 10);
-    if (isNaN(nbclassTmp)) {
-      if (this.silent) this.log("[silent mode] '" + nbclassTmp + "' is not a valid integer. Enable to set class number.", true);
-      else throw new TypeError("'" + nbclassTmp + "' is not a valid integer. Enable to set class number.")
-    } else {
-      return nbclassTmp
-    }
-  };
-
-  /** check if the serie contains negative value */
-  this._hasNegativeValue = function () {
-    for (let i = 0; i < this.serie.length; i++) {
-      if (this.serie[i] < 0) { return true }
-    }
-    return false
-  };
-
-  /** check if the serie contains zero value */
-  this._hasZeroValue = function () {
-    for (let i = 0; i < this.serie.length; i++) {
-      if (parseFloat(this.serie[i]) === 0) { return true }
-    }
-    return false
-  };
-
-  /** return sorted values (as array) */
-  this.sorted = function () {
-    if (this.stat_sorted === null) {
-      if (this.is_uniqueValues === false) {
-        this.stat_sorted = this.serie.sort(function (a, b) {
-          return a - b
-        });
-      } else {
-        this.stat_sorted = this.serie.sort(function (a, b) {
-          var nameA = a.toString().toLowerCase(); var nameB = b.toString().toLowerCase();
-          if (nameA < nameB) return -1
-          if (nameA > nameB) return 1
-          return 0
-        });
-      }
-    }
-
-    return this.stat_sorted
-  };
-
-  /**
- * Set Manual classification Return an array with bounds : ie array(0,
- * 0.75, 1.5, 2.25, 3);
- * Set ranges and prepare data for displaying legend
- *
- */
-  this.setClassManually = function (array) {
-    if (this._nodata()) { return }
-
-    if (array[0] !== this.min() || array[array.length - 1] !== this.max()) {
-      if (this.silent) this.log('[silent mode] ' + _t('Given bounds may not be correct! please check your input.\nMin value : ' + this.min() + ' / Max value : ' + this.max()), true);
-      else throw new TypeError(_t('Given bounds may not be correct! please check your input.\nMin value : ' + this.min() + ' / Max value : ' + this.max()))
-      return
-    }
-
-    this.setBounds(array);
-    this.setRanges();
-
-    // we specify the classification method
-    this.method = _t('manual classification') + ' (' + (array.length - 1) + ' ' + _t('classes') + ')';
-
-    return this.bounds
-  };
-
-  /**
- * Equal intervals classification Return an array with bounds : ie array(0,
- * 0.75, 1.5, 2.25, 3);
- */
-  this.getClassEqInterval = function (nbClass, forceMin, forceMax) {
-    nbClass = this._nbClassInt(nbClass); // ensure nbClass is an integer
-
-    if (this._nodata()) { return }
-
-    var tmpMin = (typeof forceMin === 'undefined') ? this.min() : forceMin;
-    var tmpMax = (typeof forceMax === 'undefined') ? this.max() : forceMax;
-
-    var a = [];
-    var val = tmpMin;
-    var interval = (tmpMax - tmpMin) / nbClass;
-
-    for (let i = 0; i <= nbClass; i++) {
-      a[i] = val;
-      val += interval;
-    }
-
-    // -> Fix last bound to Max of values
-    a[nbClass] = tmpMax;
-
-    this.setBounds(a);
-    this.setRanges();
-
-    // we specify the classification method
-    this.method = _t('eq. intervals') + ' (' + nbClass + ' ' + _t('classes') + ')';
-
-    return this.bounds
-  };
-
-  this.getQuantiles = function (nbClass) {
-    nbClass = this._nbClassInt(nbClass); // ensure nbClass is an integer
-
-    var tmp = this.sorted();
-    var quantiles = [];
-
-    var step = this.pop() / nbClass;
-    for (var i = 1; i < nbClass; i++) {
-      var qidx = Math.round(i * step + 0.49);
-      quantiles.push(tmp[qidx - 1]); // zero-based
-    }
-
-    return quantiles
-  };
-
-  /**
- * Quantile classification Return an array with bounds : ie array(0, 0.75,
- * 1.5, 2.25, 3);
- */
-  this.getClassQuantile = function (nbClass) {
-    nbClass = this._nbClassInt(nbClass); // ensure nbClass is an integer
-
-    if (this._nodata()) { return }
-
-    var tmp = this.sorted();
-    var bounds = this.getQuantiles(nbClass);
-    bounds.unshift(tmp[0]);
-
-    if (bounds[tmp.length - 1] !== tmp[tmp.length - 1]) { bounds.push(tmp[tmp.length - 1]); }
-
-    this.setBounds(bounds);
-    this.setRanges();
-
-    // we specify the classification method
-    this.method = _t('quantile') + ' (' + nbClass + ' ' + _t('classes') + ')';
-
-    return this.bounds
-  };
-
-  /**
- * Standard Deviation classification
- * Return an array with bounds : ie array(0,
- * 0.75, 1.5, 2.25, 3);
- */
-  this.getClassStdDeviation = function (nbClass, matchBounds) {
-    nbClass = this._nbClassInt(nbClass); // ensure nbClass is an integer
-
-    if (this._nodata()) { return }
-
-    var tmpMax = this.max();
-    var tmpMin = this.min();
-    var tmpStdDev = this.stddev();
-    var tmpMean = this.mean();
-
-    var a = [];
-
-    // number of classes is odd
-    if (nbClass % 2 === 1) {
-      // Euclidean division to get the inferior bound
-      var infBound = Math.floor(nbClass / 2);
-
-      var supBound = infBound + 1;
-
-      // we set the central bounds
-      a[infBound] = tmpMean - (tmpStdDev / 2);
-      a[supBound] = tmpMean + (tmpStdDev / 2);
-
-      // Values < to infBound, except first one
-      for (let i = infBound - 1; i > 0; i--) {
-        let val = a[i + 1] - tmpStdDev;
-        a[i] = val;
-      }
-
-      // Values > to supBound, except last one
-      for (let i = supBound + 1; i < nbClass; i++) {
-        let val = a[i - 1] + tmpStdDev;
-        a[i] = val;
-      }
-
-      // number of classes is even
-    } else {
-      var meanBound = nbClass / 2;
-
-      // we get the mean value
-      a[meanBound] = tmpMean;
-
-      // Values < to the mean, except first one
-      for (let i = meanBound - 1; i > 0; i--) {
-        let val = a[i + 1] - tmpStdDev;
-        a[i] = val;
-      }
-
-      // Values > to the mean, except last one
-      for (let i = meanBound + 1; i < nbClass; i++) {
-        let val = a[i - 1] + tmpStdDev;
-        a[i] = val;
-      }
-    }
-
-    // we finally set the first value
-    // do we excatly match min value or not ?
-    a[0] = (typeof matchBounds === 'undefined') ? a[1] - tmpStdDev : tmpMin;
-
-    // we finally set the last value
-    // do we excatly match max value or not ?
-    a[nbClass] = (typeof matchBounds === 'undefined') ? a[nbClass - 1] + tmpStdDev : tmpMax;
-
-    this.setBounds(a);
-    this.setRanges();
-
-    // we specify the classification method
-    this.method = _t('std deviation') + ' (' + nbClass + ' ' + _t('classes') + ')';
-
-    return this.bounds
-  };
-
-  /**
- * Geometric Progression classification
- * http://en.wikipedia.org/wiki/Geometric_progression
- * Return an array with bounds : ie array(0,
- * 0.75, 1.5, 2.25, 3);
- */
-  this.getClassGeometricProgression = function (nbClass) {
-    nbClass = this._nbClassInt(nbClass); // ensure nbClass is an integer
-
-    if (this._nodata()) { return }
-
-    if (this._hasNegativeValue() || this._hasZeroValue()) {
-      if (this.silent) this.log('[silent mode] ' + _t('geometric progression can\'t be applied with a serie containing negative or zero values.'), true);
-      else throw new TypeError(_t('geometric progression can\'t be applied with a serie containing negative or zero values.'))
-      return
-    }
-
-    var a = [];
-    var tmpMin = this.min();
-    var tmpMax = this.max();
-
-    var logMax = Math.log(tmpMax) / Math.LN10; // max decimal logarithm (or base 10)
-    var logMin = Math.log(tmpMin) / Math.LN10; // min decimal logarithm (or base 10)
-
-    var interval = (logMax - logMin) / nbClass;
-
-    // we compute log bounds
-    for (let i = 0; i < nbClass; i++) {
-      if (i === 0) {
-        a[i] = logMin;
-      } else {
-        a[i] = a[i - 1] + interval;
-      }
-    }
-
-    // we compute antilog
-    a = a.map(function (x) { return Math.pow(10, x) });
-
-    // and we finally add max value
-    a.push(this.max());
-
-    this.setBounds(a);
-    this.setRanges();
-
-    // we specify the classification method
-    this.method = _t('geometric progression') + ' (' + nbClass + ' ' + _t('classes') + ')';
-
-    return this.bounds
-  };
-
-  /**
- * Arithmetic Progression classification
- * http://en.wikipedia.org/wiki/Arithmetic_progression
- * Return an array with bounds : ie array(0,
- * 0.75, 1.5, 2.25, 3);
- */
-  this.getClassArithmeticProgression = function (nbClass) {
-    nbClass = this._nbClassInt(nbClass); // ensure nbClass is an integer
-
-    if (this._nodata()) { return }
-
-    var denominator = 0;
-
-    // we compute the (french) "Raison"
-    for (let i = 1; i <= nbClass; i++) {
-      denominator += i;
-    }
-
-    var a = [];
-    var tmpMin = this.min();
-    var tmpMax = this.max();
-
-    var interval = (tmpMax - tmpMin) / denominator;
-
-    for (let i = 0; i <= nbClass; i++) {
-      if (i === 0) {
-        a[i] = tmpMin;
-      } else {
-        a[i] = a[i - 1] + (i * interval);
-      }
-    }
-
-    this.setBounds(a);
-    this.setRanges();
-
-    // we specify the classification method
-    this.method = _t('arithmetic progression') + ' (' + nbClass + ' ' + _t('classes') + ')';
-
-    return this.bounds
-  };
-
-  /**
- * Credits : Doug Curl (javascript) and Daniel J Lewis (python implementation)
- * http://www.arcgis.com/home/item.html?id=0b633ff2f40d412995b8be377211c47b
- * http://danieljlewis.org/2010/06/07/jenks-natural-breaks-algorithm-in-python/
- */
-  this.getClassJenks = function (nbClass) {
-    nbClass = this._nbClassInt(nbClass); // ensure nbClass is an integer
-
-    if (this._nodata()) { return }
-
-    let dataList = this.sorted();
-
-    // now iterate through the datalist:
-    // determine mat1 and mat2
-    // really not sure how these 2 different arrays are set - the code for
-    // each seems the same!
-    // but the effect are 2 different arrays: mat1 and mat2
-    var mat1 = [];
-    // for (var x = 0, xl = dataList.length + 1; x < xl; x++) {
-    for (var x = 0; x < dataList.length + 1; x++) {
-      var temp = [];
-      for (var j = 0, jl = nbClass + 1; j < jl; j++) {
-        temp.push(0);
-      }
-      mat1.push(temp);
-    }
-
-    var mat2 = [];
-    // for (var i = 0, il = dataList.length + 1; i < il; i++) {
-    for (var i = 0; i < dataList.length + 1; i++) {
-      var temp2 = [];
-      for (var c = 0, cl = nbClass + 1; c < cl; c++) {
-        temp2.push(0);
-      }
-      mat2.push(temp2);
-    }
-
-    // absolutely no idea what this does - best I can tell, it sets the 1st
-    // group in the
-    // mat1 and mat2 arrays to 1 and 0 respectively
-    for (var y = 1, yl = nbClass + 1; y < yl; y++) {
-      mat1[0][y] = 1;
-      mat2[0][y] = 0;
-      for (var t = 1, tl = dataList.length + 1; t < tl; t++) {
-        mat2[t][y] = Infinity;
-      }
-      var v = 0.0;
-    }
-
-    // and this part - I'm a little clueless on - but it works
-    // pretty sure it iterates across the entire dataset and compares each
-    // value to
-    // one another to and adjust the indices until you meet the rules:
-    // minimum deviation
-    // within a class and maximum separation between classes
-    for (var l = 2, ll = dataList.length + 1; l < ll; l++) {
-      var s1 = 0.0;
-      var s2 = 0.0;
-      var w = 0.0;
-      for (var m = 1, ml = l + 1; m < ml; m++) {
-        var i3 = l - m + 1;
-        var val = parseFloat(dataList[i3 - 1]);
-        s2 += val * val;
-        s1 += val;
-        w += 1;
-        v = s2 - (s1 * s1) / w;
-        var i4 = i3 - 1;
-        if (i4 !== 0) {
-          for (var p = 2, pl = nbClass + 1; p < pl; p++) {
-            if (mat2[l][p] >= (v + mat2[i4][p - 1])) {
-              mat1[l][p] = i3;
-              mat2[l][p] = v + mat2[i4][p - 1];
-            }
+  }
+
+  // fill matrices
+  for (let l = 2; l < serie.length + 1; l++) {
+    let s1 = 0.0;
+    let s2 = 0.0;
+    let w = 0.0;
+    let v = 0.0;
+    for (let m = 1; m < l + 1; m++) {
+      const i3 = l - m + 1;
+      const val = parseFloat(serie[i3 - 1]);
+      s2 += val * val;
+      s1 += val;
+      w += 1;
+      v = s2 - (s1 * s1) / w;
+      const i4 = i3 - 1;
+      if (i4 !== 0) {
+        for (let p = 2; p < nbClass + 1; p++) {
+          if (mat2[l][p] >= v + mat2[i4][p - 1]) {
+            mat1[l][p] = i3;
+            mat2[l][p] = v + mat2[i4][p - 1];
           }
         }
       }
-      mat1[l][1] = 1;
-      mat2[l][1] = v;
     }
-
-    var k = dataList.length;
-    var kclass = [];
-
-    // fill the kclass (classification) array with zeros:
-    for (i = 0; i <= nbClass; i++) {
-      kclass.push(0);
-    }
-
-    // this is the last number in the array:
-    kclass[nbClass] = parseFloat(dataList[dataList.length - 1]);
-    // this is the first number - can set to zero, but want to set to lowest
-    // to use for legend:
-    kclass[0] = parseFloat(dataList[0]);
-    var countNum = nbClass;
-    while (countNum >= 2) {
-      var id = parseInt((mat1[k][countNum]) - 2);
-      kclass[countNum - 1] = dataList[id];
-      k = parseInt((mat1[k][countNum] - 1));
-      // spits out the rank and value of the break values:
-      // console.log("id="+id,"rank = " + String(mat1[k][countNum]),"val =
-      // " + String(dataList[id]))
-      // count down:
-      countNum -= 1;
-    }
-    // check to see if the 0 and 1 in the array are the same - if so, set 0
-    // to 0:
-    if (kclass[0] === kclass[1]) {
-      kclass[0] = 0;
-    }
-
-    this.setBounds(kclass);
-    this.setRanges();
-
-    this.method = _t('Jenks') + ' (' + nbClass + ' ' + _t('classes') + ')';
-
-    return this.bounds // array of breaks
-  };
-
-  /**
- * Quantile classification Return an array with bounds : ie array(0, 0.75,
- * 1.5, 2.25, 3);
- */
-  this.getClassUniqueValues = function () {
-    if (this._nodata()) { return }
-
-    this.is_uniqueValues = true;
-    var tmp = this.sorted(); // display in alphabetical order
-
-    var a = [];
-
-    for (let i = 0; i < this.pop(); i++) {
-      if (a.indexOf(tmp[i]) === -1) {
-        a.push(tmp[i]);
-      }
-    }
-
-    this.bounds = a;
-
-    // we specify the classification method
-    this.method = _t('unique values');
-
-    return a
-  };
-
-  /**
- * Return the class of a given value.
- * For example value : 6
- * and bounds array = (0, 4, 8, 12);
- * Return 2
- */
-  this.getClass = function (value) {
-    for (let i = 0; i < this.bounds.length; i++) {
-      if (this.is_uniqueValues === true) {
-        if (value === this.bounds[i]) { return i }
-      } else {
-      // parseFloat() is necessary
-        if (parseFloat(value) <= this.bounds[i + 1]) {
-          return i
-        }
-      }
-    }
-
-    return _t("Unable to get value's class.")
-  };
-
-  /**
- * Return the ranges array : array('0-0.75', '0.75-1.5', '1.5-2.25',
- * '2.25-3');
- */
-  this.getRanges = function () {
-    return this.ranges
-  };
-
-  /**
- * Returns the number/index of this.ranges that value falls into
- */
-  this.getRangeNum = function (value) {
-    var bounds, i;
-
-    for (i = 0; i < this.ranges.length; i++) {
-      bounds = this.ranges[i].split(/ - /);
-      if (value <= parseFloat(bounds[1])) {
-        return i
-      }
-    }
-  };
-
-  /*
- * Compute inner ranges based on serie.
- * Produce discontinous ranges used for legend - return an array similar to :
- * array('0.00-0.74', '0.98-1.52', '1.78-2.25', '2.99-3.14');
- * If inner ranges already computed, return array values.
- */
-  this.getInnerRanges = function () {
-    // if already computed, we return the result
-    if (this.inner_ranges != null) {
-      return this.inner_ranges
-    }
-
-    var a = [];
-    var tmp = this.sorted();
-    var cnt = 1; // bounds array counter
-
-    for (let i = 0; i < tmp.length; i++) {
-      let rangeFirstValue;
-      if (i === 0) {
-        rangeFirstValue = tmp[i]; // we init first range value
-      }
-
-      if (parseFloat(tmp[i]) > parseFloat(this.bounds[cnt])) {
-        a[cnt - 1] = '' + rangeFirstValue + this.separator + tmp[i - 1];
-
-        rangeFirstValue = tmp[i];
-
-        cnt++;
-      }
-
-      // we reach the last range, we finally complete manually
-      // and return the array
-      if (cnt === (this.bounds.length - 1)) {
-      // we set the last value
-        a[cnt - 1] = '' + rangeFirstValue + this.separator + tmp[tmp.length - 1];
-
-        this.inner_ranges = a;
-        return this.inner_ranges
-      }
-    }
-  };
-
-  this.getSortedlist = function () {
-    return this.sorted().join(', ')
-  };
-
-  // object constructor
-  // At the end of script. If not setPrecision() method is not known
-
-  // we create an object identifier for debugging
-  this.objectID = new Date().getUTCMilliseconds();
-  this.log('Creating new geostats object');
-
-  if (typeof a !== 'undefined' && a.length > 0) {
-    this.serie = a;
-    this.setPrecision();
-    this.log('Setting serie (' + a.length + ') : ' + a.join());
-  } else {
-    this.serie = [];
+    mat1[l][1] = 1;
+    mat2[l][1] = v;
   }
 
-  // creating aliases on classification function for backward compatibility
-  this.getJenks = this.getClassJenks;
-  this.getGeometricProgression = this.getClassGeometricProgression;
-  this.getEqInterval = this.getClassEqInterval;
-  this.getQuantile = this.getClassQuantile;
-  this.getStdDeviation = this.getClassStdDeviation;
-  this.getUniqueValues = this.getClassUniqueValues;
-  this.getArithmeticProgression = this.getClassArithmeticProgression;
+  const bounds = [];
+  bounds.push(serie[serie.length - 1]);
+  let k = serie.length;
+  for (let i = nbClass; i >= 2; i--) {
+    const idx = parseInt(mat1[k][i] - 2);
+    bounds.push(serie[idx]);
+    k = parseInt(mat1[k][i] - 1);
+  }
+  bounds.push(serie[0]);
+
+  return bounds.reverse()
+};
+
+const classifyQuantile = (serie, nbClass) => {
+  if (serie.length === 0) {
+    return []
+  }
+
+  serie.sort((a, b) => a - b);
+  const bounds = [];
+
+  bounds.push(serie[0]);
+  const step = serie.length / nbClass;
+  for (let i = 1; i < nbClass; i++) {
+    const qidx = Math.round(i * step + 0.49);
+    bounds.push(serie[qidx - 1]);
+  }
+  bounds.push(serie[serie.length - 1]);
+
+  return bounds
+};
+
+const mean$1 = (serie) => {
+  const sum = serie.reduce((sum, val) => sum + val, 0);
+  return sum / serie.length
+};
+
+const variance = (serie) => {
+  let tmp = 0;
+  for (let i = 0; i < serie.length; i++) {
+    tmp += Math.pow(serie[i] - mean$1(serie), 2);
+  }
+  return tmp / serie.length
+};
+
+const stddev = (serie) => {
+  return Math.sqrt(variance(serie))
+};
+
+const classifyStdDeviation = (serie, nbClass) => {
+  if (serie.length === 0) {
+    return []
+  }
+
+  const _mean = mean$1(serie);
+  const _stddev = stddev(serie);
+
+  const bounds = [];
+
+  // number of classes is odd
+  if (nbClass % 2 === 1) {
+    // Euclidean division to get the inferior bound
+    const infBound = Math.floor(nbClass / 2);
+    const supBound = infBound + 1;
+    // we set the central bounds
+    bounds[infBound] = _mean - _stddev / 2;
+    bounds[supBound] = _mean + _stddev / 2;
+    // Values < to infBound, except first one
+    for (let i = infBound - 1; i > 0; i--) {
+      const val = bounds[i + 1] - _stddev;
+      bounds[i] = val;
+    }
+    // Values > to supBound, except last one
+    for (let i = supBound + 1; i < nbClass; i++) {
+      const val = bounds[i - 1] + _stddev;
+      bounds[i] = val;
+    }
+
+    // number of classes is even
+  } else {
+    const meanBound = nbClass / 2;
+    // we get the mean value
+    bounds[meanBound] = _mean;
+    // Values < to the mean, except first one
+    for (let i = meanBound - 1; i > 0; i--) {
+      const val = bounds[i + 1] - _stddev;
+      bounds[i] = val;
+    }
+    // Values > to the mean, except last one
+    for (let i = meanBound + 1; i < nbClass; i++) {
+      const val = bounds[i - 1] + _stddev;
+      bounds[i] = val;
+    }
+  }
+  // set first value
+  bounds[0] = Math.min(...serie);
+  // set last value
+  bounds[nbClass] = Math.max(...serie);
+
+  return bounds
+};
+
+const numericSort = arr => arr.slice().sort((a, b) => a - b);
+const uniqueCountSorted = arr => new Set(arr).size;
+
+/**
+ * Based on https://github.com/simple-statistics/simple-statistics/blob/master/src/ckmeans.js
+
+ * Ckmeans clustering is an improvement on heuristic-based clustering
+ * approaches like Jenks. The algorithm was developed in
+ * [Haizhou Wang and Mingzhou Song](http://journal.r-project.org/archive/2011-2/RJournal_2011-2_Wang+Song.pdf)
+ * as a [dynamic programming](https://en.wikipedia.org/wiki/Dynamic_programming) approach
+ * to the problem of clustering numeric data into groups with the least
+ * within-group sum-of-squared-deviations.
+ *
+ * Minimizing the difference within groups - what Wang & Song refer to as
+ * `withinss`, or within sum-of-squares, means that groups are optimally
+ * homogenous within and the data is split into representative groups.
+ * This is very useful for visualization, where you may want to represent
+ * a continuous variable in discrete color or style groups. This function
+ * can provide groups that emphasize differences between data.
+ *
+ * Being a dynamic approach, this algorithm is based on two matrices that
+ * store incrementally-computed values for squared deviations and backtracking
+ * indexes.
+ *
+ * This implementation is based on Ckmeans 3.4.6, which introduced a new divide
+ * and conquer approach that improved runtime from O(kn^2) to O(kn log(n)).
+ *
+ * Unlike the [original implementation](https://cran.r-project.org/web/packages/Ckmeans.1d.dp/index.html),
+ * this implementation does not include any code to automatically determine
+ * the optimal number of clusters: this information needs to be explicitly
+ * provided.
+ *
+ * ### References
+ * _Ckmeans.1d.dp: Optimal k-means Clustering in One Dimension by Dynamic
+ * Programming_ Haizhou Wang and Mingzhou Song ISSN 2073-4859
+ *
+ * from The R Journal Vol. 3/2, December 2011
+ * @param {Array<number>} x input data, as an array of number values
+ * @param {number} nClusters number of desired classes. This cannot be
+ * greater than the number of values in the data array.
+ * @returns {Array<Array<number>>} clustered input
+ * @throws {Error} if the number of requested clusters is higher than the size of the data
+ * @example
+ * ckmeans([-1, 2, -1, 2, 4, 5, 6, -1, 2, -1], 3);
+ * // The input, clustered into groups of similar numbers.
+ * //= [[-1, -1, -1, -1], [2, 2, 2], [4, 5, 6]]);
+ */
+function classifyCkmeans(x, nClusters) {
+  if (nClusters > x.length) {
+    return []
+  }
+
+  const sorted = numericSort(x);
+  // we'll use this as the maximum number of clusters
+  const uniqueCount = uniqueCountSorted(sorted);
+
+  // if all of the input values are identical, there's one cluster
+  // with all of the input in it.
+  if (uniqueCount === 1) {
+    return [sorted]
+  }
+
+  // named 'S' originally
+  const matrix = makeMatrix(nClusters, sorted.length);
+  // named 'J' originally
+  const backtrackMatrix = makeMatrix(nClusters, sorted.length);
+
+  // This is a dynamic programming way to solve the problem of minimizing
+  // within-cluster sum of squares. It's similar to linear regression
+  // in this way, and this calculation incrementally computes the
+  // sum of squares that are later read.
+  fillMatrices(sorted, matrix, backtrackMatrix);
+
+  // The real work of Ckmeans clustering happens in the matrix generation:
+  // the generated matrices encode all possible clustering combinations, and
+  // once they're generated we can solve for the best clustering groups
+  // very quickly.
+  const clusters = [];
+  let clusterRight = backtrackMatrix[0].length - 1;
+
+  // Backtrack the clusters from the dynamic programming matrix. This
+  // starts at the bottom-right corner of the matrix (if the top-left is 0, 0),
+  // and moves the cluster target with the loop.
+  for (let cluster = backtrackMatrix.length - 1; cluster >= 0; cluster--) {
+    const clusterLeft = backtrackMatrix[cluster][clusterRight];
+
+    // fill the cluster from the sorted input by taking a slice of the
+    // array. the backtrack matrix makes this easy - it stores the
+    // indexes where the cluster should start and end.
+    clusters[cluster] = sorted.slice(clusterLeft, clusterRight + 1);
+
+    if (cluster > 0) {
+      clusterRight = clusterLeft - 1;
+    }
+  }
+
+  const bounds = [];
+  bounds.push(clusters[0][0]);
+  for (const cluster of clusters) {
+    bounds.push(cluster[cluster.length - 1]);
+  }
+
+  return bounds
 }
+/**
+ * Create a new column x row matrix.
+ *
+ * @private
+ * @param {number} columns
+ * @param {number} rows
+ * @return {Array<Array<number>>} matrix
+ * @example
+ * makeMatrix(10, 10);
+ */
+function makeMatrix(columns, rows) {
+  const matrix = [];
+  for (let i = 0; i < columns; i++) {
+    const column = [];
+    for (let j = 0; j < rows; j++) {
+      column.push(0);
+    }
+    matrix.push(column);
+  }
+  return matrix
+}
+
+/**
+ * Generates incrementally computed values based on the sums and sums of
+ * squares for the data array
+ *
+ * @private
+ * @param {number} j
+ * @param {number} i
+ * @param {Array<number>} sums
+ * @param {Array<number>} sumsOfSquares
+ * @return {number}
+ * @example
+ * ssq(0, 1, [-1, 0, 2], [1, 1, 5]);
+ */
+function ssq(j, i, sums, sumsOfSquares) {
+  let sji; // s(j, i)
+  if (j > 0) {
+    const muji = (sums[i] - sums[j - 1]) / (i - j + 1); // mu(j, i)
+    sji = sumsOfSquares[i] - sumsOfSquares[j - 1] - (i - j + 1) * muji * muji;
+  } else {
+    sji = sumsOfSquares[i] - (sums[i] * sums[i]) / (i + 1);
+  }
+  if (sji < 0) {
+    return 0
+  }
+  return sji
+}
+
+/**
+ * Function that recursively divides and conquers computations
+ * for cluster j
+ *
+ * @private
+ * @param {number} iMin Minimum index in cluster to be computed
+ * @param {number} iMax Maximum index in cluster to be computed
+ * @param {number} cluster Index of the cluster currently being computed
+ * @param {Array<Array<number>>} matrix
+ * @param {Array<Array<number>>} backtrackMatrix
+ * @param {Array<number>} sums
+ * @param {Array<number>} sumsOfSquares
+ */
+function fillMatrixColumn(
+  iMin,
+  iMax,
+  cluster,
+  matrix,
+  backtrackMatrix,
+  sums,
+  sumsOfSquares
+) {
+  if (iMin > iMax) {
+    return
+  }
+
+  // Start at midpoint between iMin and iMax
+  const i = Math.floor((iMin + iMax) / 2);
+
+  matrix[cluster][i] = matrix[cluster - 1][i - 1];
+  backtrackMatrix[cluster][i] = i;
+
+  let jlow = cluster; // the lower end for j
+
+  if (iMin > cluster) {
+    jlow = Math.max(jlow, backtrackMatrix[cluster][iMin - 1] || 0);
+  }
+  jlow = Math.max(jlow, backtrackMatrix[cluster - 1][i] || 0);
+
+  let jhigh = i - 1; // the upper end for j
+  if (iMax < matrix.length - 1) {
+    jhigh = Math.min(jhigh, backtrackMatrix[cluster][iMax + 1] || 0);
+  }
+
+  let sji;
+  let sjlowi;
+  let ssqjlow;
+  let ssqj;
+  for (let j = jhigh; j >= jlow; --j) {
+    sji = ssq(j, i, sums, sumsOfSquares);
+
+    if (sji + matrix[cluster - 1][jlow - 1] >= matrix[cluster][i]) {
+      break
+    }
+
+    // Examine the lower bound of the cluster border
+    sjlowi = ssq(jlow, i, sums, sumsOfSquares);
+
+    ssqjlow = sjlowi + matrix[cluster - 1][jlow - 1];
+
+    if (ssqjlow < matrix[cluster][i]) {
+      // Shrink the lower bound
+      matrix[cluster][i] = ssqjlow;
+      backtrackMatrix[cluster][i] = jlow;
+    }
+    jlow++;
+
+    ssqj = sji + matrix[cluster - 1][j - 1];
+    if (ssqj < matrix[cluster][i]) {
+      matrix[cluster][i] = ssqj;
+      backtrackMatrix[cluster][i] = j;
+    }
+  }
+
+  fillMatrixColumn(
+    iMin,
+    i - 1,
+    cluster,
+    matrix,
+    backtrackMatrix,
+    sums,
+    sumsOfSquares
+  );
+  fillMatrixColumn(
+    i + 1,
+    iMax,
+    cluster,
+    matrix,
+    backtrackMatrix,
+    sums,
+    sumsOfSquares
+  );
+}
+
+/**
+ * Initializes the main matrices used in Ckmeans and kicks
+ * off the divide and conquer cluster computation strategy
+ *
+ * @private
+ * @param {Array<number>} data sorted array of values
+ * @param {Array<Array<number>>} matrix
+ * @param {Array<Array<number>>} backtrackMatrix
+ */
+function fillMatrices(data, matrix, backtrackMatrix) {
+  const nValues = matrix[0].length;
+
+  // Shift values by the median to improve numeric stability
+  const shift = data[Math.floor(nValues / 2)];
+
+  // Cumulative sum and cumulative sum of squares for all values in data array
+  const sums = [];
+  const sumsOfSquares = [];
+
+  // Initialize first column in matrix & backtrackMatrix
+  for (let i = 0, shiftedValue; i < nValues; ++i) {
+    shiftedValue = data[i] - shift;
+    if (i === 0) {
+      sums.push(shiftedValue);
+      sumsOfSquares.push(shiftedValue * shiftedValue);
+    } else {
+      sums.push(sums[i - 1] + shiftedValue);
+      sumsOfSquares.push(sumsOfSquares[i - 1] + shiftedValue * shiftedValue);
+    }
+
+    // Initialize for cluster = 0
+    matrix[0][i] = ssq(0, i, sums, sumsOfSquares);
+    backtrackMatrix[0][i] = 0;
+  }
+
+  // Initialize the rest of the columns
+  let iMin;
+  for (let cluster = 1; cluster < matrix.length; ++cluster) {
+    if (cluster < matrix.length - 1) {
+      iMin = cluster;
+    } else {
+      // No need to compute matrix[K-1][0] ... matrix[K-1][N-2]
+      iMin = nValues - 1;
+    }
+
+    fillMatrixColumn(
+      iMin,
+      nValues - 1,
+      cluster,
+      matrix,
+      backtrackMatrix,
+      sums,
+      sumsOfSquares
+    );
+  }
+}
+
+const methodMap = {
+  EqualInterval: classifyEqInterval,
+  StandardDeviation: classifyStdDeviation,
+  Quantile: classifyQuantile,
+  Jenks: classifyJenks,
+  CKMeans: classifyCkmeans
+};
 
 function bin (data, binInstructions) {
   if (binInstructions.constructor === Object) {
     const intervalBounds = getIntervalBounds(data, binInstructions);
     const ranges = pairRanges(intervalBounds);
 
-    return bin1d(data, binInstructions.groupBy, ranges)
+    return bin1d(data, binInstructions.column, ranges)
   }
 
   if (binInstructions.constructor === Array) {
     const intervalBoundsPerVariable = binInstructions.map(instructions => getIntervalBounds(data, instructions));
     const rangesPerVariable = intervalBoundsPerVariable.map(bounds => pairRanges(bounds));
-    const variables = binInstructions.map(instructions => instructions.groupBy);
+    const variables = binInstructions.map(instructions => instructions.column);
 
     return binKd(data, variables, rangesPerVariable)
   }
 }
 
 function getIntervalBounds (data, binInstructions) {
-  const { groupBy, method, numClasses } = parseBinInstructions(binInstructions);
+  const { column, method, numClasses } = parseBinInstructions(binInstructions);
 
-  const variableData = data[groupBy];
+  const variableData = data[column];
   if (!variableData) {
-    throw new Error(`groupBy column '${groupBy}' does not exist`)
+    throw new Error(`Column '${column}' does not exist`)
   }
 
   if (method === 'IntervalSize') {
@@ -2516,8 +1739,7 @@ function getIntervalBounds (data, binInstructions) {
     return binInstructions.manualClasses
   }
 
-  const geoStat = new Geostats(variableData);
-  return geoStat[methodMap[method]](numClasses)
+  return methodMap[method](variableData, numClasses)
 }
 
 function parseBinInstructions (binInstructions) {
@@ -2525,28 +1747,12 @@ function parseBinInstructions (binInstructions) {
     throw new Error('Bin only accepts an Object')
   }
 
-  const groupBy = binInstructions.groupBy;
-  if (groupBy.constructor !== String) {
-    throw new Error('groupBy only accepts a String variable name')
+  const column = binInstructions.column;
+  if (column.constructor !== String) {
+    throw new Error('column only accepts a String variable name')
   }
 
-  let method = binInstructions.method;
-  if (!method) {
-    warn('No binning method specified, defaulting to EqualInterval');
-    method = 'EqualInterval';
-  }
-  if (method.constructor !== String) {
-    warn('Binning method not recognized, defaulting to EqualInterval');
-    method = 'EqualInterval';
-  }
-
-  let numClasses = binInstructions.numClasses;
-  if (!numClasses) {
-    warn('numClasses not specified, defaulting to 5');
-    numClasses = 5;
-  }
-
-  return { groupBy, method, numClasses }
+  return binInstructions
 }
 
 function createRangesFromBinSize (variableData, binSize) {
@@ -2571,15 +1777,6 @@ function createRangesFromBinSize (variableData, binSize) {
 
   return ranges
 }
-
-const methodMap = {
-  EqualInterval: 'getClassEqInterval',
-  StandardDeviation: 'getClassStdDeviation',
-  ArithmeticProgression: 'getClassArithmeticProgression',
-  GeometricProgression: 'getClassGeometricProgression',
-  Quantile: 'getClassQuantile',
-  Jenks: 'getClassJenks'
-};
 
 function pairRanges (ranges) {
   const l = ranges.length;
@@ -2859,128 +2056,6 @@ function checkIfColumnsExist (data, columns) {
   }
 }
 
-// This function comes from Turf's wonderful geospatial lib
-// We only need this single function and importing it from @turf/meta
-// doesn't work well for in-browser compilation
-// https://github.com/Turfjs/turf
-
-// The MIT License (MIT)
-
-// Copyright (c) 2019 Morgan Herlocker
-
-// Permission is hereby granted, free of charge, to any person obtaining a copy of
-// this software and associated documentation files (the "Software"), to deal in
-// the Software without restriction, including without limitation the rights to
-// use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
-// the Software, and to permit persons to whom the Software is furnished to do so,
-// subject to the following conditions:
-
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-// FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-// IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-// CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-function coordEach (geojson, callback, excludeWrapCoord) {
-  // Handles null Geometry -- Skips this GeoJSON
-  if (geojson === null) return
-  var j; var k; var l; var geometry; var stopG; var coords;
-  var geometryMaybeCollection;
-  var wrapShrink = 0;
-  var coordIndex = 0;
-  var isGeometryCollection;
-  var type = geojson.type;
-  var isFeatureCollection = type === 'FeatureCollection';
-  var isFeature = type === 'Feature';
-  var stop = isFeatureCollection ? geojson.features.length : 1;
-
-  // This logic may look a little weird. The reason why it is that way
-  // is because it's trying to be fast. GeoJSON supports multiple kinds
-  // of objects at its root: FeatureCollection, Features, Geometries.
-  // This function has the responsibility of handling all of them, and that
-  // means that some of the `for` loops you see below actually just don't apply
-  // to certain inputs. For instance, if you give this just a
-  // Point geometry, then both loops are short-circuited and all we do
-  // is gradually rename the input until it's called 'geometry'.
-  //
-  // This also aims to allocate as few resources as possible: just a
-  // few numbers and booleans, rather than any temporary arrays as would
-  // be required with the normalization approach.
-  for (var featureIndex = 0; featureIndex < stop; featureIndex++) {
-    geometryMaybeCollection = (isFeatureCollection ? geojson.features[featureIndex].geometry
-      : (isFeature ? geojson.geometry : geojson));
-    isGeometryCollection = (geometryMaybeCollection) ? geometryMaybeCollection.type === 'GeometryCollection' : false;
-    stopG = isGeometryCollection ? geometryMaybeCollection.geometries.length : 1;
-
-    for (var geomIndex = 0; geomIndex < stopG; geomIndex++) {
-      var multiFeatureIndex = 0;
-      var geometryIndex = 0;
-      geometry = isGeometryCollection
-        ? geometryMaybeCollection.geometries[geomIndex] : geometryMaybeCollection;
-
-      // Handles null Geometry -- Skips this geometry
-      if (geometry === null) continue
-      coords = geometry.coordinates;
-      var geomType = geometry.type;
-
-      wrapShrink = (excludeWrapCoord && (geomType === 'Polygon' || geomType === 'MultiPolygon')) ? 1 : 0;
-
-      switch (geomType) {
-        case null:
-          break
-        case 'Point':
-          if (callback(coords, coordIndex, featureIndex, multiFeatureIndex, geometryIndex) === false) return false
-          coordIndex++;
-          multiFeatureIndex++;
-          break
-        case 'LineString':
-        case 'MultiPoint':
-          for (j = 0; j < coords.length; j++) {
-            if (callback(coords[j], coordIndex, featureIndex, multiFeatureIndex, geometryIndex) === false) return false
-            coordIndex++;
-            if (geomType === 'MultiPoint') multiFeatureIndex++;
-          }
-          if (geomType === 'LineString') multiFeatureIndex++;
-          break
-        case 'Polygon':
-        case 'MultiLineString':
-          for (j = 0; j < coords.length; j++) {
-            for (k = 0; k < coords[j].length - wrapShrink; k++) {
-              if (callback(coords[j][k], coordIndex, featureIndex, multiFeatureIndex, geometryIndex) === false) return false
-              coordIndex++;
-            }
-            if (geomType === 'MultiLineString') multiFeatureIndex++;
-            if (geomType === 'Polygon') geometryIndex++;
-          }
-          if (geomType === 'Polygon') multiFeatureIndex++;
-          break
-        case 'MultiPolygon':
-          for (j = 0; j < coords.length; j++) {
-            geometryIndex = 0;
-            for (k = 0; k < coords[j].length; k++) {
-              for (l = 0; l < coords[j][k].length - wrapShrink; l++) {
-                if (callback(coords[j][k][l], coordIndex, featureIndex, multiFeatureIndex, geometryIndex) === false) return false
-                coordIndex++;
-              }
-              geometryIndex++;
-            }
-            multiFeatureIndex++;
-          }
-          break
-        case 'GeometryCollection':
-          for (j = 0; j < geometry.geometries.length; j++) { if (coordEach(geometry.geometries[j], callback, excludeWrapCoord) === false) return false }
-          break
-        default:
-          throw new Error('Unknown Geometry Type')
-      }
-    }
-  }
-}
-
 function transformGeometries (geometries, transformFunc) {
   const geometriesClone = JSON.parse(JSON.stringify(geometries));
 
@@ -3184,7 +2259,7 @@ const transformations = {
   rowCumsum
 };
 
-const methods$1 = {
+const methods$2 = {
   arrange (sortInstructions) {
     const data = transformations.arrange(this._data, sortInstructions);
     return new DataContainer(data, { validate: false })
@@ -3272,7 +2347,7 @@ const methods$1 = {
 };
 
 function transformationsMixin (targetClass) {
-  Object.assign(targetClass.prototype, methods$1);
+  Object.assign(targetClass.prototype, methods$2);
 }
 
 function ensureValidRow (row, self) {
@@ -3301,9 +2376,9 @@ function ensureValidRowUpdate (row, self) {
   }
 }
 
-function ensureRowExists (key, self) {
-  if (isUndefined(self._keyToRowNumber[key])) {
-    throw new Error(`Key '${key}' not found`)
+function ensureRowExists (accessorObject, self) {
+  if (isUndefined(self._rowIndex(accessorObject))) {
+    throw new Error(`Invalid accessor object: '${accessorObject.toString()}'`)
   }
 }
 
@@ -3393,7 +2468,7 @@ function ensureColumnExists (columnName, self) {
   }
 }
 
-const methods$2 = {
+const methods$3 = {
   // Rows
   addRow (row) {
     ensureValidRow(row, this);
@@ -3405,50 +2480,82 @@ const methods$2 = {
       this._updateDomainIfNecessary(columnName, value);
     }
 
-    const rowNumber = getDataLength(this._data) - 1;
-    const keyDomain = this.domain('$key');
-    keyDomain[1]++;
-    const key = keyDomain[1];
+    const rowIndex = getDataLength(this._data) - 1;
 
-    this._data.$key.push(key);
-    this._keyToRowNumber[key] = rowNumber;
+    if (!this._keyColumn) {
+      const keyDomain = this.domain('$key');
+      keyDomain[1]++;
+      const key = keyDomain[1];
+
+      this._data.$key.push(key);
+      this._keyToRowIndex.set(key, rowIndex);
+    }
+
+    if (this._keyColumn) {
+      const key = row[this._keyColumn];
+
+      if (this._keyToRowIndex.has(key)) {
+        throw new Error(`Duplicate key '${key}'`)
+      }
+
+      this._keyToRowIndex.set(key, rowIndex);
+    }
   },
 
-  updateRow (key, row) {
+  updateRow (accessorObject, row) {
     if (row.constructor === Function) {
-      const result = row(this.row(key));
+      const result = row(this.row(accessorObject));
 
       if (!(result && result.constructor === Object)) {
         throw new Error('updateRow function must return Object')
       }
 
-      this.updateRow(key, result);
+      this.updateRow(accessorObject, result);
     }
 
-    ensureRowExists(key, this);
+    ensureRowExists(accessorObject, this);
     ensureValidRowUpdate(row, this);
 
-    const rowNumber = this._keyToRowNumber[key];
+    const rowIndex = this._rowIndex(accessorObject);
+
+    if (this._keyColumn && this._keyColumn in row) {
+      const oldKey = this._row(rowIndex).$key;
+      const newKey = row[this._keyColumn];
+
+      if (
+        newKey !== oldKey &&
+        this._keyToRowIndex.has(newKey)
+      ) {
+        throw new Error(`Duplicate key '${newKey}'`)
+      }
+
+      this._keyToRowIndex.delete(oldKey);
+      this._keyToRowIndex.set(newKey, rowIndex);
+    }
 
     for (const columnName in row) {
       throwErrorIfColumnIsKey(columnName);
 
       const value = row[columnName];
-      this._data[columnName][rowNumber] = value;
+      this._data[columnName][rowIndex] = value;
 
       this._resetDomainIfNecessary(columnName);
     }
   },
 
-  deleteRow (key) {
-    ensureRowExists(key, this);
+  deleteRow (accessorObject) {
+    ensureRowExists(accessorObject, this);
 
-    const rowNumber = this._keyToRowNumber[key];
-    delete this._keyToRowNumber[key];
+    const rowIndex = this._rowIndex(accessorObject);
+    const key = this._row(rowIndex).$key;
+
+    this._keyToRowIndex.delete(key);
 
     for (const columnName in this._data) {
-      this._data[columnName].splice(rowNumber, 1);
-      this._resetDomainIfNecessary(columnName);
+      if (!(this._keyColumn && columnName === '$key')) {
+        this._data[columnName].splice(rowIndex, 1);
+        this._resetDomainIfNecessary(columnName);
+      }
     }
   },
 
@@ -3510,11 +2617,152 @@ const methods$2 = {
 };
 
 function modifyingRowsAndColumnsMixin (targetClass) {
-  Object.assign(targetClass.prototype, methods$2);
+  Object.assign(targetClass.prototype, methods$3);
 }
 
 function throwErrorIfColumnIsKey (columnName) {
   if (columnName === '$key') throw new Error('Cannot modify key column')
+}
+
+function ascending(a, b) {
+  return a < b ? -1 : a > b ? 1 : a >= b ? 0 : NaN;
+}
+
+function bisector(f) {
+  let delta = f;
+  let compare = f;
+
+  if (f.length === 1) {
+    delta = (d, x) => f(d) - x;
+    compare = ascendingComparator(f);
+  }
+
+  function left(a, x, lo, hi) {
+    if (lo == null) lo = 0;
+    if (hi == null) hi = a.length;
+    while (lo < hi) {
+      const mid = (lo + hi) >>> 1;
+      if (compare(a[mid], x) < 0) lo = mid + 1;
+      else hi = mid;
+    }
+    return lo;
+  }
+
+  function right(a, x, lo, hi) {
+    if (lo == null) lo = 0;
+    if (hi == null) hi = a.length;
+    while (lo < hi) {
+      const mid = (lo + hi) >>> 1;
+      if (compare(a[mid], x) > 0) hi = mid;
+      else lo = mid + 1;
+    }
+    return lo;
+  }
+
+  function center(a, x, lo, hi) {
+    if (lo == null) lo = 0;
+    if (hi == null) hi = a.length;
+    const i = left(a, x, lo, hi);
+    return i > lo && delta(a[i - 1], x) > -delta(a[i], x) ? i - 1 : i;
+  }
+
+  return {left, center, right};
+}
+
+function ascendingComparator(f) {
+  return (d, x) => ascending(f(d), x);
+}
+
+var ascendingBisect = bisector(ascending);
+var bisectRight = ascendingBisect.right;
+
+function initRange(domain, range) {
+  switch (arguments.length) {
+    case 0: break;
+    case 1: this.range(domain); break;
+    default: this.range(range).domain(domain); break;
+  }
+  return this;
+}
+
+function threshold() {
+  var domain = [0.5],
+      range = [0, 1],
+      unknown,
+      n = 1;
+
+  function scale(x) {
+    return x <= x ? range[bisectRight(domain, x, 0, n)] : unknown;
+  }
+
+  scale.domain = function(_) {
+    return arguments.length ? (domain = Array.from(_), n = Math.min(domain.length, range.length - 1), scale) : domain.slice();
+  };
+
+  scale.range = function(_) {
+    return arguments.length ? (range = Array.from(_), n = Math.min(domain.length, range.length - 1), scale) : range.slice();
+  };
+
+  scale.invertExtent = function(y) {
+    var i = range.indexOf(y);
+    return [domain[i - 1], domain[i]];
+  };
+
+  scale.unknown = function(_) {
+    return arguments.length ? (unknown = _, scale) : unknown;
+  };
+
+  scale.copy = function() {
+    return threshold()
+        .domain(domain)
+        .range(range)
+        .unknown(unknown);
+  };
+
+  return initRange.apply(scale, arguments);
+}
+
+const methods$4 = {
+  bounds (binInstructions) {
+    const bounds = this.fullBounds(binInstructions);
+    return bounds.slice(1, bounds.length - 1)
+  },
+
+  fullBounds (binInstructions) {
+    if (this.type(binInstructions.column) !== 'quantitative') {
+      throw new Error('Column should be of type \'quantitative\'')
+    }
+
+    const bounds = getIntervalBounds(
+      this._data,
+      binInstructions
+    );
+
+    return bounds
+  },
+
+  boundRanges (binInstructions) {
+    const bounds = this.fullBounds(binInstructions);
+    const boundRanges = [];
+
+    for (let i = 0; i < bounds.length - 1; i++) {
+      boundRanges.push([bounds[i], bounds[i + 1]]);
+    }
+
+    return boundRanges
+  },
+
+  classify (binInstructions, range) {
+    const bounds = this.bounds(binInstructions);
+
+    return threshold()
+      .domain(bounds)
+      .range(range)
+  }
+};
+
+function classificationMixin (targetClass) {
+  Object.assign(targetClass.prototype, methods$4);
 }
 
 function getJoinColumns (left, right, by) {
@@ -3675,10 +2923,26 @@ function ensureNoDuplicateColumnNames (left, right, by) {
   }
 }
 
+function validateAccessorObject (accessorObject) {
+  const keys = Object.keys(accessorObject);
+
+  if (
+    accessorObject &&
+    accessorObject.constructor === Object &&
+    keys.length === 1 &&
+    ['index', 'key'].includes(keys[0])
+  ) {
+    return
+  }
+
+  throw new Error('Invalid accessor object, must be either \'{ index: <index> }\'  or \'{ key: <key> }\'')
+}
+
 class DataContainer {
   constructor (data, options = { validate: true }) {
     this._data = {};
-    this._keyToRowNumber = {};
+    this._keyToRowIndex = new Map();
+    this._keyColumn = null;
     this._domains = {};
 
     if (isColumnOriented(data)) {
@@ -3709,21 +2973,9 @@ class DataContainer {
     return this._data
   }
 
-  row (key) {
-    const rowNumber = this._keyToRowNumber[key];
-    return this._row(rowNumber)
-  }
-
-  prevRow (key) {
-    const rowNumber = this._keyToRowNumber[key];
-    const previousRowNumber = rowNumber - 1;
-    return this._row(previousRowNumber)
-  }
-
-  nextRow (key) {
-    const rowNumber = this._keyToRowNumber[key];
-    const nextRowNumber = rowNumber + 1;
-    return this._row(nextRowNumber)
+  row (accessorObject) {
+    const rowIndex = this._rowIndex(accessorObject);
+    return this._row(rowIndex)
   }
 
   rows () {
@@ -3759,6 +3011,22 @@ class DataContainer {
 
   bbox () {
     return this.domain('$geometry')
+  }
+
+  min (columnName) {
+    if (this.type(columnName) !== 'quantitative') {
+      throw new Error('Column must be quantitative')
+    }
+
+    return this.domain(columnName)[0]
+  }
+
+  max (columnName) {
+    if (this.type(columnName) !== 'quantitative') {
+      throw new Error('Column must be quantitative')
+    }
+
+    return this.domain(columnName)[1]
   }
 
   type (columnName) {
@@ -3802,17 +3070,27 @@ class DataContainer {
   }
 
   // Private methods
-  _row (rowNumber) {
+  _rowIndex (accessorObject) {
+    validateAccessorObject(accessorObject);
+
+    const rowIndex = 'key' in accessorObject
+      ? this._keyToRowIndex.get(accessorObject.key)
+      : accessorObject.index;
+
+    return rowIndex
+  }
+
+  _row (rowIndex) {
     const length = getDataLength(this._data);
 
-    if (rowNumber < 0 || rowNumber >= length) {
+    if (rowIndex < 0 || rowIndex >= length) {
       return undefined
     }
 
     const row = {};
 
     for (const columnName in this._data) {
-      const value = this._data[columnName][rowNumber];
+      const value = this._data[columnName][rowIndex];
       row[columnName] = value;
     }
 
@@ -3821,8 +3099,10 @@ class DataContainer {
 }
 
 dataLoadingMixin(DataContainer);
+keyMixin(DataContainer);
 transformationsMixin(DataContainer);
 modifyingRowsAndColumnsMixin(DataContainer);
+classificationMixin(DataContainer);
 
 const invalidDataError = new Error('Data passed to DataContainer is of unknown format');
 
