@@ -127,9 +127,9 @@ The `DataContainer` automatically generates a key for each row when data is load
 
 ```js
 const dataContainer = new DataContainer({ a: [2, 4, 6, 8, 10, 12, 14] })
-dataContainer.keys() // [0, 1, 2, 3, 4, 5, 6]
+dataContainer.keys() // ['0', '1', '2', '3', '4', '5', '6']
 const transformed = dataContainer.filter(row => row.a > 10)
-transformed.keys() // [5, 6]
+transformed.keys() // ['5', '6']
 ```
 
 Furthermore, retrieving, updating or deleting rows (see [accessing data](#accessing-data)) can be done either by index or by key:
@@ -137,11 +137,11 @@ Furthermore, retrieving, updating or deleting rows (see [accessing data](#access
 ```js
 const dataContainer = new DataContainer({ a: [2, 4, 6, 8, 10, 12, 14] })
 const transformed = dataContainer.filter(row => row.a > 10)
-transformed.row({ index: 0 }) // { a: 12, $key: 5 }
-transformed.row({ key: 5 }) // { a: 12, $key: 5 }
+transformed.row({ index: 0 }) // { a: 12, $key: '5' }
+transformed.row({ key: '5' }) // { a: 12, $key: '5' }
 ```
 
-Automatically generated keys are always integers. Besides using automatically generated keys, it is also possible to use a column present in the data as custom key (see [setKey](#datacontainer_setkey)). When using a custom key, it is recommended to use a column with primitive values, like `quantitative` or `categorical` columns, containing respectively `Number`s and `String`s. Other types and objects like dates are possible too, since the key functionality internally uses a [Map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map). Beware, however, that a reference to the exact same (and not an equivalent) object must be used in this case to retrieve, update or delete rows.
+Automatically generated keys are always strings. Besides using automatically generated keys, it is also possible to use a column present in the data as custom key (see [setKey](#datacontainer_setkey)). When using a custom key, it is recommended to use a column with primitive values, like `quantitative` or `categorical` columns, containing respectively `Number`s and `String`s. Other types and objects like dates are possible too, since the key functionality internally uses a [Map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map). Beware, however, that a reference to the exact same (and not an equivalent) object must be used in this case to retrieve, update or delete rows.
 
 <a name="datacontainer_keys" href="#datacontainer_keys">#</a> <i>DataContainer</i>.<b>keys</b>()
 
@@ -149,7 +149,7 @@ Returns an array of keys:
 
 ```js
 const dataContainer = new DataContainer({ a: [100, 200, 300], b: ['a', 'b', 'c'] })
-dataContainer.keys() // [0, 1, 2]
+dataContainer.keys() // ['0', '1', '2']
 ```
 
 <a name="datacontainer_setkey" href="#datacontainer_setkey">#</a> <i>DataContainer</i>.<b>setKey</b>(columnName)
@@ -171,7 +171,7 @@ const dataContainer = new DataContainer({ a: [100, 200, 300], b: ['a', 'b', 'c']
 dataContainer.setKey('b')
 dataContainer.keys() // ['a', 'b', 'c']
 dataContainer.resetKeys()
-dataContainer.keys() [0, 1, 2]
+dataContainer.keys() ['0', '1', '2']
 ```
 
 Also works to reset keys after a transformation:
@@ -179,9 +179,9 @@ Also works to reset keys after a transformation:
 ```js
 const dataContainer = new DataContainer({ a: [2, 4, 6, 8, 10, 12, 14] })
 const transformed = dataContainer.filter(row => row.a > 10)
-transformed.keys() // [5, 6]
+transformed.keys() // ['5', '6']
 transformed.resetKey()
-transformed.keys() // [0, 1]
+transformed.keys() // ['0', '1']
 ```
 
 ### Accessing data
@@ -196,7 +196,7 @@ const dataContainer = new DataContainer([
   { fruit: 'banana', amount: 2 }
 ])
 
-dataContainer.data() // { fruit: ['apple', 'banana'], amount: [1, 2], $key: [0, 1] }
+dataContainer.data() // { fruit: ['apple', 'banana'], amount: [1, 2], $key: ['0', '1'] }
 ```
 
 <a name="datacontainer_row" href="#datacontainer_row">#</a> <i>DataContainer</i>.<b>row</b>(accessorObject)
@@ -205,7 +205,7 @@ Returns an object representing a row. `accessorObject` is either `{ index: <Numb
 
 ```js
 const dataContainer = new DataContainer({ fruit: ['apple', 'banana'], amount: [1, 2] })
-dataContainer.row({ index: 0 }) // { fruit: 'apple', amount: 1, $key: 0 }
+dataContainer.row({ index: 0 }) // { fruit: 'apple', amount: 1, $key: '0' }
 ```
 
 <a name="datacontainer_rows" href="#datacontainer_rows">#</a> <i>DataContainer</i>.<b>rows</b>()
@@ -216,8 +216,8 @@ Returns an `Array` of rows.
 const dataContainer = new DataContainer({ fruit: ['apple', 'banana'], amount: [1, 2] })
 dataContainer.rows() 
 /* [
- *   { fruit: 'apple', amount: 1, $key: 0 },
- *   { fruit: 'banana', amount: 2, $key: 1 },
+ *   { fruit: 'apple', amount: 1, $key: '0' },
+ *   { fruit: 'banana', amount: 2, $key: '1' },
  * ] 
  */
 ```
@@ -229,7 +229,7 @@ Returns a column as an `Array`.
 ```js
 const dataContainer = new DataContainer({ fruit: ['apple', 'banana'], amount: [1, 2] })
 dataContainer.column('fruit') // ['apple', 'banana']
-dataContainer.column('$key') // [0, 1]
+dataContainer.keys() // ['0', '1']
 ```
 
 <a name="datacontainer_map" href="#datacontainer_map">#</a> <i>DataContainer</i>.<b>map</b>(columnName, func)
@@ -346,7 +346,7 @@ const dataContainer = new DataContainer({
 })
 
 const withoutDayOfSale = dataContainer.select(['fruit', 'quantity'])
-withoutDayOfSale.data() // { fruit: ['apple', 'banana'], quantity: [1, 2], $key: [0, 1] }
+withoutDayOfSale.data() // { fruit: ['apple', 'banana'], quantity: [1, 2], $key: ['0', '1'] }
 ```
 
 <a name="datacontainer_rename" href="#datacontainer_rename">#</a> <i>DataContainer</i>.<b>rename</b>(renameInstructions)
@@ -365,7 +365,7 @@ renamed.column('fruit') // ['apple', 'banana']
 
 ```js
 const dataContainer = new DataContainer({ fruit: ['apple', 'banana'], amount: [1, 2] })
-dataContainer.filter(row => row.fruit !== 'banana').data() // { fruit: ['apple'], amount: [1] }
+dataContainer.filter(row => row.fruit !== 'banana').data() // { fruit: ['apple'], amount: [1], $key: ['0'] }
 ```
 
 <a name="datacontainer_dropna" href="#datacontainer_dropna">#</a> <i>DataContainer</i>.<b>dropNA</b>(dropNAInstructions)
@@ -373,7 +373,7 @@ dataContainer.filter(row => row.fruit !== 'banana').data() // { fruit: ['apple']
 `dropNA` is essentially a special case of `filter` that disposes of invalid values like `NaN`, `null` or `undefined`.
 `dropNAInstructions` can be 
 
-- nothing or something else that's falsy, in which case it will dispose of all rows in all columns that contain invalid values
+- nothing, in which case it will dispose of all rows in all columns that contain invalid values
 - a `String` value with a column name. All rows that have invalid values in this column will be removed
 - an `Array` of column names (`String`s). All rows that have invalid values in any of these columns will be removed
 
@@ -383,7 +383,7 @@ const dataContainer = new DataContainer(
 )
 
 dataContainer.dropNA().data() // { a: [4], b: [8], c: [12], $key: [3] }
-dataContainer.dropNA(['a', 'b']).data() // { a: [1, 4], b: [5, 8], c: [NaN, 12], $key: [0, 3] }
+dataContainer.dropNA(['a', 'b']).data() // { a: [1, 4], b: [5, 8], c: [NaN, 12], $key: ['0', '3'] }
 ```
 
 <a name="datacontainer_arrange" href="#datacontainer_arrange">#</a> <i>DataContainer</i>.<b>arrange</b>(arrangeInstructions)
@@ -405,7 +405,7 @@ arranged.data()
 /* {
  *   fruit: ['durian', 'coconut', 'coconut', 'banana', 'banana', 'apple']
  *   value: [2, 4, 7, 3, 5, 4],
- *   $key: [3, 4, 2, 1, 5, 0]
+ *   $key: ['3', '4', '2', '1', '5', '0']
  * } */
 ```
 
@@ -452,7 +452,7 @@ const dataContainer = new DataContainer(
 const binned = dataContainer.bin({ column: 'a', method: 'EqualInterval', numClasses: 3 })
 binned.column('bins') // [[1, 3], [3, 5], [5, 7]]
 binned.type('bins') // 'interval'
-binned.row(1).$grouped.rows() // [{ a: 3, b: 10, $key: 2 }, { a: 4, b: 11, $key: 3 }]
+binned.row(1).$grouped.rows() // [{ a: 3, b: 10, $key: '2' }, { a: 4, b: 11, $key: '3' }]
 ```
 
 Besides `'EqualInterval'`, other methods of classification are supported. Different methods might require different additional
@@ -500,8 +500,8 @@ When applying `summarise` to a grouped `DataContainer`, the summaries of the gro
 const dataContainer = new DataContainer({ a: [1, 2, 3, 4], b: ['a', 'b', 'a', 'b'] })
 const grouped = dataContainer.groupBy('b')
 
-dataContainer.summarise({ mean_a: { a: 'mean' }}).data() // { mean_a: [2.5], $key: [0] }
-grouped.summarise({ mean_a: { a: 'mean' } }).data() // { b: ['a', 'b'], mean_a: [2, 3], $key: [0, 1] }
+dataContainer.summarise({ mean_a: { a: 'mean' }}).data() // { mean_a: [2.5], $key: ['0'] }
+grouped.summarise({ mean_a: { a: 'mean' } }).data() // { b: ['a', 'b'], mean_a: [2, 3], $key: ['0', '1'] }
 ```
 
 The following `summaryMethod`s are available:
@@ -614,7 +614,7 @@ dataContainer.column('b') // ['a', 'b', 'c', 'd']
 
 <a name="datacontainer_updaterow" href="#datacontainer_updaterow">#</a> <i>DataContainer</i>.<b>updateRow</b>(accessorObject, row)
 
-Updates an existing row. `accessorObject` is either `{ index: <Number> }` or `{ key: <key value> }`.
+Updates an existing row. `accessorObject` is either `{ index: <Number> }` or `{ key: <key value> }` (see [keying](#keying)).
 
 ```js
 const dataContainer = new DataContainer({ a: [1, 2, 3], b: ['a', 'b', 'c'] })
@@ -666,7 +666,7 @@ Deletes an existing column.
 ```js
 const dataContainer = new DataContainer({ a: [1, 2, 3], b: ['a', 'b', 'c'] })
 dataContainer.deleteColumn('b')
-dataContainer.data() // { $key: [0, 1, 2], a: [1, 2, 3] }
+dataContainer.data() // { $key: ['0', '1', '2'], a: [1, 2, 3] }
 ```
 
 ### Classification

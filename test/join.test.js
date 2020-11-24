@@ -6,7 +6,7 @@ describe('join', () => {
     const right = new DataContainer({ c: [1, 2, 3], d: [4, 5, 6] })
 
     const expectedData = {
-      $key: [0, 1, 2],
+      $key: ['0', '1', '2'],
       a: [1, 2, 3],
       b: [4, 5, 6],
       c: [1, 2, 3],
@@ -39,7 +39,7 @@ describe('join', () => {
     const right = new DataContainer({ c: ['c', 'a', 'b'], d: [1, 2, 3] })
 
     const expectedData = {
-      $key: [0, 1, 2],
+      $key: ['0', '1', '2'],
       a: ['a', 'b', 'c'],
       b: [4, 5, 6],
       d: [2, 3, 1]
@@ -55,7 +55,7 @@ describe('join', () => {
     const right = new DataContainer({ c: ['a', 'b'], d: [100, 200] })
 
     const expectedData = {
-      $key: [0, 1, 2, 3],
+      $key: ['0', '1', '2', '3'],
       a: ['a', 'a', 'b', 'b'],
       b: [1, 2, 3, 4],
       d: [100, 100, 200, 200]
@@ -75,7 +75,7 @@ describe('join', () => {
     const right = new DataContainer({ a: ['c', 'a', 'b'], d: [1, 2, 3] })
 
     const expectedData = {
-      $key: [0, 1, 2],
+      $key: ['0', '1', '2'],
       a: ['a', 'b', 'c'],
       b: [4, 5, 6],
       d: [2, 3, 1]

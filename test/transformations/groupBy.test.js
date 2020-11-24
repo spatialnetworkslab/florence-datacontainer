@@ -9,7 +9,7 @@ describe('groupBy transformation', () => {
 
     const grouped = dataContainer.groupBy('b')
 
-    expect(grouped.keys()).toEqual([0, 1, 2])
+    expect(grouped.keys()).toEqual(['0', '1', '2'])
   })
 
   test('groupBy followed by summarise generates new keys', () => {
@@ -20,7 +20,7 @@ describe('groupBy transformation', () => {
 
     const summarised = dataContainer.groupBy('b').summarise({ sumA: { a: 'sum' } })
 
-    expect(summarised.keys()).toEqual([0, 1, 2])
+    expect(summarised.keys()).toEqual(['0', '1', '2'])
   })
 
   test('groupBy results in a new column of DataContainers', () => {

@@ -32,7 +32,7 @@ describe('custom key functionality', () => {
     dataContainer.setKey('b')
     dataContainer.resetKey()
 
-    expect(dataContainer.keys()).toEqual([0, 1, 2, 3, 4, 5])
+    expect(dataContainer.keys()).toEqual(['0', '1', '2', '3', '4', '5'])
   })
 
   test('accessing row with custom key works', () => {

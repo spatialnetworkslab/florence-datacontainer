@@ -14,7 +14,7 @@ describe('accessing rows', () => {
     const int = 2
     const str = '2'
     const none = undefined
-    const wrongObj = { index: 0, key: 2 }
+    const wrongObj = { index: 0, key: '2' }
     const wrongObj2 = { foo: 'bar' }
 
     expect(accessRow(int)).toThrow()
@@ -25,12 +25,12 @@ describe('accessing rows', () => {
   })
 
   test('row works with index', () => {
-    expect(dataContainer.row({ index: 2 })).toEqual({ a: 3, b: 'c', $key: 2 })
-    expect(filtered.row({ index: 2 })).toEqual({ a: 5, b: 'e', $key: 4 })
+    expect(dataContainer.row({ index: 2 })).toEqual({ a: 3, b: 'c', $key: '2' })
+    expect(filtered.row({ index: 2 })).toEqual({ a: 5, b: 'e', $key: '4' })
   })
 
   test('row works with key', () => {
-    expect(dataContainer.row({ key: 2 })).toEqual({ a: 3, b: 'c', $key: 2 })
-    expect(filtered.row({ key: 2 })).toEqual({ a: 3, b: 'c', $key: 2 })
+    expect(dataContainer.row({ key: '2' })).toEqual({ a: 3, b: 'c', $key: '2' })
+    expect(filtered.row({ key: '2' })).toEqual({ a: 3, b: 'c', $key: '2' })
   })
 })
