@@ -9,7 +9,7 @@ describe('modifying rows', () => {
 
     dataContainer.addRow({ a: 5, b: 'c' })
 
-    expect(dataContainer.row({ index: 4 })).toEqual({ a: 5, b: 'c', $key: 4 })
+    expect(dataContainer.row({ index: 4 })).toEqual({ a: 5, b: 'c', $key: '4' })
   })
 
   test('addRow with missing columns throws error', () => {
@@ -47,7 +47,7 @@ describe('modifying rows', () => {
       b: ['a', 'a', 'b', 'b']
     })
 
-    dataContainer.updateRow({ key: 2 }, { a: 5, b: 'c' })
+    dataContainer.updateRow({ key: '2' }, { a: 5, b: 'c' })
 
     expect(dataContainer.column('b')).toEqual(['a', 'a', 'c', 'b'])
   })
@@ -100,7 +100,7 @@ describe('modifying rows', () => {
       b: ['a', 'a', 'b', 'b']
     })
 
-    dataContainer.deleteRow({ key: 2 })
+    dataContainer.deleteRow({ key: '2' })
 
     expect(dataContainer.column('b')).toEqual(['a', 'a', 'b'])
   })

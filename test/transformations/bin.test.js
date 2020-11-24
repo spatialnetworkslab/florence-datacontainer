@@ -10,7 +10,7 @@ describe('bin transformation', () => {
 
     expect(binned.column('bins')).toEqual([[1, 3], [3, 5], [5, 7]])
     expect(binned.type('bins')).toBe('interval')
-    expect(binned.row({ index: 1 }).$grouped.rows()).toEqual([{ a: 3, b: 10, $key: 2 }, { a: 4, b: 11, $key: 3 }])
+    expect(binned.row({ index: 1 }).$grouped.rows()).toEqual([{ a: 3, b: 10, $key: '2' }, { a: 4, b: 11, $key: '3' }])
   })
 
   test('IntervalSize works', () => {
