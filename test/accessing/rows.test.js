@@ -30,7 +30,7 @@ describe('accessing rows', () => {
   })
 
   test('row works with key', () => {
-    expect(dataContainer.row({ key: 2 })).toEqual({ a: 3, b: 'c', $key: '2' })
-    expect(filtered.row({ key: 2 })).toEqual({ a: 3, b: 'c', $key: '2' })
+    expect(dataContainer.row({ key: '2' })).toEqual({ a: 3, b: 'c', $key: '2' })
+    expect(filtered.row({ key: '2' })).toEqual({ a: 3, b: 'c', $key: '2' })
   })
 })

@@ -4,6 +4,7 @@ import { ensureValidColumn, ensureColumnExists } from './utils/isValidColumn.js'
 import { updateDomain } from './utils/calculateDomain.js'
 import { getDataType } from './utils/getDataType.js'
 import getDataLength from './utils/getDataLength.js'
+import { incrementKey } from './utils/key.js'
 
 const methods = {
   // Rows
@@ -20,9 +21,7 @@ const methods = {
     const rowIndex = getDataLength(this._data) - 1
 
     if (!this._keyColumn) {
-      const keyDomain = this.domain('$key')
-      keyDomain[1]++
-      const key = keyDomain[1]
+      const key = incrementKey(this._data.$key)
 
       this._data.$key.push(key)
       this._keyToRowIndex.set(key, rowIndex)

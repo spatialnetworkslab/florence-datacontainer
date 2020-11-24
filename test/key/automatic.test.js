@@ -7,7 +7,7 @@ describe('automatic key generation', () => {
 
     expect(dataContainer.keys()).toEqual(['0', '1', '2', '3', '4', '5', '6'])
     expect(transformed.keys()).toEqual(['5', '6'])
-    expect(dataContainer.row({ key: 5 })).toEqual({ a: 12, $key: '5' })
+    expect(dataContainer.row({ key: '5' })).toEqual({ a: 12, $key: '5' })
   })
 
   test('works as expected with arrange', () => {
