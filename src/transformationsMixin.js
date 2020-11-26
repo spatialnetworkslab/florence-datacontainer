@@ -53,7 +53,7 @@ const methods = {
   },
 
   pivotWider (pivotInstructions) {
-    const data = transformations.pivotWider(this_data, pivotInstructions)
+    const data = transformations.pivotWider(this._data, pivotInstructions)
     return new DataContainer(data, { validate: false })
   },
 
