@@ -123,6 +123,13 @@ export default class DataContainer {
     return columnExists(columnName, this)
   }
 
+  hasRow (accessorObject) {
+    const rowIndex = this._rowIndex(accessorObject)
+    const length = this.nrow()
+
+    return typeof rowIndex !== 'undefined' && rowIndex < length && rowIndex >= 0
+  }
+
   columnIsValid (columnName) {
     const column = this.column(columnName)
     return isValidColumn(column, columnName)

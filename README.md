@@ -298,7 +298,11 @@ Some convenience functions to check data during development.
 
 <a name="datacontainer_hascolumn" href="#datacontainer_hascolumn">#</a> <i>DataContainer</i>.<b>hasColumn</b>(columnName)
 
-Check if the `DataContainer` has a column.
+Checks if the `DataContainer` has a column.
+
+<a name="datacontainer_hasrow" href="datacontainer_hasrow">#</a> <i>DataContainer</i>.<b>hasRow</b>(accessorObject)
+
+Checks if the `DataContainer` has a row. See [.row](#datacontainer_row) for an explanation of the `accessorObject`.
 
 ```js
 const dataContainer = new DataContainer({ a: [1, 2, 3, 4] })

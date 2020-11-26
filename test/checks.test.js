@@ -24,4 +24,20 @@ describe('checks', () => {
 
     expect(() => dataContainer.validateColumn('b')).toThrow()
   })
+
+  test('hasRow returns true if row exists', () => {
+    const dataContainer = new DataContainer({ a: ['a', 'b', 'c'] })
+    dataContainer.setKey('a')
+
+    expect(dataContainer.hasRow({ index: 1 })).toBe(true)
+    expect(dataContainer.hasRow({ key: 'b' })).toBe(true)
+  })
+
+  test('hasRow returns false if row does not exist', () => {
+    const dataContainer = new DataContainer({ a: ['a', 'b', 'c'] })
+    dataContainer.setKey('a')
+
+    expect(dataContainer.hasRow({ index: 4 })).toBe(false)
+    expect(dataContainer.hasRow({ key: 'd' })).toBe(false)
+  })
 })
