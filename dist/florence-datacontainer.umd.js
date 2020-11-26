@@ -175,7 +175,7 @@
   }
 
   function generateKeyColumn (length) {
-    return new Array(length).fill(0).map((_, i) => i)
+    return new Array(length).fill(0).map((_, i) => i.toString())
   }
 
   function validateKeyColumn (keyColumn, requiredLength) {
@@ -190,6 +190,19 @@
     if (keyColumn.length !== new Set(keyColumn).size) {
       throw new Error('Keys must be unique')
     }
+  }
+
+  function incrementKey (keyColumn) {
+    let max = -Infinity;
+
+    for (let i = 0; i < keyColumn.length; i++) {
+      const keyInt = +keyColumn[i];
+      max = keyInt > max ? keyInt : max;
+    }
+
+    max++;
+
+    return max.toString()
   }
 
   function getDataLength (data) {
@@ -2247,6 +2260,1748 @@
     }
   }
 
+  function _isPlaceholder(a) {
+    return a != null && typeof a === 'object' && a['@@functional/placeholder'] === true;
+  }
+
+  /**
+   * Optimized internal one-arity curry function.
+   *
+   * @private
+   * @category Function
+   * @param {Function} fn The function to curry.
+   * @return {Function} The curried function.
+   */
+
+  function _curry1(fn) {
+    return function f1(a) {
+      if (arguments.length === 0 || _isPlaceholder(a)) {
+        return f1;
+      } else {
+        return fn.apply(this, arguments);
+      }
+    };
+  }
+
+  /**
+   * Optimized internal two-arity curry function.
+   *
+   * @private
+   * @category Function
+   * @param {Function} fn The function to curry.
+   * @return {Function} The curried function.
+   */
+
+  function _curry2(fn) {
+    return function f2(a, b) {
+      switch (arguments.length) {
+        case 0:
+          return f2;
+
+        case 1:
+          return _isPlaceholder(a) ? f2 : _curry1(function (_b) {
+            return fn(a, _b);
+          });
+
+        default:
+          return _isPlaceholder(a) && _isPlaceholder(b) ? f2 : _isPlaceholder(a) ? _curry1(function (_a) {
+            return fn(_a, b);
+          }) : _isPlaceholder(b) ? _curry1(function (_b) {
+            return fn(a, _b);
+          }) : fn(a, b);
+      }
+    };
+  }
+
+  function _arity(n, fn) {
+    /* eslint-disable no-unused-vars */
+    switch (n) {
+      case 0:
+        return function () {
+          return fn.apply(this, arguments);
+        };
+
+      case 1:
+        return function (a0) {
+          return fn.apply(this, arguments);
+        };
+
+      case 2:
+        return function (a0, a1) {
+          return fn.apply(this, arguments);
+        };
+
+      case 3:
+        return function (a0, a1, a2) {
+          return fn.apply(this, arguments);
+        };
+
+      case 4:
+        return function (a0, a1, a2, a3) {
+          return fn.apply(this, arguments);
+        };
+
+      case 5:
+        return function (a0, a1, a2, a3, a4) {
+          return fn.apply(this, arguments);
+        };
+
+      case 6:
+        return function (a0, a1, a2, a3, a4, a5) {
+          return fn.apply(this, arguments);
+        };
+
+      case 7:
+        return function (a0, a1, a2, a3, a4, a5, a6) {
+          return fn.apply(this, arguments);
+        };
+
+      case 8:
+        return function (a0, a1, a2, a3, a4, a5, a6, a7) {
+          return fn.apply(this, arguments);
+        };
+
+      case 9:
+        return function (a0, a1, a2, a3, a4, a5, a6, a7, a8) {
+          return fn.apply(this, arguments);
+        };
+
+      case 10:
+        return function (a0, a1, a2, a3, a4, a5, a6, a7, a8, a9) {
+          return fn.apply(this, arguments);
+        };
+
+      default:
+        throw new Error('First argument to _arity must be a non-negative integer no greater than ten');
+    }
+  }
+
+  /**
+   * Internal curryN function.
+   *
+   * @private
+   * @category Function
+   * @param {Number} length The arity of the curried function.
+   * @param {Array} received An array of arguments received thus far.
+   * @param {Function} fn The function to curry.
+   * @return {Function} The curried function.
+   */
+
+  function _curryN(length, received, fn) {
+    return function () {
+      var combined = [];
+      var argsIdx = 0;
+      var left = length;
+      var combinedIdx = 0;
+
+      while (combinedIdx < received.length || argsIdx < arguments.length) {
+        var result;
+
+        if (combinedIdx < received.length && (!_isPlaceholder(received[combinedIdx]) || argsIdx >= arguments.length)) {
+          result = received[combinedIdx];
+        } else {
+          result = arguments[argsIdx];
+          argsIdx += 1;
+        }
+
+        combined[combinedIdx] = result;
+
+        if (!_isPlaceholder(result)) {
+          left -= 1;
+        }
+
+        combinedIdx += 1;
+      }
+
+      return left <= 0 ? fn.apply(this, combined) : _arity(left, _curryN(length, combined, fn));
+    };
+  }
+
+  /**
+   * Returns a curried equivalent of the provided function, with the specified
+   * arity. The curried function has two unusual capabilities. First, its
+   * arguments needn't be provided one at a time. If `g` is `R.curryN(3, f)`, the
+   * following are equivalent:
+   *
+   *   - `g(1)(2)(3)`
+   *   - `g(1)(2, 3)`
+   *   - `g(1, 2)(3)`
+   *   - `g(1, 2, 3)`
+   *
+   * Secondly, the special placeholder value [`R.__`](#__) may be used to specify
+   * "gaps", allowing partial application of any combination of arguments,
+   * regardless of their positions. If `g` is as above and `_` is [`R.__`](#__),
+   * the following are equivalent:
+   *
+   *   - `g(1, 2, 3)`
+   *   - `g(_, 2, 3)(1)`
+   *   - `g(_, _, 3)(1)(2)`
+   *   - `g(_, _, 3)(1, 2)`
+   *   - `g(_, 2)(1)(3)`
+   *   - `g(_, 2)(1, 3)`
+   *   - `g(_, 2)(_, 3)(1)`
+   *
+   * @func
+   * @memberOf R
+   * @since v0.5.0
+   * @category Function
+   * @sig Number -> (* -> a) -> (* -> a)
+   * @param {Number} length The arity for the returned function.
+   * @param {Function} fn The function to curry.
+   * @return {Function} A new, curried function.
+   * @see R.curry
+   * @example
+   *
+   *      const sumArgs = (...args) => R.sum(args);
+   *
+   *      const curriedAddFourNumbers = R.curryN(4, sumArgs);
+   *      const f = curriedAddFourNumbers(1, 2);
+   *      const g = f(3);
+   *      g(4); //=> 10
+   */
+
+  var curryN =
+  /*#__PURE__*/
+  _curry2(function curryN(length, fn) {
+    if (length === 1) {
+      return _curry1(fn);
+    }
+
+    return _arity(length, _curryN(length, [], fn));
+  });
+
+  /**
+   * Optimized internal three-arity curry function.
+   *
+   * @private
+   * @category Function
+   * @param {Function} fn The function to curry.
+   * @return {Function} The curried function.
+   */
+
+  function _curry3(fn) {
+    return function f3(a, b, c) {
+      switch (arguments.length) {
+        case 0:
+          return f3;
+
+        case 1:
+          return _isPlaceholder(a) ? f3 : _curry2(function (_b, _c) {
+            return fn(a, _b, _c);
+          });
+
+        case 2:
+          return _isPlaceholder(a) && _isPlaceholder(b) ? f3 : _isPlaceholder(a) ? _curry2(function (_a, _c) {
+            return fn(_a, b, _c);
+          }) : _isPlaceholder(b) ? _curry2(function (_b, _c) {
+            return fn(a, _b, _c);
+          }) : _curry1(function (_c) {
+            return fn(a, b, _c);
+          });
+
+        default:
+          return _isPlaceholder(a) && _isPlaceholder(b) && _isPlaceholder(c) ? f3 : _isPlaceholder(a) && _isPlaceholder(b) ? _curry2(function (_a, _b) {
+            return fn(_a, _b, c);
+          }) : _isPlaceholder(a) && _isPlaceholder(c) ? _curry2(function (_a, _c) {
+            return fn(_a, b, _c);
+          }) : _isPlaceholder(b) && _isPlaceholder(c) ? _curry2(function (_b, _c) {
+            return fn(a, _b, _c);
+          }) : _isPlaceholder(a) ? _curry1(function (_a) {
+            return fn(_a, b, c);
+          }) : _isPlaceholder(b) ? _curry1(function (_b) {
+            return fn(a, _b, c);
+          }) : _isPlaceholder(c) ? _curry1(function (_c) {
+            return fn(a, b, _c);
+          }) : fn(a, b, c);
+      }
+    };
+  }
+
+  /**
+   * Tests whether or not an object is an array.
+   *
+   * @private
+   * @param {*} val The object to test.
+   * @return {Boolean} `true` if `val` is an array, `false` otherwise.
+   * @example
+   *
+   *      _isArray([]); //=> true
+   *      _isArray(null); //=> false
+   *      _isArray({}); //=> false
+   */
+  var _isArray = Array.isArray || function _isArray(val) {
+    return val != null && val.length >= 0 && Object.prototype.toString.call(val) === '[object Array]';
+  };
+
+  function _isTransformer(obj) {
+    return obj != null && typeof obj['@@transducer/step'] === 'function';
+  }
+
+  function _isString(x) {
+    return Object.prototype.toString.call(x) === '[object String]';
+  }
+
+  /**
+   * Tests whether or not an object is similar to an array.
+   *
+   * @private
+   * @category Type
+   * @category List
+   * @sig * -> Boolean
+   * @param {*} x The object to test.
+   * @return {Boolean} `true` if `x` has a numeric length property and extreme indices defined; `false` otherwise.
+   * @example
+   *
+   *      _isArrayLike([]); //=> true
+   *      _isArrayLike(true); //=> false
+   *      _isArrayLike({}); //=> false
+   *      _isArrayLike({length: 10}); //=> false
+   *      _isArrayLike({0: 'zero', 9: 'nine', length: 10}); //=> true
+   */
+
+  var _isArrayLike =
+  /*#__PURE__*/
+  _curry1(function isArrayLike(x) {
+    if (_isArray(x)) {
+      return true;
+    }
+
+    if (!x) {
+      return false;
+    }
+
+    if (typeof x !== 'object') {
+      return false;
+    }
+
+    if (_isString(x)) {
+      return false;
+    }
+
+    if (x.nodeType === 1) {
+      return !!x.length;
+    }
+
+    if (x.length === 0) {
+      return true;
+    }
+
+    if (x.length > 0) {
+      return x.hasOwnProperty(0) && x.hasOwnProperty(x.length - 1);
+    }
+
+    return false;
+  });
+
+  var XWrap =
+  /*#__PURE__*/
+  function () {
+    function XWrap(fn) {
+      this.f = fn;
+    }
+
+    XWrap.prototype['@@transducer/init'] = function () {
+      throw new Error('init not implemented on XWrap');
+    };
+
+    XWrap.prototype['@@transducer/result'] = function (acc) {
+      return acc;
+    };
+
+    XWrap.prototype['@@transducer/step'] = function (acc, x) {
+      return this.f(acc, x);
+    };
+
+    return XWrap;
+  }();
+
+  function _xwrap(fn) {
+    return new XWrap(fn);
+  }
+
+  /**
+   * Creates a function that is bound to a context.
+   * Note: `R.bind` does not provide the additional argument-binding capabilities of
+   * [Function.prototype.bind](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind).
+   *
+   * @func
+   * @memberOf R
+   * @since v0.6.0
+   * @category Function
+   * @category Object
+   * @sig (* -> *) -> {*} -> (* -> *)
+   * @param {Function} fn The function to bind to context
+   * @param {Object} thisObj The context to bind `fn` to
+   * @return {Function} A function that will execute in the context of `thisObj`.
+   * @see R.partial
+   * @example
+   *
+   *      const log = R.bind(console.log, console);
+   *      R.pipe(R.assoc('a', 2), R.tap(log), R.assoc('a', 3))({a: 1}); //=> {a: 3}
+   *      // logs {a: 2}
+   * @symb R.bind(f, o)(a, b) = f.call(o, a, b)
+   */
+
+  var bind =
+  /*#__PURE__*/
+  _curry2(function bind(fn, thisObj) {
+    return _arity(fn.length, function () {
+      return fn.apply(thisObj, arguments);
+    });
+  });
+
+  function _arrayReduce(xf, acc, list) {
+    var idx = 0;
+    var len = list.length;
+
+    while (idx < len) {
+      acc = xf['@@transducer/step'](acc, list[idx]);
+
+      if (acc && acc['@@transducer/reduced']) {
+        acc = acc['@@transducer/value'];
+        break;
+      }
+
+      idx += 1;
+    }
+
+    return xf['@@transducer/result'](acc);
+  }
+
+  function _iterableReduce(xf, acc, iter) {
+    var step = iter.next();
+
+    while (!step.done) {
+      acc = xf['@@transducer/step'](acc, step.value);
+
+      if (acc && acc['@@transducer/reduced']) {
+        acc = acc['@@transducer/value'];
+        break;
+      }
+
+      step = iter.next();
+    }
+
+    return xf['@@transducer/result'](acc);
+  }
+
+  function _methodReduce(xf, acc, obj, methodName) {
+    return xf['@@transducer/result'](obj[methodName](bind(xf['@@transducer/step'], xf), acc));
+  }
+
+  var symIterator = typeof Symbol !== 'undefined' ? Symbol.iterator : '@@iterator';
+  function _reduce(fn, acc, list) {
+    if (typeof fn === 'function') {
+      fn = _xwrap(fn);
+    }
+
+    if (_isArrayLike(list)) {
+      return _arrayReduce(fn, acc, list);
+    }
+
+    if (typeof list['fantasy-land/reduce'] === 'function') {
+      return _methodReduce(fn, acc, list, 'fantasy-land/reduce');
+    }
+
+    if (list[symIterator] != null) {
+      return _iterableReduce(fn, acc, list[symIterator]());
+    }
+
+    if (typeof list.next === 'function') {
+      return _iterableReduce(fn, acc, list);
+    }
+
+    if (typeof list.reduce === 'function') {
+      return _methodReduce(fn, acc, list, 'reduce');
+    }
+
+    throw new TypeError('reduce: list must be array or iterable');
+  }
+
+  function _has(prop, obj) {
+    return Object.prototype.hasOwnProperty.call(obj, prop);
+  }
+
+  /**
+   * Returns a single item by iterating through the list, successively calling
+   * the iterator function and passing it an accumulator value and the current
+   * value from the array, and then passing the result to the next call.
+   *
+   * The iterator function receives two values: *(acc, value)*. It may use
+   * [`R.reduced`](#reduced) to shortcut the iteration.
+   *
+   * The arguments' order of [`reduceRight`](#reduceRight)'s iterator function
+   * is *(value, acc)*.
+   *
+   * Note: `R.reduce` does not skip deleted or unassigned indices (sparse
+   * arrays), unlike the native `Array.prototype.reduce` method. For more details
+   * on this behavior, see:
+   * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce#Description
+   *
+   * Dispatches to the `reduce` method of the third argument, if present. When
+   * doing so, it is up to the user to handle the [`R.reduced`](#reduced)
+   * shortcuting, as this is not implemented by `reduce`.
+   *
+   * @func
+   * @memberOf R
+   * @since v0.1.0
+   * @category List
+   * @sig ((a, b) -> a) -> a -> [b] -> a
+   * @param {Function} fn The iterator function. Receives two values, the accumulator and the
+   *        current element from the array.
+   * @param {*} acc The accumulator value.
+   * @param {Array} list The list to iterate over.
+   * @return {*} The final, accumulated value.
+   * @see R.reduced, R.addIndex, R.reduceRight
+   * @example
+   *
+   *      R.reduce(R.subtract, 0, [1, 2, 3, 4]) // => ((((0 - 1) - 2) - 3) - 4) = -10
+   *      //          -               -10
+   *      //         / \              / \
+   *      //        -   4           -6   4
+   *      //       / \              / \
+   *      //      -   3   ==>     -3   3
+   *      //     / \              / \
+   *      //    -   2           -1   2
+   *      //   / \              / \
+   *      //  0   1            0   1
+   *
+   * @symb R.reduce(f, a, [b, c, d]) = f(f(f(a, b), c), d)
+   */
+
+  var reduce =
+  /*#__PURE__*/
+  _curry3(_reduce);
+
+  function _cloneRegExp(pattern) {
+    return new RegExp(pattern.source, (pattern.global ? 'g' : '') + (pattern.ignoreCase ? 'i' : '') + (pattern.multiline ? 'm' : '') + (pattern.sticky ? 'y' : '') + (pattern.unicode ? 'u' : ''));
+  }
+
+  /**
+   * Gives a single-word string description of the (native) type of a value,
+   * returning such answers as 'Object', 'Number', 'Array', or 'Null'. Does not
+   * attempt to distinguish user Object types any further, reporting them all as
+   * 'Object'.
+   *
+   * @func
+   * @memberOf R
+   * @since v0.8.0
+   * @category Type
+   * @sig (* -> {*}) -> String
+   * @param {*} val The value to test
+   * @return {String}
+   * @example
+   *
+   *      R.type({}); //=> "Object"
+   *      R.type(1); //=> "Number"
+   *      R.type(false); //=> "Boolean"
+   *      R.type('s'); //=> "String"
+   *      R.type(null); //=> "Null"
+   *      R.type([]); //=> "Array"
+   *      R.type(/[A-z]/); //=> "RegExp"
+   *      R.type(() => {}); //=> "Function"
+   *      R.type(undefined); //=> "Undefined"
+   */
+
+  var type =
+  /*#__PURE__*/
+  _curry1(function type(val) {
+    return val === null ? 'Null' : val === undefined ? 'Undefined' : Object.prototype.toString.call(val).slice(8, -1);
+  });
+
+  /**
+   * Copies an object.
+   *
+   * @private
+   * @param {*} value The value to be copied
+   * @param {Array} refFrom Array containing the source references
+   * @param {Array} refTo Array containing the copied source references
+   * @param {Boolean} deep Whether or not to perform deep cloning.
+   * @return {*} The copied value.
+   */
+
+  function _clone(value, refFrom, refTo, deep) {
+    var copy = function copy(copiedValue) {
+      var len = refFrom.length;
+      var idx = 0;
+
+      while (idx < len) {
+        if (value === refFrom[idx]) {
+          return refTo[idx];
+        }
+
+        idx += 1;
+      }
+
+      refFrom[idx + 1] = value;
+      refTo[idx + 1] = copiedValue;
+
+      for (var key in value) {
+        copiedValue[key] = deep ? _clone(value[key], refFrom, refTo, true) : value[key];
+      }
+
+      return copiedValue;
+    };
+
+    switch (type(value)) {
+      case 'Object':
+        return copy({});
+
+      case 'Array':
+        return copy([]);
+
+      case 'Date':
+        return new Date(value.valueOf());
+
+      case 'RegExp':
+        return _cloneRegExp(value);
+
+      default:
+        return value;
+    }
+  }
+
+  function _identity(x) {
+    return x;
+  }
+
+  /**
+   * A function that does nothing but return the parameter supplied to it. Good
+   * as a default or placeholder function.
+   *
+   * @func
+   * @memberOf R
+   * @since v0.1.0
+   * @category Function
+   * @sig a -> a
+   * @param {*} x The value to return.
+   * @return {*} The input value, `x`.
+   * @example
+   *
+   *      R.identity(1); //=> 1
+   *
+   *      const obj = {};
+   *      R.identity(obj) === obj; //=> true
+   * @symb R.identity(a) = a
+   */
+
+  var identity =
+  /*#__PURE__*/
+  _curry1(_identity);
+
+  function _objectAssign(target) {
+    if (target == null) {
+      throw new TypeError('Cannot convert undefined or null to object');
+    }
+
+    var output = Object(target);
+    var idx = 1;
+    var length = arguments.length;
+
+    while (idx < length) {
+      var source = arguments[idx];
+
+      if (source != null) {
+        for (var nextKey in source) {
+          if (_has(nextKey, source)) {
+            output[nextKey] = source[nextKey];
+          }
+        }
+      }
+
+      idx += 1;
+    }
+
+    return output;
+  }
+
+  var _objectAssign$1 = typeof Object.assign === 'function' ? Object.assign : _objectAssign;
+
+  /**
+   * Creates an object containing a single key:value pair.
+   *
+   * @func
+   * @memberOf R
+   * @since v0.18.0
+   * @category Object
+   * @sig String -> a -> {String:a}
+   * @param {String} key
+   * @param {*} val
+   * @return {Object}
+   * @see R.pair
+   * @example
+   *
+   *      const matchPhrases = R.compose(
+   *        R.objOf('must'),
+   *        R.map(R.objOf('match_phrase'))
+   *      );
+   *      matchPhrases(['foo', 'bar', 'baz']); //=> {must: [{match_phrase: 'foo'}, {match_phrase: 'bar'}, {match_phrase: 'baz'}]}
+   */
+
+  var objOf =
+  /*#__PURE__*/
+  _curry2(function objOf(key, val) {
+    var obj = {};
+    obj[key] = val;
+    return obj;
+  });
+
+  var _stepCatArray = {
+    '@@transducer/init': Array,
+    '@@transducer/step': function (xs, x) {
+      xs.push(x);
+      return xs;
+    },
+    '@@transducer/result': _identity
+  };
+  var _stepCatString = {
+    '@@transducer/init': String,
+    '@@transducer/step': function (a, b) {
+      return a + b;
+    },
+    '@@transducer/result': _identity
+  };
+  var _stepCatObject = {
+    '@@transducer/init': Object,
+    '@@transducer/step': function (result, input) {
+      return _objectAssign$1(result, _isArrayLike(input) ? objOf(input[0], input[1]) : input);
+    },
+    '@@transducer/result': _identity
+  };
+  function _stepCat(obj) {
+    if (_isTransformer(obj)) {
+      return obj;
+    }
+
+    if (_isArrayLike(obj)) {
+      return _stepCatArray;
+    }
+
+    if (typeof obj === 'string') {
+      return _stepCatString;
+    }
+
+    if (typeof obj === 'object') {
+      return _stepCatObject;
+    }
+
+    throw new Error('Cannot create transformer for ' + obj);
+  }
+
+  /**
+   * Transforms the items of the list with the transducer and appends the
+   * transformed items to the accumulator using an appropriate iterator function
+   * based on the accumulator type.
+   *
+   * The accumulator can be an array, string, object or a transformer. Iterated
+   * items will be appended to arrays and concatenated to strings. Objects will
+   * be merged directly or 2-item arrays will be merged as key, value pairs.
+   *
+   * The accumulator can also be a transformer object that provides a 2-arity
+   * reducing iterator function, step, 0-arity initial value function, init, and
+   * 1-arity result extraction function result. The step function is used as the
+   * iterator function in reduce. The result function is used to convert the
+   * final accumulator into the return type and in most cases is R.identity. The
+   * init function is used to provide the initial accumulator.
+   *
+   * The iteration is performed with [`R.reduce`](#reduce) after initializing the
+   * transducer.
+   *
+   * @func
+   * @memberOf R
+   * @since v0.12.0
+   * @category List
+   * @sig a -> (b -> b) -> [c] -> a
+   * @param {*} acc The initial accumulator value.
+   * @param {Function} xf The transducer function. Receives a transformer and returns a transformer.
+   * @param {Array} list The list to iterate over.
+   * @return {*} The final, accumulated value.
+   * @see R.transduce
+   * @example
+   *
+   *      const numbers = [1, 2, 3, 4];
+   *      const transducer = R.compose(R.map(R.add(1)), R.take(2));
+   *
+   *      R.into([], transducer, numbers); //=> [2, 3]
+   *
+   *      const intoArray = R.into([]);
+   *      intoArray(transducer, numbers); //=> [2, 3]
+   */
+
+  var into =
+  /*#__PURE__*/
+  _curry3(function into(acc, xf, list) {
+    return _isTransformer(acc) ? _reduce(xf(acc), acc['@@transducer/init'](), list) : _reduce(xf(_stepCat(acc)), _clone(acc, [], [], false), list);
+  });
+
+  function accumulator () {
+    return new ColumnOrientedAccumulator()
+  }
+
+  function ColumnOrientedAccumulator () {
+    this['@@transducer/step'] = this._initStep;
+  }
+
+  ColumnOrientedAccumulator.prototype['@@transducer/init'] = () => ({});
+  ColumnOrientedAccumulator.prototype['@@transducer/result'] = identity;
+  ColumnOrientedAccumulator.prototype._initStep = _initStep;
+  ColumnOrientedAccumulator.prototype._step = _step;
+
+  function _initStep (acc, row) {
+    for (const columnName in row) {
+      acc[columnName] = [row[columnName]];
+    }
+
+    this['@@transducer/step'] = this._step;
+
+    return acc
+  }
+
+  function _step (acc, row) {
+    for (const columnName in row) {
+      acc[columnName].push(row[columnName]);
+    }
+
+    return acc
+  }
+
+  const REDUCABLE = Symbol('Reducable');
+
+  // Adapted from ramda: https://github.com/ramda/ramda
+  var _isArray$1 = Array.isArray || function _isArray (val) {
+    return (val != null &&
+            val.length >= 0 &&
+            Object.prototype.toString.call(val) === '[object Array]')
+  };
+
+  function _isString$1 (x) {
+    return Object.prototype.toString.call(x) === '[object String]'
+  }
+
+  // Adapted from ramda: https://github.com/ramda/ramda
+
+  const _isArrayLike$1 = curryN(1, function isArrayLike (x) {
+    if (_isArray$1(x)) { return true }
+    if (!x) { return false }
+    if (typeof x !== 'object') { return false }
+    if (_isString$1(x)) { return false }
+    if (x.length === 0) { return true }
+    if (x.length > 0) {
+      return 0 in x && (x.length - 1) in x
+    }
+    return false
+  });
+
+  function _isTransformer$1 (obj) {
+    return obj != null && typeof obj['@@transducer/step'] === 'function'
+  }
+
+  // Adapted from ramda: https://github.com/ramda/ramda
+
+  function _dispatchable (methodNames, transducerCreator, fn) {
+    return function () {
+      if (arguments.length === 0) {
+        return fn()
+      }
+      const obj = arguments[arguments.length - 1];
+
+      if (!_isArray$1(obj)) {
+        let idx = 0;
+        while (idx < methodNames.length) {
+          if (typeof obj[methodNames[idx]] === 'function') {
+            return obj[methodNames[idx]].apply(obj, Array.prototype.slice.call(arguments, 0, -1))
+          }
+          idx += 1;
+        }
+        if (_isTransformer$1(obj)) {
+          var transducer = transducerCreator.apply(null, Array.prototype.slice.call(arguments, 0, -1));
+          return transducer(obj)
+        }
+      }
+      return fn.apply(this, arguments)
+    }
+  }
+
+  var _xfBase = {
+    init: function () {
+      return this.xf['@@transducer/init']()
+    },
+    result: function (result) {
+      return this.xf['@@transducer/result'](result)
+    }
+  };
+
+  const _xarrange = curryN(2, function _xarrange (arrangeInstructions, xf) {
+    return new XArrange(arrangeInstructions, xf)
+  });
+
+  const arrange$1 = curryN(2, _dispatchable([], _xarrange,
+    function (arrangeInstructions, df) {
+      return into(
+        [],
+        arrange$1(arrangeInstructions),
+        df
+      )
+    }
+  ));
+
+  function XArrange (arrangeInstructions, xf) {
+    this.arrangeFn = arrangeInstructions.constructor === Function
+      ? arrangeInstructions
+      : _combineArrangeFns(arrangeInstructions);
+
+    this.rows = [];
+    this.xf = xf;
+  }
+
+  XArrange.prototype['@@transducer/init'] = _xfBase.init;
+  XArrange.prototype['@@transducer/result'] = function () {
+    this.rows.sort(this.arrangeFn);
+
+    return this.xf['@@transducer/result'](reduce(
+      this.xf['@@transducer/step'].bind(this.xf),
+      this.xf['@@transducer/init'](),
+      this.rows
+    ))
+  };
+  XArrange.prototype['@@transducer/step'] = function (acc, row) {
+    this.rows.push(row);
+  };
+
+  function _combineArrangeFns (arrangeFns) {
+    return function (a, b) {
+      for (let i = 0; i < arrangeFns.length; i++) {
+        const res = arrangeFns[i](a, b);
+        if (res) return res
+      }
+
+      return -1
+    }
+  }
+
+  function _reduceObjVals (step, acc, obj) {
+    for (const key in obj) {
+      const val = obj[key];
+
+      acc = step(acc, val);
+
+      if (acc && acc['@@transducer/reduced']) {
+        acc = acc['@@transducer/value'];
+        break
+      }
+    }
+
+    return acc
+  }
+
+  function _idFromCols (row, idCols, sep = '@') {
+    let id = sep;
+
+    for (let i = 0; i < idCols.length; i++) {
+      id += row[idCols[i]] + sep;
+    }
+
+    return id
+  }
+
+  const _xsummariseByReducable = (summariseFn, by, xf) => {
+    return new XSummariseByReducable(summariseFn, by, xf)
+  };
+
+  function XSummariseByReducable (summariseFn, by, xf) {
+    this.instructions = _getReducableInstructions(summariseFn);
+    this.by = by;
+    this.xf = xf;
+
+    this.summarizedDataById = {};
+  }
+
+  function _getReducableInstructions (f) {
+    const columnProxy = new Proxy({}, { get (_, prop) { return prop } });
+    return f(columnProxy)
+  }
+
+  XSummariseByReducable.prototype['@@transducer/init'] = _xfBase.init;
+  XSummariseByReducable.prototype['@@transducer/result'] = _result;
+  XSummariseByReducable.prototype['@@transducer/step'] = _step$2;
+  XSummariseByReducable.prototype._finalStep = _finalStep;
+
+  function _result () {
+    return this.xf['@@transducer/result'](_reduceObjVals(
+      this._finalStep.bind(this),
+      this.xf['@@transducer/init'](),
+      this.summarizedDataById
+    ))
+  }
+
+  function _step$2 (acc, row) {
+    const id = _idFromCols(row, this.by);
+    const newId = !(id in this.summarizedDataById);
+
+    if (newId) {
+      this.summarizedDataById[id] = _initSummaryGroup(
+        this.instructions,
+        row,
+        this.by
+      );
+    }
+
+    this.summarizedDataById[id] = _updateSummaryGroup(
+      this.summarizedDataById[id],
+      this.instructions,
+      row
+    );
+
+    return acc
+  }
+
+  function _finalStep (acc, row) {
+    for (const newColumnName in this.instructions) {
+      row[newColumnName] = this
+        .instructions[newColumnName]
+        .xf['@@transducer/result'](row[newColumnName]);
+    }
+
+    return this.xf['@@transducer/step'](acc, row)
+  }
+
+  function _initSummaryGroup (instructions, row, by) {
+    const summaryGroup = {};
+
+    for (const newColumnName in instructions) {
+      const instruction = instructions[newColumnName];
+      summaryGroup[newColumnName] = instruction.xf['@@transducer/init']();
+    }
+
+    for (let i = 0; i < by.length; i++) {
+      const byCol = by[i];
+      summaryGroup[byCol] = row[byCol];
+    }
+
+    return summaryGroup
+  }
+
+  function _updateSummaryGroup (summaryGroup, instructions, row) {
+    for (const newColumnName in instructions) {
+      const instruction = instructions[newColumnName];
+
+      summaryGroup[newColumnName] = instruction.xf['@@transducer/step'](
+        summaryGroup[newColumnName],
+        row[instruction.column]
+      );
+    }
+
+    return summaryGroup
+  }
+
+  const _stepCatArray$1 = {
+    '@@transducer/init': Array,
+    '@@transducer/step': function (xs, x) {
+      xs.push(x);
+      return xs
+    },
+    '@@transducer/result': identity
+  };
+
+  const _stepCatString$1 = {
+    '@@transducer/init': String,
+    '@@transducer/step': function (a, b) { return a + b },
+    '@@transducer/result': identity
+  };
+
+  const _stepCatObject$1 = {
+    '@@transducer/init': Object,
+    '@@transducer/step': function (result, input) {
+      return Object.assign(
+        result,
+        _isArrayLike$1(input) ? objOf(input[0], input[1]) : input
+      )
+    },
+    '@@transducer/result': identity
+  };
+
+  function _stepCat$1 (obj) {
+    if (_isTransformer$1(obj)) {
+      return obj
+    }
+
+    if (_isArrayLike$1(obj)) {
+      return _stepCatArray$1
+    }
+
+    if (typeof obj === 'string') {
+      return _stepCatString$1
+    }
+
+    if (typeof obj === 'object') {
+      return _stepCatObject$1
+    }
+
+    throw new Error('Cannot create transformer for ' + obj)
+  }
+
+  function _getSelectFn (columns) {
+    return row => {
+      const newRow = {};
+
+      for (let i = 0; i < columns.length; i++) {
+        const columnName = columns[i];
+        newRow[columnName] = row[columnName];
+      }
+
+      return newRow
+    }
+  }
+
+  const _xnestBy = curryN(3, function _xnestBy (nestInstructions, by, xf) {
+    return new XNestBy(nestInstructions, by, xf)
+  });
+
+  const nestBy = curryN(3, _dispatchable([], _xnestBy,
+    function (nestInstructions, by, df) {
+      return into(
+        [],
+        nestBy(nestInstructions, by),
+        df
+      )
+    }
+  ));
+
+  function XNestBy (nestInstructions, by, xf) {
+    const nestInstructionsIsObj = nestInstructions.constructor === Object;
+
+    this.nestColName = nestInstructionsIsObj
+      ? nestInstructions.column
+      : nestInstructions;
+
+    this.getAccumulator = nestInstructionsIsObj && nestInstructions.getAccumulator
+      ? nestInstructions.getAccumulator
+      : () => [];
+
+    this.by = by;
+    this.xf = xf;
+
+    this.select = null;
+    this.nestedDataById = {};
+    this.accumulatorById = {};
+
+    this['@@transducer/step'] = this._initStep;
+  }
+
+  XNestBy.prototype['@@transducer/init'] = _xfBase.init;
+  XNestBy.prototype['@@transducer/result'] = _result$1;
+  XNestBy.prototype._initStep = _initStep$1;
+  XNestBy.prototype._step = _step$3;
+
+  function _result$1 () {
+    return this.xf['@@transducer/result'](_reduceObjVals(
+      this.xf['@@transducer/step'].bind(this.xf),
+      this.xf['@@transducer/init'](),
+      this.nestedDataById
+    ))
+  }
+
+  function _initStep$1 (acc, row) {
+    const bySet = new Set(this.by);
+    const nestedColumns = [];
+
+    for (const columnName in row) {
+      if (!bySet.has(columnName)) {
+        nestedColumns.push(columnName);
+      }
+    }
+
+    this.select = _getSelectFn(nestedColumns);
+
+    this['@@transducer/step'] = this._step;
+    return this['@@transducer/step'](acc, row)
+  }
+
+  function _step$3 (acc, row) {
+    const id = _idFromCols(row, this.by);
+    const newId = !(id in this.accumulatorById);
+
+    if (newId) {
+      this.accumulatorById[id] = _stepCat$1(this.getAccumulator());
+
+      const nestRow = _initNestRow(
+        row,
+        this.nestColName,
+        this.by,
+        this.accumulatorById[id]['@@transducer/init']()
+      );
+
+      this.nestedDataById[id] = nestRow;
+    }
+
+    const xf = this.accumulatorById[id];
+
+    this.nestedDataById[id][this.nestColName] = xf['@@transducer/step'](
+      this.nestedDataById[id][this.nestColName],
+      this.select(row)
+    );
+
+    return acc
+  }
+
+  function _initNestRow (row, nestColName, by, initVal) {
+    const nestRow = {};
+
+    for (let i = 0; i < by.length; i++) {
+      const colName = by[i];
+      nestRow[colName] = row[colName];
+    }
+
+    nestRow[nestColName] = initVal;
+
+    return nestRow
+  }
+
+  const _xsummariseByIrreducable = (summariseFn, by, xf) => {
+    return new XSummariseByIrreducable(summariseFn, by, xf)
+  };
+
+  function XSummariseByIrreducable (summariseFn, by, xf) {
+    this.summariseFn = summariseFn;
+    this.by = by;
+    this.xf = xf;
+
+    this.nestColName = Symbol('nested');
+    this.getAccumulator = accumulator;
+
+    this.nestedColumns = [];
+    this.nestedDataById = {};
+    this.accumulatorById = {};
+
+    this['@@transducer/step'] = this._initStep;
+  }
+
+  XSummariseByIrreducable.prototype['@@transducer/init'] = _xfBase.init;
+  XSummariseByIrreducable.prototype['@@transducer/result'] = _result$2;
+  XSummariseByIrreducable.prototype._initStep = _initStep$1;
+  XSummariseByIrreducable.prototype._step = _step$3;
+  XSummariseByIrreducable.prototype._finalStep = _finalStep$1;
+
+  function _result$2 () {
+    return this.xf['@@transducer/result'](_reduceObjVals(
+      this._finalStep.bind(this),
+      this.xf['@@transducer/init'](),
+      this.nestedDataById
+    ))
+  }
+
+  function _finalStep$1 (acc, row) {
+    const summarizedRow = this.summariseFn(row[this.nestColName]);
+
+    for (let i = 0; i < this.by.length; i++) {
+      const byCol = this.by[i];
+      summarizedRow[byCol] = row[byCol];
+    }
+
+    return this.xf['@@transducer/step'](acc, summarizedRow)
+  }
+
+  const _xsummariseBy = curryN(3, (summariseFn, by, xf) => {
+    return _isReducable(summariseFn)
+      ? _xsummariseByReducable(summariseFn, by, xf)
+      : _xsummariseByIrreducable(summariseFn, by, xf)
+  });
+
+  const summariseBy = curryN(3, _dispatchable([], _xsummariseBy,
+    function (summariseFn, by, df) {
+      return into(
+        [],
+        summariseBy(summariseFn, by),
+        df
+      )
+    }
+  ));
+
+  function _isReducable (summariseFn) {
+    try {
+      const summariseInstructions = summariseFn({});
+
+      for (const newColumnName in summariseInstructions) {
+        if (summariseInstructions[newColumnName] !== REDUCABLE) {
+          return false
+        }
+      }
+    } catch (e) {
+      return false
+    }
+
+    return true
+  }
+
+  const _xfilterByReducable = (summariseFn, predicate, by, xf) => {
+    return new XFilterByReducable(summariseFn, predicate, by, xf)
+  };
+
+  function XFilterByReducable (summariseFn, predicate, by, xf) {
+    this.instructions = _getReducableInstructions(summariseFn);
+    this.predicate = predicate;
+    this.by = by;
+    this.xf = xf;
+
+    this.summarizedDataById = {};
+    this.rows = [];
+    this.ids = [];
+  }
+
+  XFilterByReducable.prototype['@@transducer/init'] = _xfBase.init;
+  XFilterByReducable.prototype['@@transducer/result'] = _result$3;
+  XFilterByReducable.prototype['@@transducer/step'] = _step$4;
+
+  function _result$3 () {
+    for (const id in this.summarizedDataById) {
+      for (const newColumnName in this.instructions) {
+        const resultFn = this
+          .instructions[newColumnName]
+          .xf['@@transducer/result'];
+
+        this.summarizedDataById[id][newColumnName] = resultFn(
+          this.summarizedDataById[id][newColumnName]
+        );
+      }
+    }
+
+    let acc = this.xf['@@transducer/init']();
+    let idx = 0;
+    const len = this.rows.length;
+
+    while (idx < len) {
+      const row = this.rows[idx];
+      const id = this.ids[idx];
+
+      if (this.predicate(row, this.summarizedDataById[id])) {
+        acc = this.xf['@@transducer/step'](acc, row);
+      }
+
+      if (acc && acc['@@transducer/reduced']) {
+        acc = acc['@@transducer/value'];
+        break
+      }
+
+      idx++;
+    }
+
+    return this.xf['@@transducer/result'](acc)
+  }
+
+  function _step$4 (acc, row) {
+    const id = _idFromCols(row, this.by);
+    const newId = !(id in this.summarizedDataById);
+
+    this.rows.push(row);
+    this.ids.push(id);
+
+    if (newId) {
+      this.summarizedDataById[id] = _initSummaryGroup(
+        this.instructions,
+        row,
+        this.by
+      );
+    }
+
+    this.summarizedDataById[id] = _updateSummaryGroup(
+      this.summarizedDataById[id],
+      this.instructions,
+      row
+    );
+
+    return acc
+  }
+
+  // import _reduceObjVals from './_reduceObjVals.js'
+
+  const _xfilterByIrreducable = (summariseFn, predicate, by, xf) => {
+    return new XFilterByIrreducable(summariseFn, predicate, by, xf)
+  };
+
+  function XFilterByIrreducable (summariseFn, predicate, by, xf) {
+    this.summariseFn = summariseFn;
+    this.predicate = predicate;
+    this.by = by;
+    this.xf = xf;
+
+    this.nestColName = Symbol('nested');
+    this.getAccumulator = accumulator;
+
+    this.nestedColumns = [];
+    this.nestedDataById = {};
+    this.accumulatorById = {};
+    this.rows = [];
+    this.ids = [];
+
+    this['@@transducer/step'] = this._initStep;
+  }
+
+  XFilterByIrreducable.prototype['@@transducer/init'] = _xfBase.init;
+  XFilterByIrreducable.prototype['@@transducer/result'] = _result$4;
+  XFilterByIrreducable.prototype._initStep = _initStep$1;
+  XFilterByIrreducable.prototype._step = _step$5;
+
+  function _result$4 () {
+    for (const id in this.nestedDataById) {
+      const row = this.nestedDataById[id];
+
+      const summarizedRow = this.summariseFn(row[this.nestColName]);
+
+      for (let i = 0; i < this.by.length; i++) {
+        const byCol = this.by[i];
+        summarizedRow[byCol] = row[byCol];
+      }
+
+      this.nestedDataById[id] = summarizedRow;
+    }
+
+    this.summarizedDataById = this.nestedDataById;
+    this.nestedDataById = null;
+
+    let acc = this.xf['@@transducer/init']();
+    let idx = 0;
+    const len = this.rows.length;
+
+    while (idx < len) {
+      const row = this.rows[idx];
+      const id = this.ids[idx];
+
+      if (this.predicate(row, this.summarizedDataById[id])) {
+        acc = this.xf['@@transducer/step'](acc, row);
+      }
+
+      if (acc && acc['@@transducer/reduced']) {
+        acc = acc['@@transducer/value'];
+        break
+      }
+
+      idx++;
+    }
+
+    return this.xf['@@transducer/result'](acc)
+  }
+
+  function _step$5 (acc, row) {
+    const id = _idFromCols(row, this.by);
+    const newId = !(id in this.accumulatorById);
+
+    this.rows.push(row);
+    this.ids.push(id);
+
+    if (newId) {
+      this.accumulatorById[id] = _stepCat$1(this.getAccumulator());
+
+      const nestRow = _initNestRow(
+        row,
+        this.nestColName,
+        this.by,
+        this.accumulatorById[id]['@@transducer/init']()
+      );
+
+      this.nestedDataById[id] = nestRow;
+    }
+
+    const xf = this.accumulatorById[id];
+
+    this.nestedDataById[id][this.nestColName] = xf['@@transducer/step'](
+      this.nestedDataById[id][this.nestColName],
+      this.select(row)
+    );
+
+    return acc
+  }
+
+  const _xfilterBy = curryN(4, function _xfilterBy (summariseFn, predicate, by, xf) {
+    return _isReducable(summariseFn)
+      ? _xfilterByReducable(summariseFn, predicate, by, xf)
+      : _xfilterByIrreducable(summariseFn, predicate, by, xf)
+  });
+
+  const filterBy = curryN(4, _dispatchable([], _xfilterBy,
+    function (summariseFn, predicate, by, df) {
+      return into(
+        [],
+        filterBy(summariseFn, predicate, by),
+        df
+      )
+    }
+  ));
+
+  const _xpivotLonger = curryN(2, function _xpivotLonger (pivotInstructions, xf) {
+    return new XPivotLonger(pivotInstructions, xf)
+  });
+
+  const pivotLonger = curryN(2, _dispatchable([], _xpivotLonger,
+    function (pivotInstructions, df) {
+      return into(
+        [],
+        pivotLonger(pivotInstructions),
+        df
+      )
+    }
+  ));
+
+  function XPivotLonger ({ columns, namesTo, valuesTo }, xf) {
+    this.pivotColumns = columns;
+    this.pivotColumnsSet = new Set(columns);
+    this.namesTo = namesTo;
+    this.valuesTo = valuesTo;
+    this.xf = xf;
+
+    this.columns = null;
+    this.idColumns = null;
+
+    this['@@transducer/step'] = this._initStep;
+  }
+
+  XPivotLonger.prototype['@@transducer/init'] = _xfBase.init;
+  XPivotLonger.prototype['@@transducer/result'] = _xfBase.result;
+  XPivotLonger.prototype._initStep = _initStep$2;
+  XPivotLonger.prototype._step = _step$6;
+
+  function _initStep$2 (acc, row) {
+    this.columns = Object.keys(row);
+
+    this.idColumns = this.columns.filter(
+      columnName => !this.pivotColumnsSet.has(columnName)
+    );
+
+    this['@@transducer/step'] = this._step;
+    return this['@@transducer/step'](acc, row)
+  }
+
+  function _step$6 (acc, row) {
+    const newRows = [];
+
+    for (let j = 0; j < this.pivotColumns.length; j++) {
+      const newRow = {};
+
+      const pivotColumnName = this.pivotColumns[j];
+      const pivotColumnValue = row[pivotColumnName];
+
+      newRow[this.namesTo] = pivotColumnName;
+      newRow[this.valuesTo] = pivotColumnValue;
+
+      for (let k = 0; k < this.idColumns.length; k++) {
+        const idColumnName = this.idColumns[k];
+        newRow[idColumnName] = row[idColumnName];
+      }
+
+      newRows.push(newRow);
+    }
+
+    return reduce(
+      this.xf['@@transducer/step'].bind(this.xf),
+      acc,
+      newRows
+    )
+  }
+
+  const _xpivotWider = curryN(2, function _xpivotWider (pivotInstructions, xf) {
+    return new XPivotWider(pivotInstructions, xf)
+  });
+
+  const pivotWider = curryN(2, _dispatchable([], _xpivotWider,
+    function (pivotInstructions, df) {
+      return into(
+        [],
+        pivotWider(pivotInstructions),
+        df
+      )
+    }
+  ));
+
+  function XPivotWider ({ namesFrom, valuesFrom, valuesFill = null }, xf) {
+    this.namesFrom = namesFrom;
+    this.valuesFrom = valuesFrom;
+    this.valuesFill = valuesFill;
+    this.xf = xf;
+
+    this.idColumns = null;
+    this.widerRowsById = {};
+    this.newColumnsSet = new Set();
+    this.newColumns = null;
+
+    this['@@transducer/step'] = this._initStep;
+  }
+
+  XPivotWider.prototype['@@transducer/init'] = _xfBase.init;
+  XPivotWider.prototype['@@transducer/result'] = _result$5;
+  XPivotWider.prototype._initStep = _initStep$3;
+  XPivotWider.prototype._step = _step$7;
+  XPivotWider.prototype._finalStep = _finalStep$2;
+
+  function _result$5 () {
+    this.newColumns = Array.from(this.newColumnsSet);
+
+    return this.xf['@@transducer/result'](_reduceObjVals(
+      this._finalStep.bind(this),
+      this.xf['@@transducer/init'](),
+      this.widerRowsById
+    ))
+  }
+
+  function _initStep$3 (acc, row) {
+    const columns = Object.keys(row);
+    const nonIdColumns = [this.namesFrom, this.valuesFrom];
+    this.idColumns = columns.filter(c => !nonIdColumns.includes(c));
+
+    this['@@transducer/step'] = this._step;
+    return this['@@transducer/step'](acc, row)
+  }
+
+  function _step$7 (acc, row) {
+    const id = _idFromCols(row, this.idColumns);
+    const newId = !(id in this.widerRowsById);
+
+    if (newId) {
+      const widerRow = {};
+
+      for (let i = 0; i < this.idColumns.length; i++) {
+        const idColumn = this.idColumns[i];
+        widerRow[idColumn] = row[idColumn];
+      }
+
+      this.widerRowsById[id] = widerRow;
+    }
+
+    const column = row[this.namesFrom];
+    const value = row[this.valuesFrom];
+
+    this.widerRowsById[id][column] = value;
+    this.newColumnsSet.add(column);
+  }
+
+  function _finalStep$2 (acc, row) {
+    for (let i = 0; i < this.newColumns.length; i++) {
+      const newColumn = this.newColumns[i];
+
+      if (!(newColumn in row)) {
+        row[newColumn] = this.valuesFill;
+      }
+    }
+
+    return this.xf['@@transducer/step'](acc, row)
+  }
+
+  function _reduced (x) {
+    return x && x['@@transducer/reduced']
+      ? x
+      : {
+        '@@transducer/value': x,
+        '@@transducer/reduced': true
+      }
+  }
+
+  const _xslice = curryN(2, function _xslice (indices, xf) {
+    return new XSlice(indices, xf)
+  });
+
+  const slice = curryN(2, _dispatchable([], _xslice,
+    function (indices, df) {
+      return into(
+        [],
+        slice(indices),
+        df
+      )
+    }
+  ));
+
+  function XSlice (indices, xf) {
+    this.indices = new Set(indices);
+    this.xf = xf;
+
+    this.counter = -1;
+  }
+
+  XSlice.prototype['@@transducer/init'] = _xfBase.init;
+  XSlice.prototype['@@transducer/result'] = _xfBase.result;
+  XSlice.prototype['@@transducer/step'] = function (acc, row) {
+    this.counter++;
+
+    if (this.indices.has(this.counter)) {
+      this.indices.delete(this.counter);
+      const output = this.xf['@@transducer/step'](acc, row);
+
+      return this.indices.size === 0
+        ? _reduced(output)
+        : output
+    }
+
+    return acc
+  };
+
+  const _xunnest = curryN(3, function _xunnest (nestColName, nestWrapper, xf) {
+    return new XUnnest(nestColName, nestWrapper, xf)
+  });
+
+  const unnest = curryN(3, _dispatchable([], _xunnest,
+    function (nestColName, nestWrapper, df) {
+      return into(
+        [],
+        unnest(nestColName, nestWrapper),
+        df
+      )
+    }
+  ));
+
+  function XUnnest (nestColName, nestWrapper, xf) {
+    this.nestColName = nestColName;
+    this.nestWrapper = nestWrapper;
+    this.xf = xf;
+    this.outerColumns = [];
+
+    this['@@transducer/step'] = this._initStep;
+  }
+
+  XUnnest.prototype['@@transducer/init'] = _xfBase.init;
+  XUnnest.prototype['@@transducer/result'] = _xfBase.result;
+
+  XUnnest.prototype._initStep = function (acc, row) {
+    for (const columnName in row) {
+      if (columnName !== this.nestColName) {
+        this.outerColumns.push(columnName);
+      }
+    }
+
+    this['@@transducer/step'] = this._step;
+    return this['@@transducer/step'](acc, row)
+  };
+
+  XUnnest.prototype._step = function (acc, row) {
+    const nestedData = row[this.nestColName];
+
+    const rowWithoutNested = Object.assign({}, row);
+    delete rowWithoutNested[this.nestColName];
+
+    return reduce(
+      (innerAcc, innerRow) => this.xf[['@@transducer/step']](
+        innerAcc,
+        _attach(innerRow, rowWithoutNested)
+      ),
+      acc,
+      this.nestWrapper(nestedData)
+    )
+  };
+
+  function _attach (innerRow, outerRow) {
+    const newRow = Object.assign({}, innerRow);
+
+    for (const columnName in outerRow) {
+      newRow[columnName] = outerRow[columnName];
+    }
+
+    return newRow
+  }
+
+  function pivotLonger$1 (data, pivotInstructions) {
+    return pivotLonger(pivotInstructions, data)
+  }
+
+  function pivotWider$1 (data, pivotInstructions) {
+    return pivotWider(pivotInstructions, data)
+  }
+
   const transformations = {
     filter,
     select,
@@ -2262,7 +4017,9 @@
     reproject,
     transform,
     cumsum,
-    rowCumsum
+    rowCumsum,
+    pivotLonger: pivotLonger$1,
+    pivotWider: pivotWider$1
   };
 
   const methods$2 = {
@@ -2308,6 +4065,16 @@
 
     mutate (mutateInstructions) {
       const data = transformations.mutate(this._data, mutateInstructions);
+      return new DataContainer(data, { validate: false })
+    },
+
+    pivotLonger (pivotInstructions) {
+      const data = transformations.pivotLonger(this._data, pivotInstructions);
+      return new DataContainer(data, { validate: false })
+    },
+
+    pivotWider (pivotInstructions) {
+      const data = transformations.pivotWider(this._data, pivotInstructions);
       return new DataContainer(data, { validate: false })
     },
 
@@ -2489,9 +4256,7 @@
       const rowIndex = getDataLength(this._data) - 1;
 
       if (!this._keyColumn) {
-        const keyDomain = this.domain('$key');
-        keyDomain[1]++;
-        const key = keyDomain[1];
+        const key = incrementKey(this._data.$key);
 
         this._data.$key.push(key);
         this._keyToRowIndex.set(key, rowIndex);
@@ -3020,7 +4785,7 @@
     }
 
     min (columnName) {
-      if (this.type(columnName) !== 'quantitative') {
+      if (!['quantitative', 'interval'].includes(this.type(columnName))) {
         throw new Error('Column must be quantitative')
       }
 
@@ -3028,7 +4793,7 @@
     }
 
     max (columnName) {
-      if (this.type(columnName) !== 'quantitative') {
+      if (!['quantitative', 'interval'].includes(this.type(columnName))) {
         throw new Error('Column must be quantitative')
       }
 
@@ -3044,9 +4809,20 @@
       return Object.keys(this._data)
     }
 
+    nrow () {
+      return getDataLength(this._data)
+    }
+
     // Checks
     hasColumn (columnName) {
       return columnExists(columnName, this)
+    }
+
+    hasRow (accessorObject) {
+      const rowIndex = this._rowIndex(accessorObject);
+      const length = this.nrow();
+
+      return typeof rowIndex !== 'undefined' && rowIndex < length && rowIndex >= 0
     }
 
     columnIsValid (columnName) {
