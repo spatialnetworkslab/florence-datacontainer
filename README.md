@@ -610,6 +610,46 @@ dataContainer.column('c') // [1, 2, 3, 4]
 
 `rowCumsum`'s `asInterval` functionality works similar to `cumsum`'s.
 
+<a name="datacontainer_pivotlonger" href="#datacontainer_pivotlonger">#</a> <i>DataContainer</i>.<b>pivotLonger</b>(pivotInstructions)
+
+Pivots 'wide' data to 'long' data- meaning that a set of selected columns and their values will be converted to two columns: one containing the selected columns' names, and one containing their values.
+
+```js
+const dataContainer = new DataContainer({
+  col1: [1, 2],
+  col2: [10, 20],
+  col3: ['a', 'b'],
+  col4: ['aa', 'bb']
+}).pivotLonger({
+  columns: ['col3', 'col4'],
+  namesTo: 'name',
+  valuesTo: 'value'
+})
+
+dataContainer.column('col1') // [1, 1, 2, 2]
+dataContainer.column('name') // ['col3', 'col4', 'col3', 'col4']
+dataContainer.column('value') // ['a', 'aa', 'b', 'bb']
+```
+
+<a name="datacontainer_pivotwider" href="#datacontainer_pivotwider">#</a> <i>DataContainer</i>.<b>pivotWider</b>(pivotInstructions)
+
+The opposite of [pivotLonger](#datacontainer_pivotlonger): pivots 'long' to 'wide' data, meaning that two columns will be converted into a larger set of columns. Missing values in the wider data will be filled with `null`. This default behavior can be changed by providing a `valuesFill` option in de `pivotInstructions` object, besides the `namesFrom` and `valuesFrom` options.
+
+```js
+const dataContainer = new DataContainer({
+  idCol: ['a', 'a', 'b', 'b', 'b', 'c', 'c'],
+  names: ['x', 'y', 'x', 'y', 'z', 'x', 'z'],
+  values: [1, 2, 10, 20, 30, 100, 300]
+}).pivotWider({
+  namesFrom: 'names',
+  valuesFrom: 'values'
+})
+
+dataContainer.column('idCol') // ['a', 'b', 'c']
+dataContainer.column('x') // [1, 10, 100]
+dataContainer.column('y') // [2, 20, null]
+```
+
 ### Adding and removing rows
 
 All of these functions work in-place.
