@@ -90,7 +90,7 @@ export default class DataContainer {
   }
 
   min (columnName) {
-    if (this.type(columnName) !== 'quantitative') {
+    if (!['quantitative', 'interval'].includes(this.type(columnName))) {
       throw new Error('Column must be quantitative')
     }
 
@@ -98,7 +98,7 @@ export default class DataContainer {
   }
 
   max (columnName) {
-    if (this.type(columnName) !== 'quantitative') {
+    if (!['quantitative', 'interval'].includes(this.type(columnName))) {
       throw new Error('Column must be quantitative')
     }
 

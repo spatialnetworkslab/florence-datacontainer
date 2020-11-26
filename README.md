@@ -266,11 +266,11 @@ For geometry data (`.domain('$geometry')`), this will return the bounding box.
 
 <a name="datacontainer_min" href="#datacontainer_min">#</a> <i>DataContainer</i>.<b>min</b>(columnName)
 
-Equivalent to `domain(columnName)[0]`. Only works for quantitative columns.
+Equivalent to `domain(columnName)[0]`. Only works for quantitative and interval columns.
 
 <a name="datacontainer_max" href="#datacontainer_max">#</a> <i>DataContainer</i>.<b>max</b>(columnName)
 
-Equivalent to `domain(columnName)[1]`. Only works for quantitative columns.
+Equivalent to `domain(columnName)[1]`. Only works for quantitative and interval columns.
 
 <a name="datacontainer_bbox" href="#datacontainer_bbox">#</a> <i>DataContainer</i>.<b>bbox</b>()
 
