@@ -114,6 +114,10 @@ export default class DataContainer {
     return Object.keys(this._data)
   }
 
+  nrow () {
+    return getDataLength(this._data)
+  }
+
   // Checks
   hasColumn (columnName) {
     return columnExists(columnName, this)

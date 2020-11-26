@@ -236,6 +236,14 @@ dataContainer.keys() // ['0', '1']
 
 Equivalent to `.column(columnName).map(func)`
 
+<a name="datacontainer_nrow" href="#datacontainer_nrow">#</a> <i>DataContainer</i>.<b>nrow</b>()
+
+Returns the number of rows.
+
+<a name="datacontainer_columnnames" href="#datacontainer_columnnames">#</a> <i>DataContainer</i>.<b>columnNames</b>()
+
+Returns the names of the currently loaded columns.
+
 ### Domains and types
 
 <a name="datacontainer_domain" href="#datacontainer_domain">#</a> <i>DataContainer</i>.<b>domain</b>(columnName)
