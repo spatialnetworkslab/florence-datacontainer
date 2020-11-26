@@ -55,7 +55,7 @@ const methods = {
   pivotWider (pivotInstructions) {
     const data = transformations.pivotWider(this_data, pivotInstructions)
     return new DataContainer(data, { validate: false })
-  }
+  },
 
   transmute (transmuteInstructions) {
     const data = transformations.transmute(this._data, transmuteInstructions)
