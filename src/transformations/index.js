@@ -12,6 +12,8 @@ import reproject from './reproject.js'
 import transform from './transform.js'
 import cumsum from './cumsum.js'
 import rowCumsum from './rowCumsum.js'
+import pivotLonger from './pivotLonger.js'
+import pivotWider from './pivotWider.js'
 
 const transformations = {
   filter,
@@ -28,7 +30,9 @@ const transformations = {
   reproject,
   transform,
   cumsum,
-  rowCumsum
+  rowCumsum,
+  pivotLonger,
+  pivotWider
 }
 
 export default transformations

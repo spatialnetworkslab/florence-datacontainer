@@ -90,7 +90,7 @@ export default class DataContainer {
   }
 
   min (columnName) {
-    if (this.type(columnName) !== 'quantitative') {
+    if (!['quantitative', 'interval'].includes(this.type(columnName))) {
       throw new Error('Column must be quantitative')
     }
 
@@ -98,7 +98,7 @@ export default class DataContainer {
   }
 
   max (columnName) {
-    if (this.type(columnName) !== 'quantitative') {
+    if (!['quantitative', 'interval'].includes(this.type(columnName))) {
       throw new Error('Column must be quantitative')
     }
 
@@ -114,9 +114,20 @@ export default class DataContainer {
     return Object.keys(this._data)
   }
 
+  nrow () {
+    return getDataLength(this._data)
+  }
+
   // Checks
   hasColumn (columnName) {
     return columnExists(columnName, this)
+  }
+
+  hasRow (accessorObject) {
+    const rowIndex = this._rowIndex(accessorObject)
+    const length = this.nrow()
+
+    return typeof rowIndex !== 'undefined' && rowIndex < length && rowIndex >= 0
   }
 
   columnIsValid (columnName) {

@@ -237,6 +237,14 @@ dataContainer.keys() // ['0', '1']
 
 Equivalent to `.column(columnName).map(func)`
 
+<a name="datacontainer_nrow" href="#datacontainer_nrow">#</a> <i>DataContainer</i>.<b>nrow</b>()
+
+Returns the number of rows.
+
+<a name="datacontainer_columnnames" href="#datacontainer_columnnames">#</a> <i>DataContainer</i>.<b>columnNames</b>()
+
+Returns the names of the currently loaded columns.
+
 ### Domains and types
 
 <a name="datacontainer_domain" href="#datacontainer_domain">#</a> <i>DataContainer</i>.<b>domain</b>(columnName)
@@ -259,11 +267,11 @@ For geometry data (`.domain('$geometry')`), this will return the bounding box.
 
 <a name="datacontainer_min" href="#datacontainer_min">#</a> <i>DataContainer</i>.<b>min</b>(columnName)
 
-Equivalent to `domain(columnName)[0]`. Only works for quantitative columns.
+Equivalent to `domain(columnName)[0]`. Only works for quantitative and interval columns.
 
 <a name="datacontainer_max" href="#datacontainer_max">#</a> <i>DataContainer</i>.<b>max</b>(columnName)
 
-Equivalent to `domain(columnName)[1]`. Only works for quantitative columns.
+Equivalent to `domain(columnName)[1]`. Only works for quantitative and interval columns.
 
 <a name="datacontainer_bbox" href="#datacontainer_bbox">#</a> <i>DataContainer</i>.<b>bbox</b>()
 
@@ -291,7 +299,11 @@ Some convenience functions to check data during development.
 
 <a name="datacontainer_hascolumn" href="#datacontainer_hascolumn">#</a> <i>DataContainer</i>.<b>hasColumn</b>(columnName)
 
-Check if the `DataContainer` has a column.
+Checks if the `DataContainer` has a column.
+
+<a name="datacontainer_hasrow" href="datacontainer_hasrow">#</a> <i>DataContainer</i>.<b>hasRow</b>(accessorObject)
+
+Checks if the `DataContainer` has a row. See [.row](#datacontainer_row) for an explanation of the `accessorObject`.
 
 ```js
 const dataContainer = new DataContainer({ a: [1, 2, 3, 4] })
@@ -598,6 +610,46 @@ dataContainer.column('c') // [1, 2, 3, 4]
 ```
 
 `rowCumsum`'s `asInterval` functionality works similar to `cumsum`'s.
+
+<a name="datacontainer_pivotlonger" href="#datacontainer_pivotlonger">#</a> <i>DataContainer</i>.<b>pivotLonger</b>(pivotInstructions)
+
+Pivots 'wide' data to 'long' data- meaning that a set of selected columns and their values will be converted to two columns: one containing the selected columns' names, and one containing their values.
+
+```js
+const dataContainer = new DataContainer({
+  col1: [1, 2],
+  col2: [10, 20],
+  col3: ['a', 'b'],
+  col4: ['aa', 'bb']
+}).pivotLonger({
+  columns: ['col3', 'col4'],
+  namesTo: 'name',
+  valuesTo: 'value'
+})
+
+dataContainer.column('col1') // [1, 1, 2, 2]
+dataContainer.column('name') // ['col3', 'col4', 'col3', 'col4']
+dataContainer.column('value') // ['a', 'aa', 'b', 'bb']
+```
+
+<a name="datacontainer_pivotwider" href="#datacontainer_pivotwider">#</a> <i>DataContainer</i>.<b>pivotWider</b>(pivotInstructions)
+
+The opposite of [pivotLonger](#datacontainer_pivotlonger): pivots 'long' to 'wide' data, meaning that two columns will be converted into a larger set of columns. Missing values in the wider data will be filled with `null`. This default behavior can be changed by providing a `valuesFill` option in de `pivotInstructions` object, besides the `namesFrom` and `valuesFrom` options.
+
+```js
+const dataContainer = new DataContainer({
+  idCol: ['a', 'a', 'b', 'b', 'b', 'c', 'c'],
+  names: ['x', 'y', 'x', 'y', 'z', 'x', 'z'],
+  values: [1, 2, 10, 20, 30, 100, 300]
+}).pivotWider({
+  namesFrom: 'names',
+  valuesFrom: 'values'
+})
+
+dataContainer.column('idCol') // ['a', 'b', 'c']
+dataContainer.column('x') // [1, 10, 100]
+dataContainer.column('y') // [2, 20, null]
+```
 
 ### Adding and removing rows
 
