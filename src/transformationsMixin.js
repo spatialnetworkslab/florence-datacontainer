@@ -47,6 +47,16 @@ const methods = {
     return new DataContainer(data, { validate: false })
   },
 
+  pivotLonger (pivotInstructions) {
+    const data = transformations.pivotLonger(this._data, pivotInstructions)
+    return new DataContainer(data, { validate: false })
+  },
+
+  pivotWider (pivotInstructions) {
+    const data = transformations.pivotWider(this._data, pivotInstructions)
+    return new DataContainer(data, { validate: false })
+  },
+
   transmute (transmuteInstructions) {
     const data = transformations.transmute(this._data, transmuteInstructions)
     return new DataContainer(data, { validate: false })
