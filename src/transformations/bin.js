@@ -51,7 +51,7 @@ export function getIntervalBounds (data, binInstructions) {
     return binInstructions.manualClasses
   }
 
-  return methodMap[method](variableData, numClasses)
+  return methodMap[method](JSON.parse(JSON.stringify(variableData)), numClasses)
 }
 
 function parseBinInstructions (binInstructions) {
