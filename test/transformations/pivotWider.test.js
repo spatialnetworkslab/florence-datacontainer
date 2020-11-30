@@ -1,6 +1,6 @@
 import DataContainer from '../../src/index.js'
 
-describe('pivotWider: standalone', () => {
+describe('pivotWider transformation', () => {
   it('works (values complete)', () => {
     const input = [
       { idCol: 'a', names: 'x', values: 1 },
@@ -24,7 +24,8 @@ describe('pivotWider: standalone', () => {
       idCol: ['a', 'b', 'c'],
       x: [1, 10, 100],
       y: [2, 20, 200],
-      z: [3, 30, 300]
+      z: [3, 30, 300],
+      $key: ['0', '1', '2']
     }
 
     expect(output).toEqual(expectedOutput)
@@ -51,7 +52,8 @@ describe('pivotWider: standalone', () => {
       idCol: ['a', 'b', 'c'],
       x: [1, 10, 100],
       y: [2, 20, null],
-      z: [null, 30, 300]
+      z: [null, 30, 300],
+      $key: ['0', '1', '2']
     }
 
     expect(output).toEqual(expectedOutput)
@@ -82,7 +84,8 @@ describe('pivotWider: standalone', () => {
       idCol: ['a', 'b', 'c'],
       x: [1, 10, 100],
       y: [2, 20, NaN],
-      z: [NaN, 30, 300]
+      z: [NaN, 30, 300],
+      $key: ['0', '1', '2']
     }
 
     expect(output).toEqual(expectedOutput)
