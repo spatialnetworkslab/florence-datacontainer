@@ -1,5 +1,12 @@
-import { pivotWider } from '@snlab/ducebox'
+import { pivotWider, into, columnOriented } from '@snlab/ducebox'
 
-export default function (data, pivotInstructions) {
-  return pivotWider(pivotInstructions, data)
+export default function (_data, pivotInstructions) {
+  const data = Object.assign({}, _data)
+  delete data.$key
+
+  return into(
+    columnOriented.accumulator(),
+    pivotWider(pivotInstructions),
+    columnOriented.wrap(data)
+  )
 }

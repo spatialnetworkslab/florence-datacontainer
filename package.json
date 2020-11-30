@@ -7,7 +7,7 @@
   "repository": "https://github.com/spatialnetworkslab/florence-datacontainer.git",
   "license": "MIT",
   "dependencies": {
-    "@snlab/ducebox": "0.0.2",
+    "@snlab/ducebox": "0.0.5",
     "classify-series": "^0.3.2",
     "d3-scale": "^3.2.3"
   },
