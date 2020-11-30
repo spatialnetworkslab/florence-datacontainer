@@ -12,7 +12,7 @@ const pivotInstructions = {
   valuesTo: 'value'
 }
 
-describe('pivotLonger: standalone', () => {
+describe('pivotLonger transformation', () => {
   it('works', () => {
     const output = new DataContainer(input)
       .pivotLonger(pivotInstructions)
