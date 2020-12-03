@@ -7,7 +7,7 @@ export default [
   {
     input: 'src/index.js',
     output: {
-      name: 'fd',
+      name: 'DataContainer',
       file: pkg.browser,
       format: 'umd'
     },

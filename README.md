@@ -8,7 +8,7 @@ In Node or browser applications, `Datacontainer` can be installed from NPM (`npm
 import DataContainer from '@snlab/florence-datacontainer'
 ```
 
-You can also load the library directly into an HTML page, which exports an `fd` global:
+You can also load the library directly into an HTML page, which exports an `DataContainer` global:
 
 ```html
 <script src="https://cdn.jsdelivr.net/npm/@snlab/florence-datacontainer"></script>
