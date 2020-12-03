@@ -4,7 +4,7 @@
   "main": "dist/florence-datacontainer.cjs.js",
   "module": "dist/florence-datacontainer.esm.js",
   "browser": "dist/florence-datacontainer.umd.js",
-  "repository": "https://github.com/spatialnetworkslab/florence-datacontainer.git",
+  "repository": "https://gitlab.com/spatialnetworkslab/florence-datacontainer.git",
   "license": "MIT",
   "dependencies": {
     "@snlab/ducebox": "0.0.5",
