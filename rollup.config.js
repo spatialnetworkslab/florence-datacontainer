@@ -7,7 +7,7 @@ export default [
   {
     input: 'src/index.js',
     output: {
-      name: 'florence-datacontainer',
+      name: 'DataContainer',
       file: pkg.browser,
       format: 'umd'
     },
