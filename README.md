@@ -1,9 +1,23 @@
 # Florence DataContainer
-A powerful yet light-weight interface to manage data. Designed to be used with [florence](https://github.com/spatialnetworkslab/florence).
+A powerful yet light-weight interface to manage data. Designed to be used with [florence](https://gitlab.com/spatialnetworkslab/florence).
+
+## Installation
+In Node or browser applications, `Datacontainer` can be installed from NPM (`npm install @snlab/florence-datacontainer`). After installation, it can be imported into any project using ES6 import syntax.
+
+```js
+import DataContainer from '@snlab/florence-datacontainer'
+```
+
+You can also load the library directly into an HTML page, which exports an `fd` global:
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/@snlab/florence-datacontainer"></script>
+```
 
 ## API Reference
 
 - [Florence DataContainer](#florence-datacontainer)
+  - [Installation](#installation)
   - [API Reference](#api-reference)
     - [Loading data](#loading-data)
       - [Loading column- and row-oriented data](#loading-column--and-row-oriented-data)
