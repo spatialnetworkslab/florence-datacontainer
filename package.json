@@ -9,7 +9,7 @@
   "dependencies": {
     "@snlab/ducebox": "0.0.5",
     "classify-series": "^0.3.2",
-    "d3-scale": "^3.2.3"
+    "d3-scale": "^3.3.0"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9",
