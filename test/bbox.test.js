@@ -35,8 +35,10 @@ describe('bbox', () => {
     })
 
     const expectedBbox = {
-      x: [-2, 4],
-      y: [-1, 4]
+      minX: -2,
+      maxX: 4,
+      minY: -1,
+      maxY: 4
     }
 
     expect(dataContainer.bbox()).toEqual(expectedBbox)
@@ -58,8 +60,10 @@ describe('bbox', () => {
     })
 
     const expectedBbox = {
-      x: [-4, 4],
-      y: [-3, 4]
+      minX: -4,
+      maxX: 4,
+      minY: -3,
+      maxY: 4
     }
 
     expect(dataContainer.bbox()).toEqual(expectedBbox)
