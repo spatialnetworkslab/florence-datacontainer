@@ -52,7 +52,7 @@ This means that loading column-oriented data will be slightly faster than row-or
 
 `DataContainer` supports 6 data types. These data types correspond to native JS data types/structures (see table below).
 
-|  Data type   |                                          JS equivalent                                           |        Loadable         | Column name |
+| Data type    | JS equivalent                                                                                    | Loadable                | Column name |
 | ------------ | ------------------------------------------------------------------------------------------------ | ----------------------- | ----------- |
 | quantitative | `Number`                                                                                         | yes                     | NA          |
 | categorical  | `String`                                                                                         | yes                     | NA          |
@@ -127,7 +127,7 @@ The `DataContainer` constructor takes a second argument, which is an optional ob
 const dataContainer = new DataContainer(data, { validate: true })
 ```
 
-| Option name | Default value |  Type   |
+| Option name | Default value | Type    |
 | ----------- | ------------- | ------- |
 | validate    | `true`        | Boolean |
 
@@ -277,7 +277,32 @@ dataContainer.domain('quantity') // [1, 4]
 dataContainer.domain('dayOfSale') // [Date Fri May 03 2019 ..., Date Mon May 06 2019 ...]
 ```
 
-For geometry data (`.domain('$geometry')`), this will return the bounding box.
+For geometry data (`.domain('$geometry')`), this will return the bounding box:
+
+```js
+const geometry = {
+  type: 'Polygon',
+  coordinates: [[
+    [-1, 1],
+    [-2, 3],
+    [4, 4],
+    [2, -1],
+    [-1, 1]
+  ]]
+}
+
+const dataContainer = new DataContainer({
+  type: 'FeatureCollection',
+  features: [
+    {
+      type: 'Feature',
+      geometry
+    }
+  ]
+})
+
+dataContainer.domain('$geometry') // { minX: -2, maxX: 4, minY: -1, maxY: 4 }
+```
 
 <a name="datacontainer_min" href="#datacontainer_min">#</a> <i>DataContainer</i>.<b>min</b>(columnName)
 
@@ -485,15 +510,15 @@ binned.row(1).$grouped.rows() // [{ a: 3, b: 10, $key: '2' }, { a: 4, b: 11, $ke
 Besides `'EqualInterval'`, other methods of classification are supported. Different methods might require different additional
 keys to be passed to `binInstructions`. See the table below for an overview.
 
-|       Class. method       |   option name   |
-| ------------------------- | --------------- |
-| `'EqualInterval'`         | `numClasses`    |
-| `'StandardDeviation'`     | `numClasses`    |
-| `'Quantile'`              | `numClasses`    |
-| `'Jenks'`                 | `numClasses`    |
-| `'CKMeans'`               | `numClasses`    |
-| `'IntervalSize'`          | `binSize`       |
-| `'Manual'`                | `manualClasses` |
+| Class. method         | option name     |
+| --------------------- | --------------- |
+| `'EqualInterval'`     | `numClasses`    |
+| `'StandardDeviation'` | `numClasses`    |
+| `'Quantile'`          | `numClasses`    |
+| `'Jenks'`             | `numClasses`    |
+| `'CKMeans'`           | `numClasses`    |
+| `'IntervalSize'`      | `binSize`       |
+| `'Manual'`            | `manualClasses` |
 
 For `'Manual'`, `manualClasses` is required and must be an Array of `interval`s, which will become the bins.
 The classification is performed internally by [classify-series](https://github.com/Fischerfredl/classify-series).
